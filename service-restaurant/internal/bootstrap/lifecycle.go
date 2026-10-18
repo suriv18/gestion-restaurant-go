@@ -33,3 +33,6 @@ func (a *App) Run(ctx context.Context) error {
 	}
 	return err
 }
+
+// Handler devuelve el handler HTTP completo (router y middleware), útil para pruebas.
+func (a *App) Handler() http.Handler { return a.server.Handler }

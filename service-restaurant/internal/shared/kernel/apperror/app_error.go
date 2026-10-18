@@ -5,6 +5,7 @@ package apperror
 type Kind string
 
 const (
+	KindBadRequest   Kind = "bad_request"
 	KindValidation   Kind = "validation"
 	KindNotFound     Kind = "not_found"
 	KindConflict     Kind = "conflict"

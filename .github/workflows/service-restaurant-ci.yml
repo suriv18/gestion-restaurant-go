@@ -37,7 +37,7 @@ jobs:
       - name: Pruebas de integracion (PostgreSQL 18)
         run: go test -count=1 ./tests/integration/...
       - name: Build
-        run: go build ./cmd/api ./cmd/migrate
+        run: go build ./cmd/...
 
   image:
     runs-on: ubuntu-latest

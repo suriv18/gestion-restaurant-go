@@ -20,7 +20,12 @@ func (a *App) router() http.Handler {
 		response.WriteJSON(w, http.StatusOK, map[string]string{"status": "ready"})
 		return nil
 	}))
-	// Los módulos registran sus rutas aquí al incorporarse (infrastructure/config/module.go).
+
+	// API versionada. Cada módulo registra sus rutas; protect exige un actor autenticado.
+	api := http.NewServeMux()
+	protect := middleware.Authenticate(a.identidad.Authenticator(), a.logger)
+	a.identidad.RegisterRoutes(api, protect)
+	mux.Handle("/api/v1/", http.StripPrefix("/api/v1", api))
 
 	var h http.Handler = mux
 	h = http.MaxBytesHandler(h, a.cfg.MaxBodyBytes)

@@ -17,13 +17,13 @@ func scalar(t *testing.T, query string, args ...any) int {
 
 func TestMigrationsCreateFullSchema(t *testing.T) {
 	if n := scalar(t, `SELECT count(*) FROM information_schema.tables
-		WHERE table_schema='sch_restaurante' AND table_type='BASE TABLE'`); n != 49 {
-		t.Errorf("tablas = %d, quería 49", n)
+		WHERE table_schema='sch_restaurante' AND table_type='BASE TABLE'`); n != 51 {
+		t.Errorf("tablas = %d, quería 51 (49 de la V4 + sesiones e idempotencia)", n)
 	}
 	if n := scalar(t, `SELECT count(*) FROM information_schema.columns c
 		JOIN information_schema.tables t USING (table_schema, table_name)
-		WHERE c.table_schema='sch_restaurante' AND t.table_type='BASE TABLE'`); n != 664 {
-		t.Errorf("columnas = %d, quería 664", n)
+		WHERE c.table_schema='sch_restaurante' AND t.table_type='BASE TABLE'`); n != 680 {
+		t.Errorf("columnas = %d, quería 680 (664 de la V4 + 7 de sesiones + 9 de idempotencia)", n)
 	}
 	if n := scalar(t, `SELECT count(*) FROM pg_trigger tg
 		JOIN pg_class c ON c.oid=tg.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace

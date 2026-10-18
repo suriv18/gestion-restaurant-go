@@ -1,4 +1,4 @@
-// Package security define el contrato de autenticación; la implementación llega en I1.
+// Package security define el contrato de autenticación; lo implementa el módulo identidad.
 package security
 
 import (
@@ -8,6 +8,7 @@ import (
 )
 
 // Authenticator valida la solicitud y devuelve el actor verificado.
+// Ante credenciales inválidas devuelve un *apperror.AppError de tipo KindUnauthorized.
 type Authenticator interface {
 	Authenticate(r *http.Request) (appctx.Actor, error)
 }

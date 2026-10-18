@@ -6,7 +6,8 @@ RUN go mod download
 COPY . .
 ENV CGO_ENABLED=0
 RUN go build -trimpath -ldflags="-s -w" -o /out/api ./cmd/api \
- && go build -trimpath -ldflags="-s -w" -o /out/migrate ./cmd/migrate
+ && go build -trimpath -ldflags="-s -w" -o /out/migrate ./cmd/migrate \
+ && go build -trimpath -ldflags="-s -w" -o /out/admin ./cmd/admin
 
 # Imagen minima sin shell, usuario no root. Configuracion solo por variables de entorno.
 FROM gcr.io/distroless/static-debian12:nonroot
@@ -14,6 +15,8 @@ COPY --from=build /out/api /app/api
 # Las migraciones van embebidas; se ejecutan como paso controlado, no al arrancar cada replica:
 #   docker run --rm --entrypoint /app/migrate <imagen> up
 COPY --from=build /out/migrate /app/migrate
+# Instalacion inicial (una vez): crea el primer administrador. Ver cmd/admin.
+COPY --from=build /out/admin /app/admin
 EXPOSE 8080
 USER nonroot:nonroot
 ENTRYPOINT ["/app/api"]

@@ -8,24 +8,39 @@ import (
 	"net/http"
 	"time"
 
+	identidad "service-restaurant/internal/modules/identidad/infrastructure/config"
 	"service-restaurant/internal/platform/config"
 	"service-restaurant/internal/platform/database"
 )
 
 type App struct {
-	cfg    config.Config
-	logger *slog.Logger
-	db     *sql.DB
-	server *http.Server
+	cfg       config.Config
+	logger    *slog.Logger
+	db        *sql.DB
+	identidad *identidad.Module
+	server    *http.Server
 }
 
-// New abre recursos y arma el servidor.
+func newIdentidad(cfg config.Config, logger *slog.Logger, db *sql.DB) (*identidad.Module, error) {
+	return identidad.New(identidad.Deps{
+		DB:        db,
+		Logger:    logger,
+		JWTSecret: cfg.JWTSecret, JWTIssuer: cfg.JWTIssuer, JWTAudience: cfg.JWTAudience,
+	})
+}
+
+// New abre recursos, ensambla los módulos y arma el servidor.
 func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, error) {
 	db, err := database.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
 	}
-	a := &App{cfg: cfg, logger: logger, db: db}
+	mod, err := newIdentidad(cfg, logger, db)
+	if err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	a := &App{cfg: cfg, logger: logger, db: db, identidad: mod}
 	a.server = &http.Server{
 		Addr:              cfg.Addr,
 		Handler:           a.router(),

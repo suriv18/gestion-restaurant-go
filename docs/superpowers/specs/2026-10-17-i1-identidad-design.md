@@ -7,7 +7,7 @@ Requisitos: RES-RF-001 (autenticar), RES-RF-002 (autorizar por permiso y sede), 
 
 | Tema | Decisión |
 |---|---|
-| Token (DEC-06) | Token opaco aleatorio de 32 bytes (base64url); en BD solo su hash SHA-256. Sin JWT ni refresh (el contrato `Token` solo trae `access_token`). |
+| Token (DEC-06) | **JWT HS256 con sesión en BD (híbrido)**, por pedido posterior del equipo. El bearer es un JWT firmado (claims `sid`, `sub`, `iss`, `aud`, `iat`, `exp`=12 h); en cada petición el servidor además valida la sesión `sid` en BD, de modo que revocar, inactividad, baja de usuario y cambios de permisos surten efecto al instante (un JWT sin estado no lo permite). Sin refresh (el contrato `Token` solo trae `access_token`). Reemplaza la decisión inicial de token opaco. |
 | Primer administrador | Binario `cmd/admin`, ejecutado una vez por el instalador. Sin endpoint de alta pública. |
 | Alcance | Todo I1: RF-001, RF-002 y RF-033. |
 | Idempotencia (ADR-04) | Componente genérico dentro de I1: lo exigen las escrituras de RF-033 y lo reusarán I3/I4. |
@@ -21,7 +21,7 @@ Módulo nuevo `internal/modules/identidad` con `domain`, `application`, `infrast
 
 Migración nueva `00007_sesiones_idempotencia` con dos tablas **técnicas**, sin triggers de metadatos ni de auditoría (desviación deliberada de la convención V4: actualizarían `ultimo_uso` en cada petición y generarían un evento de auditoría por petición; se registrará en un ADR):
 
-- `sesiones`: id, `usuario_id`, `token_hash` (único), `creado_en`, `ultimo_uso_en` (se actualiza como máximo una vez por minuto), `expira_inactividad_en`, `expira_absoluta_en`, `revocada_en`.
+- `sesiones`: id, `usuario_id`, `creada_en`, `ultimo_uso_en` (se actualiza como máximo una vez por minuto), `expira_inactividad_en`, `expira_absoluta_en`, `revocada_en`.
 - `idempotencia`: `clave` (UUID), `usuario_id`, `operacion`, `huella` (SHA-256 del contenido), `estado`, `respuesta_status`, `respuesta_cuerpo`, `creado_en`, `expira_en` (24 h). Único por (`clave`, `usuario_id`, `operacion`).
 
 Permisos efectivos: vista `v_permisos_efectivos` de la V4 (todos los eslabones activos: usuario, rol, permiso, sucursal, negocio). No se agregan permisos: `USUARIO_ADMINISTRAR` protege todas las rutas de administración.
@@ -30,7 +30,7 @@ Permisos efectivos: vista `v_permisos_efectivos` de la V4 (todos los eslabones a
 
 **Login (`POST /auth/login`).** Normaliza `lower(btrim(username))`. Si el usuario no existe, calcula igualmente un hash contra uno ficticio (tiempos similares). Responde 401 con cuerpo idéntico si: contraseña incorrecta, usuario inactivo, `__sistema__` o bloqueado. Un fallo real suma `intentos_fallidos` (actor `__sistema__`, porque aún no hay usuario autenticado); al quinto fija `bloqueado_hasta`. Éxito: `intentos_fallidos = 0`, `ultimo_acceso_en` (actor: el usuario), crea la sesión y devuelve `{access_token, token_type: "Bearer", expires_in}`. `POST /auth/logout` (ruta nueva, a agregar al OpenAPI) revoca la sesión actual.
 
-**Autenticación por petición.** Middleware: `Authorization: Bearer` → hash → sesión vigente, no revocada, usuario activo y no sistema → permisos efectivos → `Actor` con mapa sede → permisos; `actor.Can(permiso, sedeId)` es en memoria. 2 consultas por petición; revocar o dar de baja surte efecto inmediato.
+**Autenticación por petición.** Middleware: `Authorization: Bearer` → verificar JWT (firma HS256 fijada, `iss`, `aud`, `exp`, `iat`) → sesión `sid` vigente, no revocada, usuario activo y no sistema → permisos efectivos → `Actor` con mapa sede → permisos; `actor.Can(permiso, sedeId)` es en memoria. 2 consultas por petición; revocar o dar de baja surte efecto inmediato.
 
 **Autorización.**
 - Rutas sin sede propia (roles, permisos, usuarios): `USUARIO_ADMINISTRAR` en al menos una sede.
@@ -76,6 +76,8 @@ Tres pasos, cada uno con CI en verde:
 3. Administración (RF-033).
 
 ## 7. Riesgos y pendientes
+
+- **JWT:** la clave `JWT_SECRET` (>= 32 bytes) es obligatoria y secreta; sin rotación (`kid`) por ahora. HS256 es adecuado mientras solo este monolito verifica tokens.
 
 - La migración 00007 se aparta de la convención de auditoría V4 (ADR a escribir).
 - Argon2id con parámetros altos ralentiza los tests: parámetros bajos en pruebas, valor sensato por defecto en producción.

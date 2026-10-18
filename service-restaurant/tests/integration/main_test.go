@@ -17,7 +17,10 @@ import (
 )
 
 // testDB es una base PostgreSQL 18 limpia con todas las migraciones aplicadas.
-var testDB *sql.DB
+var (
+	testDB  *sql.DB
+	testURL string
+)
 
 func TestMain(m *testing.M) {
 	os.Exit(run(m))
@@ -44,6 +47,7 @@ func run(m *testing.M) int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
+	testURL = url
 	testDB, err = database.Open(ctx, url)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

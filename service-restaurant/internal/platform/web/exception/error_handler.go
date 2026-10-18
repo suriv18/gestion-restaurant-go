@@ -14,6 +14,8 @@ import (
 // StatusFor traduce un Kind a código HTTP.
 func StatusFor(k apperror.Kind) int {
 	switch k {
+	case apperror.KindBadRequest:
+		return http.StatusBadRequest
 	case apperror.KindValidation, apperror.KindBusinessRule:
 		return http.StatusUnprocessableEntity
 	case apperror.KindNotFound:
