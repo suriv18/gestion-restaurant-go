@@ -1,3 +1,15 @@
+# Stack local: PostgreSQL 18 + migraciones + API.
+#   docker compose up -d --build          levanta db, aplica migraciones y arranca la API
+#   docker compose run --rm -T admin ...  instalacion inicial (una vez), ver README
+# Requiere JWT_SECRET en .env (>= 32 bytes, p. ej. `openssl rand -base64 48`).
+
+x-api-env: &api-env
+  DATABASE_URL: postgres://restaurant:change-me@db:5432/restaurant?sslmode=disable
+  JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET en .env (minimo 32 bytes)}
+  JWT_ISSUER: ${JWT_ISSUER:-service-restaurant}
+  JWT_AUDIENCE: ${JWT_AUDIENCE:-service-restaurant-api}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
 services:
   db:
     image: postgres:18
@@ -14,6 +26,45 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Paso controlado de migraciones: corre una vez y termina; la API espera a que acabe bien.
+  migrate:
+    build: .
+    image: service-restaurant:local
+    entrypoint: ["/app/migrate", "up"]
+    environment:
+      DATABASE_URL: postgres://restaurant:change-me@db:5432/restaurant?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    image: service-restaurant:local
+    environment:
+      <<: *api-env
+      APP_ADDR: ":8080"
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Instalacion inicial: crea el primer administrador (y negocio/sucursal si faltan).
+  # La contraseña va por ADMIN_PASSWORD o por stdin. Solo corre con --profile setup o `run`.
+  admin:
+    image: service-restaurant:local
+    entrypoint: ["/app/admin"]
+    environment:
+      <<: *api-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    profiles: ["setup"]
 
 volumes:
   pgdata:
