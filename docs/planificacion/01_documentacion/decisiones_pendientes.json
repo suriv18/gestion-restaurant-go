@@ -32,8 +32,8 @@
     "avance": {
       "fecha": "2026-10-17",
       "eleccion_indicada": "Backend en Go 1.26.5 con PostgreSQL 18, pgx/v5 y Goose",
-      "evidencia_parcial": "service-restaurant/docs/adr/003-persistencia-y-versiones.md: migraciones por dominio verificadas contra PostgreSQL 18, rollback del runner, imagen y CI en verde",
-      "falta_para_cerrar": "Comparacion documentada de al menos dos combinaciones, prueba con autenticacion y consulta de catalogo, y confirmacion del responsable tecnico real (ADR-06). Frontend fuera de este avance."
+      "evidencia_parcial": "service-restaurant/docs/adr/003-persistencia-y-versiones.md y 004-acceso-jwt-sesion-y-tablas-tecnicas.md: migraciones por dominio verificadas contra PostgreSQL 18, rollback del runner, imagen y CI en verde; prueba con autenticacion (login, sesion, revocacion, permisos por sede y administracion de accesos) con pruebas de integracion en CI.",
+      "falta_para_cerrar": "Comparacion documentada de al menos dos combinaciones de stack (no se evaluo otra pila: la eleccion de Go fue indicada por el equipo), consulta de catalogo (I2) y confirmacion del responsable tecnico real (ADR-06). Frontend fuera de este avance."
     }
   },
   {
@@ -100,7 +100,13 @@
     "responsable_propuesto": "Responsable técnico",
     "evidencia_cierre": "Autenticación, revocación, recuperación y aprovisionamiento definidos",
     "estado": "PENDIENTE",
-    "fecha_cierre": null
+    "fecha_cierre": null,
+    "avance": {
+      "fecha": "2026-10-17",
+      "decision_tomada": "JWT HS256 con sesion en BD (revocacion, inactividad y permisos vigentes en cada peticion); contrasenas argon2id; bloqueo de 5 intentos por 15 minutos; primer administrador con cmd/admin (sin endpoint publico de alta). Registrada en service-restaurant/docs/adr/004-acceso-jwt-sesion-y-tablas-tecnicas.md.",
+      "cubierto": ["autenticacion", "revocacion (logout, baja de usuario, rol o permiso inactivo, sede retirada)", "aprovisionamiento (cmd/admin)"],
+      "falta_para_cerrar": "Recuperacion de contrasena (no definida ni implementada), y confirmacion del responsable tecnico real. Pendientes de endurecimiento: MFA, rate limiting por IP, rotacion de claves JWT (kid) y refresh de sesion."
+    }
   },
   {
     "id": "DEC-07",
