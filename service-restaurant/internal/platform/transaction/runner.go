@@ -7,7 +7,18 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+
+	"service-restaurant/internal/platform/database"
 )
+
+// Option ajusta la transacción recién abierta.
+type Option func(ctx context.Context, tx *sql.Tx) error
+
+// WithActor fija app.usuario_id local a la transacción (decisión 12 de la V4). El id debe
+// provenir de la sesión validada, nunca del cliente. Sin actor, la base rechaza escribir.
+func WithActor(usuarioID int64) Option {
+	return func(ctx context.Context, tx *sql.Tx) error { return database.SetActor(ctx, tx, usuarioID) }
+}
 
 // Run ejecuta work dentro de una transacción. Hace commit solo si work no
 // devuelve error y canCommit(resultado) es true; en otro caso rollback.
@@ -19,6 +30,7 @@ func Run[T any](
 	logger *slog.Logger,
 	work func(ctx context.Context, tx *sql.Tx) (T, error),
 	canCommit func(T) bool,
+	options ...Option,
 ) (T, error) {
 	var zero T
 	tx, err := db.BeginTx(ctx, opts)
@@ -34,6 +46,11 @@ func Run[T any](
 		}
 	}()
 
+	for _, o := range options {
+		if err := o(ctx, tx); err != nil {
+			return zero, fmt.Errorf("transaction: preparar: %w", err)
+		}
+	}
 	res, err := work(ctx, tx)
 	if err != nil {
 		return zero, err
