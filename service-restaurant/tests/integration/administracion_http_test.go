@@ -475,3 +475,143 @@ func TestRolInactivoDejaDeConcederPermisos(t *testing.T) {
 		t.Fatal("al restaurar el rol vuelve a conceder el permiso")
 	}
 }
+
+type equipoItem struct {
+	ID         string  `json:"id"`
+	Username   string  `json:"username"`
+	EsSistema  bool    `json:"es_sistema"`
+	EsActivo   bool    `json:"es_activo"`
+	MotivoBaja *string `json:"motivo_baja"`
+	Roles      []struct {
+		ID       string `json:"id"`
+		Codigo   string `json:"codigo"`
+		EsActivo bool   `json:"es_activo"`
+	} `json:"roles"`
+	Sucursales []struct {
+		ID     string `json:"id"`
+		Codigo string `json:"codigo"`
+	} `json:"sucursales"`
+}
+
+func listarEquipo(t *testing.T, tk string) []equipoItem {
+	t.Helper()
+	var todos []equipoItem
+	cursor := ""
+	for pagina := 0; pagina < 50; pagina++ {
+		ruta := "/api/v1/usuarios?limit=5"
+		if cursor != "" {
+			ruta += "&cursor=" + cursor
+		}
+		r := call(t, "GET", ruta, "", tk)
+		esperar(t, r, http.StatusOK, "")
+		var p struct {
+			Items      []equipoItem `json:"items"`
+			NextCursor *string      `json:"nextCursor"`
+		}
+		r.json(t, &p)
+		todos = append(todos, p.Items...)
+		if p.NextCursor == nil {
+			return todos
+		}
+		cursor = *p.NextCursor
+	}
+	t.Fatal("la paginación no termina")
+	return nil
+}
+
+func TestEquipoListaPersonasConSusAccesosVigentes(t *testing.T) {
+	tk := adminToken(t)
+	crearUsuario(t, "equipo.cajero", "EquipoCajero2026Ok", "CAJERO")
+	crearUsuario(t, "equipo.baja", "EquipoBaja2026Ok", "MESERO")
+	bajaID := idDe(t, "usuarios", "username", "equipo.baja")
+	esperar(t, post(t, "/api/v1/usuarios/"+bajaID+"/baja", `{"motivo":"cambio de turno"}`, tk), http.StatusOK, "")
+
+	equipo := listarEquipo(t, tk)
+	porNombre := map[string]equipoItem{}
+	ids := map[string]bool{}
+	for _, u := range equipo {
+		if ids[u.ID] {
+			t.Fatalf("persona repetida entre páginas: %s", u.ID)
+		}
+		ids[u.ID] = true
+		porNombre[u.Username] = u
+		if u.EsSistema || u.Username == "__sistema__" {
+			t.Fatal("el actor técnico nunca debe aparecer en el equipo")
+		}
+	}
+	if len(equipo) != scalar(t, `SELECT count(*) FROM sch_restaurante.usuarios WHERE NOT es_sistema`) {
+		t.Fatalf("el listado debe incluir a todas las personas (activas y de baja): %d", len(equipo))
+	}
+
+	c := porNombre["equipo.cajero"]
+	if !c.EsActivo || len(c.Roles) != 1 || c.Roles[0].Codigo != "CAJERO" || !c.Roles[0].EsActivo ||
+		len(c.Sucursales) != 1 || c.Sucursales[0].Codigo != "PRINCIPAL" {
+		t.Fatalf("accesos del cajero: %+v", c)
+	}
+	b := porNombre["equipo.baja"]
+	if b.EsActivo || b.MotivoBaja == nil || *b.MotivoBaja != "cambio de turno" {
+		t.Fatalf("la persona de baja debe mostrar su motivo: %+v", b)
+	}
+
+	// Solo asignaciones vigentes: al cambiar de rol, el anterior deja de listarse.
+	sede := idDe(t, "sucursales", "codigo", "PRINCIPAL")
+	cocina := idDe(t, "roles", "codigo", "COCINA")
+	esperar(t, callH(t, "PUT", "/api/v1/usuarios/"+c.ID+"/asignaciones",
+		fmt.Sprintf(`{"rol_ids":["%s"],"sucursal_ids":["%s"]}`, cocina, sede), tk, nil), http.StatusOK, "")
+	for _, u := range listarEquipo(t, tk) {
+		if u.ID == c.ID && (len(u.Roles) != 1 || u.Roles[0].Codigo != "COCINA") {
+			t.Fatalf("debe listar solo el rol vigente: %+v", u.Roles)
+		}
+	}
+
+	// Nunca se expone el hash de contraseña.
+	raw := call(t, "GET", "/api/v1/usuarios?limit=100", "", tk).Body.String()
+	for _, prohibido := range []string{"password", "argon2", "hash"} {
+		if strings.Contains(strings.ToLower(raw), prohibido) {
+			t.Fatalf("el listado no debe exponer %q", prohibido)
+		}
+	}
+	esperar(t, call(t, "GET", "/api/v1/usuarios?limit=0", "", tk), http.StatusBadRequest, "limit_invalido")
+	esperar(t, call(t, "GET", "/api/v1/usuarios?cursor=%%%", "", tk), http.StatusBadRequest, "query_invalida")
+}
+
+func TestEquipoYSedesAsignablesExigenAdministrador(t *testing.T) {
+	crearUsuario(t, "equipo.sinpoder", "EquipoSin2026Ok", "CAJERO")
+	tk := token(t, "equipo.sinpoder", "EquipoSin2026Ok")
+	esperar(t, call(t, "GET", "/api/v1/usuarios", "", tk), http.StatusForbidden, "sin_permiso")
+	esperar(t, call(t, "GET", "/api/v1/sucursales-asignables", "", tk), http.StatusForbidden, "sin_permiso")
+	esperar(t, call(t, "GET", "/api/v1/usuarios", "", ""), http.StatusUnauthorized, "no_autenticado")
+	esperar(t, call(t, "GET", "/api/v1/sucursales-asignables", "", ""), http.StatusUnauthorized, "no_autenticado")
+}
+
+// Las sedes que se ofrecen son exactamente las que la regla de asignación permite.
+func TestSucursalesAsignablesSonLasQueElAdministradorAdministra(t *testing.T) {
+	tk := adminToken(t)
+	asSystem(t, `INSERT INTO sch_restaurante.sucursales(negocio_id, codigo, nombre, direccion)
+		SELECT id, 'TERCERA', 'Tercera sede', 'Calle 3' FROM sch_restaurante.negocio
+		WHERE NOT EXISTS (SELECT 1 FROM sch_restaurante.sucursales WHERE codigo='TERCERA')`)
+	r := call(t, "GET", "/api/v1/sucursales-asignables", "", tk)
+	esperar(t, r, http.StatusOK, "")
+	var l struct {
+		Items []struct {
+			ID     string `json:"id"`
+			Codigo string `json:"codigo"`
+			Nombre string `json:"nombre"`
+		} `json:"items"`
+	}
+	r.json(t, &l)
+	codigos := []string{}
+	for _, s := range l.Items {
+		codigos = append(codigos, s.Codigo)
+	}
+	// El administrador solo administra PRINCIPAL: las otras sedes existen pero no se ofrecen.
+	if len(codigos) != 1 || codigos[0] != "PRINCIPAL" || l.Items[0].Nombre == "" {
+		t.Fatalf("sedes ofrecidas: %v (existen más sedes, pero no son suyas)", codigos)
+	}
+	// Coherencia con la regla: asignar una sede no ofrecida se rechaza.
+	crearUsuario(t, "equipo.sede", "EquipoSede2026Ok", "CAJERO")
+	uid := idDe(t, "usuarios", "username", "equipo.sede")
+	cajero, tercera := idDe(t, "roles", "codigo", "CAJERO"), idDe(t, "sucursales", "codigo", "TERCERA")
+	esperar(t, callH(t, "PUT", "/api/v1/usuarios/"+uid+"/asignaciones",
+		fmt.Sprintf(`{"rol_ids":["%s"],"sucursal_ids":["%s"]}`, cajero, tercera), tk, nil), http.StatusForbidden, "sede_no_autorizada")
+}

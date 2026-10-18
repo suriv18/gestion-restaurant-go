@@ -69,7 +69,8 @@ Reglas de seguridad de la administración, verificadas con pruebas (y por mutaci
 
 ### Desviaciones y huecos del contrato OpenAPI 0.2.0
 - `POST /auth/logout` no existe en el contrato; se agregó y debe incorporarse al OpenAPI.
-- `GET /usuarios` no existe en el contrato (ni lo pide RF-033): no se implementó.
+- `GET /usuarios` y `GET /sucursales-asignables` **no existen en el contrato** y se agregaron porque la pantalla «Equipo y accesos» no puede funcionar sin ellos: el primero lista al equipo con sus roles y sedes vigentes (excluye siempre al actor técnico, devuelve las bajas con su motivo y nunca el hash); el segundo ofrece solo las sedes donde el administrador tiene `USUARIO_ADMINISTRAR`, que es exactamente el conjunto que la regla de asignación le permite tocar. Ambos exigen `USUARIO_ADMINISTRAR` y deben incorporarse al OpenAPI.
+- No hay endpoints para asignar permisos a un rol ni para consultar un usuario por id; hoy la asignación rol-permiso solo se hace por SQL.
 - `UsuarioAlta.nombre` se acepta pero no se persiste (la tabla `usuarios` no tiene nombre; pertenece a empleados).
 - `GET /roles` y `GET /permisos` declaran el parámetro `sucursal_id`: se ignora (son catálogos globales).
 - Las respuestas repetidas por idempotencia no marcan la repetición con un encabezado.

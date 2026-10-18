@@ -30,6 +30,8 @@ func RegisterAdminRoutes(mux *http.ServeMux, roles *RolesHandler, permisos *Perm
 	ruta("POST /permisos/{id}/baja", permisos.Baja)
 	ruta("POST /permisos/{id}/restauracion", permisos.Restauracion)
 
+	ruta("GET /usuarios", usuarios.Listar)
+	ruta("GET /sucursales-asignables", usuarios.SucursalesAsignables)
 	ruta("POST /usuarios", usuarios.Crear)
 	ruta("PUT /usuarios/{id}/asignaciones", usuarios.Asignaciones)
 	ruta("POST /usuarios/{id}/baja", usuarios.Baja)

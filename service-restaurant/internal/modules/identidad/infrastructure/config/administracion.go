@@ -77,6 +77,7 @@ func armarAdministracion(db *sql.DB, logger *slog.Logger, hasher outbound.Passwo
 
 	// Lecturas: sobre el pool, sin transacción.
 	catalogo := readadapter.NewCatalogoReadAdapter(db)
+	equipo := readadapter.NewUsuarioReadAdapter(db)
 
 	return &administracion{
 		roles: controller.NewRolesHandler(
@@ -86,6 +87,7 @@ func armarAdministracion(db *sql.DB, logger *slog.Logger, hasher outbound.Passwo
 			inbound.CrearPermiso(crearPermiso), inbound.EditarPermiso(editarPermiso), inbound.CambiarEstadoPermiso(estadoPermiso),
 			uquery.NewListarPermisos(catalogo), uquery.NewObtenerPermiso(catalogo)),
 		usuarios: controller.NewUsuariosHandler(
-			inbound.CrearUsuario(crearUsuario), inbound.AsignarAccesos(asignar), inbound.CambiarEstadoUsuario(estadoUsuario)),
+			inbound.CrearUsuario(crearUsuario), inbound.AsignarAccesos(asignar), inbound.CambiarEstadoUsuario(estadoUsuario),
+			uquery.NewListarUsuarios(equipo), uquery.NewListarSucursalesAsignables(equipo)),
 	}
 }

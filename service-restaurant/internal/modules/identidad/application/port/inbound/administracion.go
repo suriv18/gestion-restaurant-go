@@ -50,3 +50,11 @@ type AsignarAccesos interface {
 type CambiarEstadoUsuario interface {
 	Execute(context.Context, cmd.CambiarEstadoUsuario) (appresult.Result[dtoresult.UsuarioAdmin], error)
 }
+
+type ListarUsuarios interface {
+	Execute(context.Context, qry.ListarUsuarios) (appresult.Result[dtoresult.PaginaUsuarios], error)
+}
+
+type ListarSucursalesAsignables interface {
+	Execute(context.Context, qry.ListarSucursalesAsignables) (appresult.Result[[]dtoresult.SucursalResumen], error)
+}

@@ -49,4 +49,4 @@ go test ./tests/integration/...         # integración: PostgreSQL 18 con testco
 
 ## API
 
-Base `/api/v1`: `POST /auth/login`, `POST /auth/logout`, `GET /sesion`, y la administración de `roles`, `permisos` y `usuarios` (requiere `USUARIO_ADMINISTRAR`; las altas, bajas y restauraciones exigen `Idempotency-Key` UUID). Contrato propuesto en `../docs/planificacion/03_api/openapi.yaml`; desviaciones en `docs/ADD.md` §8. Sondas: `GET /healthz`, `GET /readyz`.
+Base `/api/v1`: `POST /auth/login`, `POST /auth/logout`, `GET /sesion`, y la administración de `roles`, `permisos` y `usuarios` — incluidos `GET /usuarios` (el equipo con sus roles y sedes) y `GET /sucursales-asignables` — (requiere `USUARIO_ADMINISTRAR`; las altas, bajas y restauraciones exigen `Idempotency-Key` UUID). Contrato propuesto en `../docs/planificacion/03_api/openapi.yaml`; desviaciones en `docs/ADD.md` §8. Sondas: `GET /healthz`, `GET /readyz`.

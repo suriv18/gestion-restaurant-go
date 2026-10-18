@@ -52,3 +52,30 @@ type PaginaPermisos struct {
 	Items      []Permiso
 	NextCursor string
 }
+
+// RolResumen y SucursalResumen describen las asignaciones vigentes de un usuario.
+type RolResumen struct {
+	ID       int64
+	Codigo   string
+	Nombre   string
+	EsActivo bool
+}
+
+type SucursalResumen struct {
+	ID     int64
+	Codigo string
+	Nombre string
+}
+
+// UsuarioConAccesos es una fila del equipo: el usuario con sus roles y sedes activos.
+type UsuarioConAccesos struct {
+	UsuarioAdmin
+	MotivoBaja *string
+	Roles      []RolResumen
+	Sucursales []SucursalResumen
+}
+
+type PaginaUsuarios struct {
+	Items      []UsuarioConAccesos
+	NextCursor string
+}

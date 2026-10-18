@@ -50,3 +50,34 @@ type PermisosLista struct {
 	Items      []Permiso `json:"items"`
 	NextCursor *string   `json:"nextCursor"`
 }
+
+// RolResumen y SucursalResumen son las asignaciones vigentes de una persona del equipo.
+type RolResumen struct {
+	ID       string `json:"id"`
+	Codigo   string `json:"codigo"`
+	Nombre   string `json:"nombre"`
+	EsActivo bool   `json:"es_activo"`
+}
+
+type SucursalResumen struct {
+	ID     string `json:"id"`
+	Codigo string `json:"codigo"`
+	Nombre string `json:"nombre"`
+}
+
+// UsuarioEquipo es una persona del equipo con sus roles y sedes; nunca incluye el hash.
+type UsuarioEquipo struct {
+	Usuario
+	MotivoBaja *string           `json:"motivo_baja"`
+	Roles      []RolResumen      `json:"roles"`
+	Sucursales []SucursalResumen `json:"sucursales"`
+}
+
+type UsuariosLista struct {
+	Items      []UsuarioEquipo `json:"items"`
+	NextCursor *string         `json:"nextCursor"`
+}
+
+type SucursalesLista struct {
+	Items []SucursalResumen `json:"items"`
+}

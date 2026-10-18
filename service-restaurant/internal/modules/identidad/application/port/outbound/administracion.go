@@ -63,3 +63,10 @@ type CatalogoReader interface {
 	ListarPermisos(ctx context.Context, despuesDeID int64, limite int) ([]dtoresult.Permiso, error)
 	ObtenerPermiso(ctx context.Context, id int64) (dtoresult.Permiso, bool, error)
 }
+
+// UsuarioReader lee el equipo con sus asignaciones; nunca devuelve al actor técnico.
+type UsuarioReader interface {
+	ListarUsuarios(ctx context.Context, despuesDeID int64, limite int) ([]dtoresult.UsuarioConAccesos, error)
+	// SucursalesActivasPorID devuelve, ordenadas por id, las sucursales activas indicadas.
+	SucursalesActivasPorID(ctx context.Context, ids []int64) ([]dtoresult.SucursalResumen, error)
+}
