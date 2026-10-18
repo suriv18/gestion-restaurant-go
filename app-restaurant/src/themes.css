@@ -1,0 +1,342 @@
+/* Theme tokens also reach CDK overlays, which are attached to body. */
+:root {
+  --surface-subtle: #fcfdf9;
+}
+:root[data-theme='dark'] {
+  --ink: #e4ece5;
+  --muted: #a8b8ac;
+  --paper: #151f1a;
+  --white: #1e2c24;
+  --line: #38493e;
+  --green: #a0d5b2;
+  --green-light: #2a4233;
+  --orange: #edb187;
+  --orange-light: #443327;
+  --red: #f0aaa2;
+  --red-light: #462e2b;
+  --blue: #a5cee1;
+  --blue-light: #293e49;
+  --surface-subtle: #223229;
+}
+html[data-theme='dark'] {
+  .sidebar {
+    background: #192c23;
+  }
+  .btn.primary {
+    background: #37684f;
+    border-color: #528567;
+    color: #f5fff8;
+  }
+  .btn.primary:hover {
+    background: #437a5e;
+  }
+  .btn.accent {
+    background: #8c4c2c;
+    color: #fff8ef;
+    border-color: #ba7953;
+  }
+  .btn.accent:hover {
+    background: #a45c36;
+  }
+  .btn:hover,
+  .pick-product:hover,
+  .pick-product.selected {
+    background: var(--green-light);
+  }
+  .btn.danger {
+    background: var(--red-light);
+    color: var(--red);
+    border-color: #77504a;
+  }
+  .metric-icon,
+  .empty .empty-icon,
+  .tabs,
+  .tab small,
+  .qty-box,
+  .floor-note,
+  .reservation-strip,
+  .kanban-col,
+  .kanban-title small,
+  .pill,
+  .product-visual,
+  .money-display,
+  .percentage {
+    background: var(--surface-subtle);
+    color: var(--muted);
+    border-color: var(--line);
+  }
+  .tab {
+    color: var(--muted);
+  }
+  .tab.active {
+    background: var(--white);
+    color: var(--ink);
+  }
+  .table-card {
+    background: var(--white);
+    color: var(--ink);
+    border-color: #586e50;
+  }
+  .table-card:before,
+  .table-card:after {
+    background: #43533e;
+    border-color: #586e50;
+  }
+  .table-card.occupied {
+    background: var(--orange-light);
+    color: var(--orange);
+    border-color: #8c674c;
+  }
+  .table-card.occupied:before,
+  .table-card.occupied:after {
+    background: #634834;
+    border-color: #8c674c;
+  }
+  .table-card.ready {
+    background: var(--blue-light);
+    color: var(--blue);
+    border-color: #577f92;
+  }
+  .table-card.ready:before,
+  .table-card.ready:after {
+    background: #3d5c6b;
+    border-color: #577f92;
+  }
+  .table-card.selected {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .table-card.selected:before,
+  .table-card.selected:after {
+    background: #4d7255;
+    border-color: #94b294;
+  }
+  .table-card.disabled {
+    background: #29302b;
+    color: var(--muted);
+    border-color: #526055;
+  }
+  .table-card.disabled:before,
+  .table-card.disabled:after {
+    background: #343e35;
+    border-color: #526055;
+  }
+  .room {
+    background: radial-gradient(#aabfa41c 0.8px, transparent 0.8px) 0 0 / 12px 12px #1a271f;
+  }
+  .room-label,
+  .table-card .table-number,
+  .table-capacity,
+  .table-card small,
+  .floor-note,
+  .qty-box,
+  .order-accountbar,
+  .room-footer,
+  .order-bottom-note,
+  th,
+  .product-category,
+  .product-card-content .subtle,
+  .note-box,
+  .info-row > span {
+    color: var(--muted);
+  }
+  .room-label:after,
+  .room-footer i {
+    background: var(--line);
+  }
+  .pill.green,
+  .metric-icon:not(.orange):not(.blue) {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: var(--line);
+  }
+  .pill.orange,
+  .metric-icon.orange,
+  .ticket-line p,
+  .note-box.orange {
+    background: var(--orange-light);
+    color: var(--orange);
+    border-color: #67503d;
+  }
+  .pill.blue,
+  .metric-icon.blue {
+    background: var(--blue-light);
+    color: var(--blue);
+    border-color: #415e6b;
+  }
+  .pill.red {
+    background: var(--red-light);
+    color: var(--red);
+  }
+  .pill,
+  .product-visual .pill {
+    background: var(--surface-subtle);
+  }
+  .add-dish,
+  .note-box,
+  .dashboard-greeting {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: #4a6247;
+  }
+  .dashboard-greeting p,
+  .dashboard-greeting small {
+    color: var(--muted);
+  }
+  .product-visual[data-cat='Fondos'] {
+    background: #334630;
+    color: #b1ca9b;
+  }
+  .product-visual[data-cat='Entradas'] {
+    background: #493b2b;
+    color: #e1ba84;
+  }
+  .product-visual[data-cat='Bebidas'],
+  .product-visual.drink {
+    background: #2c404b;
+    color: #a5cee1;
+  }
+  .product-visual[data-cat='Postres'] {
+    background: #48332f;
+    color: #dcada2;
+  }
+  .cash-hero {
+    background: #223c30;
+  }
+  td {
+    color: var(--muted);
+    border-color: var(--line);
+  }
+  .order-item,
+  .ticket-line,
+  .ticket-top,
+  .info-row,
+  .timeline:before,
+  .receipt-preview,
+  .receipt-head,
+  .receipt-lines,
+  .receipt-total {
+    border-color: var(--line);
+  }
+  .field input,
+  .field select,
+  .field textarea,
+  .search {
+    border-color: #536956;
+  }
+  .text-red-700 {
+    color: var(--red);
+  }
+  .bg-white {
+    background: var(--white);
+  }
+  .bg-green-50 {
+    background: var(--green-light);
+  }
+  .text-green-600 {
+    color: var(--green);
+  }
+  .text-orange-600 {
+    color: var(--orange);
+  }
+  .text-blue-600 {
+    color: var(--blue);
+  }
+  .border-stone-200,
+  .border-stone-100 {
+    border-color: var(--line);
+  }
+  .skip-link {
+    background: var(--white);
+    color: var(--ink);
+  }
+  /* Public access keeps the same preference after signing out. */
+  app-login-page .login-layout {
+    background: var(--paper);
+    .input-wrap {
+      background: var(--white);
+      border-color: #536956;
+      color: var(--muted);
+    }
+    .input-wrap input,
+    .login-field label {
+      color: var(--ink);
+    }
+    .input-wrap input::placeholder {
+      color: var(--muted);
+    }
+    .welcome-icon,
+    .demo-link {
+      background: var(--green-light);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+    .demo-link:hover,
+    .password-toggle:hover {
+      background: #365140;
+    }
+    .form-description,
+    .form-eyebrow,
+    .preview-label,
+    .help-link,
+    .recovery-link,
+    .password-toggle,
+    .preview-note,
+    .demo-divider,
+    .demo-link small,
+    .demo-link > app-icon,
+    .access-invite,
+    .access-footer {
+      color: var(--muted);
+    }
+    .demo-divider:before,
+    .demo-divider:after {
+      background: var(--line);
+    }
+    .access-footer {
+      border-color: var(--line);
+    }
+    .field-error {
+      color: var(--red);
+    }
+    .access-message {
+      background: var(--orange-light);
+      color: var(--orange);
+      border-color: #67503d;
+    }
+  }
+}
+
+.topbar .breadcrumb {
+  min-width: 0;
+}
+.topbar .breadcrumb > strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar .top-actions {
+  flex-shrink: 0;
+}
+@media (max-width: 760px) {
+  .topbar {
+    gap: 8px;
+  }
+  .topbar .breadcrumb > span,
+  .topbar .session-indicator {
+    display: none;
+  }
+  .topbar .top-actions {
+    gap: 7px;
+  }
+}
+@media print {
+  :root[data-theme='dark'] {
+    --ink: #263b34;
+    --muted: #586552;
+    --paper: #fff;
+    --white: #fff;
+    --line: #d5ddcf;
+  }
+}

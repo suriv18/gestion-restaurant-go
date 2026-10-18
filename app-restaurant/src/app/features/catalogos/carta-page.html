@@ -1,0 +1,92 @@
+<app-page-header
+  title="El sabor de tu restaurante"
+  description="Tu carta, sus ingredientes y todo lo que la hace especial."
+  eyebrow="CARTA Y RECETAS"
+  ><button class="btn primary" (click)="edit()">
+    <app-icon name="plus" />Nuevo producto
+  </button></app-page-header
+>
+<div class="section-toolbar">
+  <label class="search"
+    ><app-icon name="search" /><input
+      aria-label="Buscar producto"
+      placeholder="Buscar producto o código..."
+      [value]="query()"
+      (input)="query.set($any($event.target).value)" /></label
+  ><label class="flex items-center gap-2 text-xs"
+    ><input
+      type="checkbox"
+      [checked]="inactive()"
+      (change)="inactive.set($any($event.target).checked)"
+    />Incluir dados de baja</label
+  >
+</div>
+<div class="tabs mb-6 flex-wrap" aria-label="Categorías de carta">
+  @for (c of categories; track c) {
+    <button
+      class="tab"
+      [class.active]="category() === c"
+      [attr.aria-pressed]="category() === c"
+      (click)="category.set(c)"
+    >
+      {{ c }}
+    </button>
+  }
+</div>
+<div class="cards-grid">
+  @for (p of products(); track p.id) {
+    <article class="product-card" [class.inactive]="!p.es_activo">
+      <div class="product-visual" [class.drink]="p.category === 'Bebidas'">
+        <app-icon [name]="icon(p.category)" /><span
+          class="pill"
+          [class.green]="p.disponible && p.es_activo"
+          >{{ !p.es_activo ? 'De baja' : p.disponible ? 'Disponible' : 'Pausado' }}</span
+        >
+      </div>
+      <div class="product-card-content">
+        <div class="product-category">{{ p.category }} · {{ p.code }}</div>
+        <h2 class="text-base font-bold my-2">{{ p.name }}</h2>
+        <p class="subtle">
+          {{ p.station }} · {{ p.type === 'PREPARADO' ? 'Preparado en casa' : 'Venta directa' }}
+        </p>
+        <div class="product-card-footer">
+          <strong>{{ p.price | money }}</strong
+          ><button
+            class="icon-btn"
+            [attr.aria-label]="'Ver receta de ' + p.name"
+            (click)="detail(p)"
+          >
+            <app-icon name="book" />
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-4">
+          @if (p.es_activo) {
+            <button class="btn small" (click)="edit(p)">Editar</button
+            ><button class="btn small" (click)="store.run('availability', { id: p.id })">
+              {{ p.disponible ? 'Pausar' : 'Activar carta' }}</button
+            ><button
+              class="icon-btn danger"
+              [attr.aria-label]="'Dar de baja ' + p.name"
+              (click)="remove(p)"
+            >
+              <app-icon name="trash" />
+            </button>
+          } @else {
+            <button
+              class="btn primary"
+              (click)="store.run('restore', { entity: 'products', id: p.id })"
+            >
+              Restaurar
+            </button>
+          }
+        </div>
+      </div>
+    </article>
+  } @empty {
+    <div class="empty-state col-span-full">
+      <h2>No encontramos ese sabor</h2>
+      <p>Prueba otro nombre o categoría.</p>
+      <button class="btn" (click)="query.set(''); category.set('Todos')">Limpiar filtros</button>
+    </div>
+  }
+</div>

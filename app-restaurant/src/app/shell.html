@@ -1,0 +1,96 @@
+<a class="skip-link" href="#main">Ir al contenido</a>
+<div class="app-shell">
+  @if (menuOpen()) {
+    <button class="mobile-backdrop" aria-label="Cerrar menú" (click)="menuOpen.set(false)"></button>
+  }
+  <aside class="sidebar" [class.open]="menuOpen()" id="sidebar">
+    <a routerLink="/salon" class="brand" aria-label="Mesa, inicio" (click)="menuOpen.set(false)"
+      ><svg class="brand-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor">
+        <path d="M5 25V7l11 13L27 7v18M5 17l11 13 11-13" /></svg
+      >mesa<span class="brand-dot">.</span></a
+    >
+    <div class="workspace">
+      <app-icon name="store" />
+      <div>
+        <strong>{{ store.state().settings.name }}</strong
+        ><small>{{ store.state().settings.branch }}</small>
+      </div>
+    </div>
+    <nav aria-label="Menú principal">
+      @for (group of groups; track group.label) {
+        <div class="nav-label">{{ group.label }}</div>
+        <div class="nav-list">
+          @for (item of group.items; track item.path) {
+            <a
+              class="nav-link"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              ariaCurrentWhenActive="page"
+              (click)="menuOpen.set(false)"
+              ><app-icon [name]="item.icon" /><span>{{ item.label }}</span>
+              @if (item.path === '/salon') {
+                <span class="nav-count">{{ store.orders().length }}</span>
+              }
+            </a>
+          }
+        </div>
+      }
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="demo-panel">
+        <strong><i class="dot"></i>Modo demostración</strong>Datos de ejemplo en este navegador
+      </div>
+    </div>
+  </aside>
+  <div class="main-shell">
+    <header class="topbar">
+      <div class="breadcrumb">
+        <button
+          class="icon-btn mobile-menu"
+          aria-label="Abrir menú"
+          aria-controls="sidebar"
+          [attr.aria-expanded]="menuOpen()"
+          (click)="menuOpen.set(!menuOpen())"
+        >
+          <app-icon name="menu" /></button
+        ><span>{{ store.state().settings.name }}</span
+        ><span>/</span><strong>{{ currentPage() }}</strong>
+      </div>
+      <div class="top-actions">
+        <span class="top-date">{{ date }}</span
+        ><span class="session-indicator"
+          ><i class="dot"></i>Caja
+          {{ store.state().session.state === 'ABIERTA' ? 'abierta' : 'cerrada' }}</span
+        ><button class="icon-btn" aria-label="Ayuda" (click)="help()">
+          <app-icon name="help" /></button
+        ><button
+          class="icon-btn notify-button"
+          aria-label="Alertas de operación"
+          (click)="alerts()"
+        >
+          <app-icon name="bell" />
+          @if (store.lowStock().length || store.ready()) {
+            <span class="notification-dot"></span>
+          }
+        </button>
+        <app-user-menu />
+      </div>
+    </header>
+    <main id="main" class="content" tabindex="-1">
+      @if (store.storageWarning()) {
+        <p role="alert" class="note-box orange mb-5">{{ store.storageWarning() }}</p>
+      }
+      <router-outlet />
+      <footer class="footer">
+        <span><strong>mesa.</strong> &nbsp; Hecho para tu día a día.</span
+        ><span>Demostración · datos guardados en este navegador</span>
+      </footer>
+    </main>
+  </div>
+</div>
+@if (store.notice()) {
+  <div class="app-toast" role="status">
+    {{ store.notice()
+    }}<button aria-label="Cerrar notificación" (click)="store.notice.set('')">×</button>
+  </div>
+}

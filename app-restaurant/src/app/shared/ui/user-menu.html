@@ -1,0 +1,56 @@
+<button
+  #accountButton
+  #accountTrigger="cdkMenuTriggerFor"
+  type="button"
+  class="user-trigger"
+  [cdkMenuTriggerFor]="accountMenu"
+  [cdkMenuPosition]="positions"
+  aria-label="Menú de usuario"
+  title="Mi cuenta"
+>
+  <span class="user-avatar" aria-hidden="true"><app-icon name="user" /></span>
+  <app-icon name="down" />
+</button>
+
+<ng-template #accountMenu>
+  <div class="account-menu" cdkMenu aria-label="Cuenta de usuario">
+    <div class="account-summary">
+      <span class="account-initials" aria-hidden="true">{{ initials() }}</span>
+      <div>
+        <strong>{{ displayName() }}</strong
+        ><small>{{ subtitle() }}</small>
+      </div>
+    </div>
+    <button type="button" class="account-item" cdkMenuItem (cdkMenuItemTriggered)="profile()">
+      <app-icon name="user" /><span>Mi perfil</span><app-icon name="chevron" />
+    </button>
+    <div class="theme-section" cdkMenuGroup aria-label="Tema de la aplicación">
+      <p class="theme-heading"><app-icon name="palette" /> Tema</p>
+      <div class="theme-options">
+        @for (item of themes; track item.value) {
+          <button
+            type="button"
+            class="theme-option"
+            cdkMenuItemRadio
+            [cdkMenuItemChecked]="theme.preference() === item.value"
+            (cdkMenuItemTriggered)="theme.select(item.value)"
+          >
+            <app-icon [name]="item.icon" /><span>{{ item.label }}</span>
+          </button>
+        }
+      </div>
+    </div>
+    <div class="account-divider" role="separator"></div>
+    <button
+      type="button"
+      class="account-item logout-item"
+      cdkMenuItem
+      (cdkMenuItemTriggered)="logout()"
+    >
+      <app-icon name="logout" /><span>Cerrar sesión</span>
+    </button>
+    @if (theme.storageWarning()) {
+      <p class="theme-warning" role="status">{{ theme.storageWarning() }}</p>
+    }
+  </div>
+</ng-template>

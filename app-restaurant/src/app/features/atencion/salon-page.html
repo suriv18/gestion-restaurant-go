@@ -1,0 +1,255 @@
+<app-page-header
+  title="El salón, bajo control"
+  description="Cada mesa, cada pedido. Todo listo para un buen servicio."
+  eyebrow="OPERACIÓN DIARIA"
+  ><a class="btn" routerLink="/reservas"><app-icon name="calendar" />Nueva reserva</a
+  ><button class="btn primary" (click)="actions.newOrder()">
+    <app-icon name="plus" />Nuevo pedido
+  </button></app-page-header
+>
+<section class="metrics" aria-label="Resumen del salón">
+  <app-metric
+    label="Mesas ocupadas"
+    [value]="store.occupied() + ' / ' + store.enabledTables().length"
+    caption="Servicio en curso"
+    icon="table"
+  /><app-metric
+    label="Mesas disponibles"
+    [value]="store.enabledTables().length - store.occupied()"
+    caption="Listas para recibir"
+    icon="users"
+  /><app-metric
+    label="Productos listos"
+    [value]="store.ready()"
+    caption="Pendientes de servir"
+    icon="chef"
+  /><app-metric
+    label="Por cobrar"
+    [value]="store.due() | money"
+    [caption]="store.orders().length + ' pedidos abiertos'"
+    icon="wallet"
+  />
+</section>
+<div class="floor-layout">
+  <section class="min-w-0">
+    <div class="floor-toolbar">
+      <div class="tabs" aria-label="Zona del restaurante">
+        @for (z of ['Salón principal', 'Terraza', 'Para llevar']; track z) {
+          <button
+            class="tab"
+            [class.active]="zone() === z"
+            [attr.aria-pressed]="zone() === z"
+            (click)="zone.set(z)"
+          >
+            {{ z }}
+          </button>
+        }
+      </div>
+      <div class="legend">
+        <span><i class="dot text-green-600"></i> Libre</span
+        ><span><i class="dot text-orange-600"></i> Ocupada</span
+        ><span><i class="dot text-blue-600"></i> Por cobrar</span>
+      </div>
+    </div>
+    @if (zone() !== 'Para llevar') {
+      <div class="room">
+        <div class="room-label">{{ zone() }} · {{ tables().length }} mesas</div>
+        <div class="table-grid">
+          @for (table of tables(); track table.id) {
+            @let order = orderFor(table);
+            <button
+              class="table-card"
+              [class.occupied]="!!order"
+              [class.ready]="order?.state === 'ENTREGADO'"
+              [class.selected]="selected()?.table === table.id"
+              [disabled]="!table.habilitada"
+              [attr.aria-label]="table.name + (order ? ', ocupada' : ', disponible')"
+              [attr.aria-pressed]="selected()?.table === table.id"
+              (click)="select(table)"
+            >
+              <span class="table-capacity"
+                ><app-icon name="users" />{{
+                  order ? order.guests + ' comensales' : table.capacity + ' personas'
+                }}</span
+              >
+              <h3>{{ table.name }}</h3>
+              <span class="table-status">{{
+                !table.habilitada
+                  ? 'No habilitada'
+                  : order
+                    ? order.state === 'ENTREGADO'
+                      ? 'Por cobrar'
+                      : 'Ocupada'
+                    : 'Disponible'
+              }}</span>
+              @if (order) {
+                <strong class="table-amount">{{ store.total(order) | money }}</strong
+                ><small>{{ minutes(order.createdAt) }} min · {{ order.waiter }}</small>
+              } @else {
+                <small>{{ table.habilitada ? 'Abrir pedido' : 'Fuera de servicio' }}</small>
+              }
+            </button>
+          }
+        </div>
+        <div class="room-footer">
+          <span>INGRESO PRINCIPAL</span><span><app-icon name="leaf" /> VENTANAL</span>
+        </div>
+      </div>
+    } @else {
+      <div class="panel p-5">
+        <div class="flex justify-between items-center mb-5">
+          <h2>Pedidos sin mesa</h2>
+          <button class="btn primary" (click)="actions.newOrder('LLEVAR')">
+            Nuevo para llevar
+          </button>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          @for (order of store.orders(); track order.id) {
+            @if (!order.table) {
+              <button
+                class="text-left rounded-xl border border-stone-200 p-5 bg-white hover:bg-green-50"
+                (click)="selectOrder(order.id)"
+              >
+                <strong>#{{ order.id }} · {{ order.customer }}</strong>
+                <p class="my-3 subtle">
+                  {{ order.type === 'DELIVERY' ? 'Delivery' : 'Para llevar' }}
+                </p>
+                <app-status [value]="order.state" /><strong class="float-right">{{
+                  store.total(order) | money
+                }}</strong>
+              </button>
+            }
+          }
+        </div>
+      </div>
+    }
+    <div class="reservation-strip">
+      <app-icon name="calendar" /><strong>Próximas reservas</strong>
+      @for (reservation of nextReservations(); track reservation.id) {
+        <span
+          >{{ reservation.start }} · {{ reservation.name }} ({{
+            reservation.guests
+          }}
+          personas)</span
+        >
+      } @empty {
+        <span>Sin reservas pendientes.</span>
+      }
+    </div>
+  </section>
+  @if (selected(); as order) {
+    <aside class="panel order-panel" aria-label="Pedido seleccionado">
+      <div class="order-top">
+        <div class="order-title">
+          <h2>{{ store.tableName(order) }}</h2>
+          <app-status [value]="order.state" />
+        </div>
+        <p class="subtle mt-3">
+          Pedido #{{ order.id }} &nbsp; · {{ order.guests }} personas &nbsp; ·
+          {{ minutes(order.createdAt) }} min
+        </p>
+      </div>
+      <div class="flex items-center justify-between gap-3 p-5 border-b border-stone-200">
+        <select
+          aria-label="Cuenta del pedido"
+          class="min-w-0 text-xs"
+          [value]="account()"
+          (change)="account.set(+$any($event.target).value)"
+        >
+          <option value="0">Todas las cuentas</option>
+          @for (a of order.accounts; track a) {
+            <option [value]="a">Cuenta {{ a }}</option>
+          }</select
+        ><button class="text-link" [disabled]="!canEdit()" (click)="actions.split(order)">
+          Dividir cuenta
+        </button>
+      </div>
+      <div class="order-items">
+        @for (line of visibleLines(); track line.id) {
+          <div class="order-item">
+            <span class="qty-box">{{ line.qty }}×</span>
+            <div class="grow">
+              <strong>{{ line.name }}</strong>
+              @if (line.note) {
+                <p class="subtle mt-1">{{ line.note }}</p>
+              }
+              <div class="flex items-center gap-2 mt-2">
+                <app-status [value]="line.state" />
+                @if (line.state === 'LISTO') {
+                  <button
+                    class="text-link"
+                    (click)="
+                      store.run('lineState', { order: order.id, line: line.id, state: 'ENTREGADO' })
+                    "
+                  >
+                    Servir
+                  </button>
+                }
+                @if (line.state === 'NUEVO') {
+                  <button
+                    class="text-link"
+                    (click)="store.run('removeLine', { order: order.id, line: line.id })"
+                  >
+                    Retirar
+                  </button>
+                }
+              </div>
+            </div>
+            <strong class="text-xs whitespace-nowrap">{{ line.price * line.qty | money }}</strong>
+          </div>
+        } @empty {
+          <div class="py-8 subtle text-center">Agrega el primer producto del pedido.</div>
+        }
+      </div>
+      <div class="px-5 pb-5">
+        <button
+          class="btn w-full border-dashed"
+          [disabled]="!canEdit()"
+          (click)="actions.add(order)"
+        >
+          <app-icon name="plus" />Agregar productos
+        </button>
+      </div>
+      <div class="order-summary">
+        <div>
+          <span>Consumo</span><span>{{ store.total(order, account()) | money }}</span>
+        </div>
+        <div>
+          <span>Pagado</span><span>{{ store.paid(order, account()) | money }}</span>
+        </div>
+        <div class="total">
+          <strong>Por cobrar</strong><strong>{{ store.balance(order, account()) | money }}</strong>
+        </div>
+      </div>
+      <div class="order-actions">
+        @if (hasNew()) {
+          <button class="btn primary" (click)="store.run('send', { order: order.id })">
+            <app-icon name="send" />Enviar comanda
+          </button>
+        }
+        <button
+          class="btn primary"
+          [disabled]="store.balance(order) <= 0 || hasNew()"
+          (click)="actions.pay(order, account() || 1)"
+        >
+          <app-icon name="wallet" />Cobrar {{ store.balance(order, account()) | money }}
+        </button>
+        @if (store.balance(order) === 0 && order.lines.length) {
+          <button class="btn primary" (click)="store.run('closeOrder', { order: order.id })">
+            Cerrar pedido y liberar mesa
+          </button>
+        }
+        <button class="btn" [disabled]="!canEdit()" (click)="actions.cancel(order)">
+          Cancelar pedido
+        </button>
+        <p class="order-bottom-note">Precios y operaciones de demostración</p>
+      </div>
+    </aside>
+  } @else {
+    <aside class="empty-state">
+      <app-icon name="table" />
+      <h2 class="mt-3">Todo comienza en una mesa</h2>
+      <p>Selecciona una mesa para abrir o consultar su pedido.</p>
+    </aside>
+  }
+</div>

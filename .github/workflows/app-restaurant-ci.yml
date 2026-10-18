@@ -1,0 +1,36 @@
+name: app-restaurant
+on:
+  push:
+    paths: ['app-restaurant/**', '.github/workflows/app-restaurant-ci.yml']
+  pull_request:
+    paths: ['app-restaurant/**', '.github/workflows/app-restaurant-ci.yml']
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-restaurant
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: app-restaurant/.nvmrc
+          cache: npm
+          cache-dependency-path: app-restaurant/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test:run
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-restaurant-playwright
+          path: |
+            app-restaurant/playwright-report
+            app-restaurant/test-results
+          retention-days: 7

@@ -1,0 +1,66 @@
+<app-page-header
+  title="A tu manera"
+  description="Los detalles que hacen que este restaurante sea tuyo."
+  eyebrow="CONFIGURACIÓN"
+/>
+<div class="grid xl:grid-cols-2 gap-6">
+  <section class="panel">
+    <div class="panel-header"><h2 class="font-bold">Tu restaurante</h2></div>
+    <form class="panel-body" [formGroup]="form" (ngSubmit)="save()">
+      <label class="field">Nombre comercial<input formControlName="name" /></label
+      ><label class="field">Nombre de la sede<input formControlName="branch" /></label
+      ><label class="field">Dirección<input formControlName="address" /></label>
+      <p class="subtle mb-5">Moneda de la demostración: soles peruanos (PEN).</p>
+      @if (error()) {
+        <p class="form-error" role="alert">{{ error() }}</p>
+      }
+      <button class="btn primary">Guardar configuración</button>
+    </form>
+  </section>
+  <section class="panel">
+    <div class="panel-header"><h2 class="font-bold">Mesas del restaurante</h2></div>
+    <div class="panel-body">
+      @for (t of store.state().tables; track t.id) {
+        <div class="setting-block">
+          <div>
+            <h3>{{ t.name }} · {{ t.capacity }} personas</h3>
+            <p>
+              {{ t.zone }} ·
+              {{ !t.es_activo ? 'Desactivada' : t.habilitada ? 'Habilitada' : 'Fuera de servicio' }}
+            </p>
+          </div>
+          <div class="inline-actions">
+            @if (t.es_activo) {
+              <button
+                class="btn"
+                [attr.aria-label]="(t.habilitada ? 'Deshabilitar ' : 'Habilitar ') + t.name"
+                (click)="store.run('tableEnabled', { id: t.id })"
+              >
+                {{ t.habilitada ? 'Deshabilitar' : 'Habilitar' }}</button
+              ><button
+                class="btn"
+                [attr.aria-label]="'Desactivar ' + t.name"
+                (click)="store.run('softDelete', { entity: 'tables', id: t.id })"
+              >
+                Desactivar
+              </button>
+            } @else {
+              <button class="btn" (click)="store.run('restore', { entity: 'tables', id: t.id })">
+                Reactivar
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+</div>
+<section class="panel mt-6">
+  <div class="panel-body flex flex-wrap justify-between gap-4 items-center">
+    <div>
+      <h2 class="font-bold mb-2">Un nuevo comienzo</h2>
+      <p class="subtle">Restablece los datos de ejemplo de este navegador.</p>
+    </div>
+    <button class="btn danger" (click)="reset()">Restablecer demostración</button>
+  </div>
+</section>

@@ -1,0 +1,192 @@
+<app-page-header
+  title="Las cuentas, claras"
+  description="Cada cobro en su lugar. Un cierre de turno sin sorpresas."
+  eyebrow="CAJA Y COBROS"
+  ><button class="btn" [disabled]="store.state().session.state !== 'ABIERTA'" (click)="movement()">
+    Entrada / salida</button
+  ><button class="btn primary" (click)="cashAction()">
+    {{ store.state().session.state === 'ABIERTA' ? 'Cerrar turno' : 'Abrir caja' }}
+  </button></app-page-header
+>
+<div class="metrics">
+  <app-metric
+    label="Efectivo esperado"
+    [value]="store.cash() | money"
+    caption="Fondo + cobros + movimientos"
+    icon="wallet"
+  /><app-metric
+    label="Cobrado en el turno"
+    [value]="collected() | money"
+    caption="Todos los métodos de pago"
+    icon="receipt"
+  /><app-metric
+    label="Por cobrar"
+    [value]="store.due() | money"
+    caption="Pedidos abiertos"
+    icon="clock"
+  /><app-metric
+    label="Sesión de caja"
+    [value]="store.state().session.state === 'ABIERTA' ? 'Abierta' : 'Cerrada'"
+    [caption]="'Turno #' + store.state().session.id"
+    icon="store"
+  />
+</div>
+<div class="panel table-scroll mb-6">
+  <table>
+    <caption>
+      Pedidos por atender
+    </caption>
+    <thead>
+      <tr>
+        <th>Pedido</th>
+        <th>Cliente</th>
+        <th>Consumo</th>
+        <th>Saldo</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (o of store.orders(); track o.id) {
+        <tr>
+          <td>
+            <strong>#{{ o.id }}</strong
+            ><small>{{ store.tableName(o) }}</small>
+          </td>
+          <td>{{ o.customer }}</td>
+          <td>{{ store.total(o) | money }}</td>
+          <td class="amount">{{ store.balance(o) | money }}</td>
+          <td>
+            <div class="inline-actions">
+              <a class="btn" routerLink="/salon" [queryParams]="{ pedido: o.id }">Ver pedido</a>
+              @if (store.balance(o) > 0) {
+                <button
+                  class="btn primary"
+                  [disabled]="store.state().session.state !== 'ABIERTA'"
+                  (click)="actions.pay(o)"
+                >
+                  Cobrar
+                </button>
+              } @else {
+                <button class="btn" (click)="store.run('closeOrder', { order: o.id })">
+                  Cerrar pedido
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5"><div class="empty-state">No hay pedidos abiertos.</div></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<div class="panel table-scroll mb-6">
+  <table>
+    <caption>
+      Historial de cobros
+    </caption>
+    <thead>
+      <tr>
+        <th>Pedido / cuenta</th>
+        <th>Método</th>
+        <th>Aplicado</th>
+        <th>Recibido / vuelto</th>
+        <th>Referencia</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (p of store.state().payments.slice().reverse(); track p.id) {
+        <tr>
+          <td>#{{ p.order }} · Cuenta {{ p.account }}</td>
+          <td>{{ p.method }}</td>
+          <td>{{ p.amount | money }}</td>
+          <td>
+            {{ p.received | money }}<small>Vuelto: {{ p.received - p.amount | money }}</small>
+          </td>
+          <td>{{ p.reference || '—' }}</td>
+          <td><button class="btn" (click)="refund(p)">Devolver</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+@if (store.state().refunds.length) {
+  <div class="panel table-scroll mb-6">
+    <table>
+      <caption>
+        Devoluciones registradas
+      </caption>
+      <thead>
+        <tr>
+          <th>Pago</th>
+          <th>Importe</th>
+          <th>Motivo</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of store.state().refunds; track r.id) {
+          <tr>
+            <td>#{{ r.payment }} · {{ r.method }}</td>
+            <td>{{ r.amount | money }}</td>
+            <td>{{ r.reason }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+@if (store.state().cashMovements.length) {
+  <div class="panel table-scroll mb-6">
+    <table>
+      <caption>
+        Entradas y salidas de caja
+      </caption>
+      <thead>
+        <tr>
+          <th>Turno</th>
+          <th>Importe</th>
+          <th>Motivo</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of store.state().cashMovements; track m.id) {
+          <tr>
+            <td>#{{ m.session }}</td>
+            <td>{{ m.amount | money }}</td>
+            <td>{{ m.reason }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+@if (store.state().sessionHistory.length) {
+  <div class="panel table-scroll">
+    <table>
+      <caption>
+        Cierres de turno
+      </caption>
+      <thead>
+        <tr>
+          <th>Turno</th>
+          <th>Esperado</th>
+          <th>Contado</th>
+          <th>Diferencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of store.state().sessionHistory; track s.id) {
+          <tr>
+            <td>#{{ s.id }}</td>
+            <td>{{ s.expected | money }}</td>
+            <td>{{ s.counted | money }}</td>
+            <td>{{ s.difference | money }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

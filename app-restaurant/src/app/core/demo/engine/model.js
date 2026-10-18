@@ -1,0 +1,791 @@
+import { seed, today } from './data.js';
+export const money = (value) =>
+  new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(value / 100);
+export const round = (n) => Math.round(n * 1000) / 1000;
+const now = () => new Date().toISOString();
+const next = (rows) => Math.max(0, ...rows.map((r) => r.id)) + 1;
+const requireValue = (test, msg) => {
+  if (!test) throw new Error(msg);
+};
+export function total(order, account) {
+  return order.lines
+    .filter((l) => l.state !== 'CANCELADO' && (!account || l.account === account))
+    .reduce((s, l) => s + l.price * l.qty, 0);
+}
+export function paid(s, order, account) {
+  return s.payments
+    .filter((p) => p.order === order.id && (!account || p.account === account))
+    .reduce((sum, p) => sum + p.amount, 0);
+}
+export function refunded(s, order) {
+  const ids = s.payments.filter((p) => p.order === order.id).map((p) => p.id);
+  return s.refunds.filter((r) => ids.includes(r.payment)).reduce((sum, r) => sum + r.amount, 0);
+}
+export function balance(s, order, account) {
+  return total(order, account) - paid(s, order, account);
+}
+export function stock(s, id) {
+  return round(s.movements.filter((m) => m.item === id).reduce((a, m) => a + m.qty, 0));
+}
+export function expectedCash(s) {
+  return (
+    s.session.opening +
+    s.payments
+      .filter((p) => p.session === s.session.id && p.method === 'EFECTIVO')
+      .reduce((a, p) => a + p.amount, 0) -
+    s.refunds
+      .filter((r) => r.session === s.session.id && r.method === 'EFECTIVO')
+      .reduce((a, r) => a + r.amount, 0) +
+    s.cashMovements.filter((m) => m.session === s.session.id).reduce((a, m) => a + m.amount, 0)
+  );
+}
+export function openOrders(s) {
+  return s.orders.filter((o) => !o.closedAt && o.state !== 'CANCELADO');
+}
+export function audit(s, entity, record, action, detail) {
+  entity =
+    {
+      products: 'Productos',
+      customers: 'Clientes',
+      suppliers: 'Proveedores',
+      users: 'Usuarios',
+      tables: 'Mesas',
+      ingredients: 'Insumos',
+    }[entity] || entity;
+  s.audit.push({
+    id: next(s.audit),
+    at: now(),
+    actor: 'Valeria Torres',
+    entity,
+    record: String(record),
+    action,
+    detail,
+  });
+}
+export function metadata() {
+  return {
+    es_activo: true,
+    creado_en: now(),
+    creado_por: 'Valeria Torres',
+    actualizado_en: now(),
+    actualizado_por: 'Valeria Torres',
+  };
+}
+const mutable = (s, o) => {
+  requireValue(!o.closedAt && o.state !== 'CANCELADO', 'El pedido está cerrado.');
+  requireValue(
+    !s.payments.some((p) => p.order === o.id),
+    'El pedido ya tiene pagos. Sus consumos no se pueden modificar.',
+  );
+};
+const availableTable = (s, id) =>
+  s.tables.some((t) => t.id === id && t.es_activo && t.habilitada) &&
+  !openOrders(s).some((o) => o.table === id);
+const syncOrder = (o) => {
+  const lines = o.lines.filter((l) => l.state !== 'CANCELADO');
+  o.state =
+    lines.length && lines.every((l) => l.state === 'ENTREGADO')
+      ? 'ENTREGADO'
+      : lines.length && lines.every((l) => ['LISTO', 'ENTREGADO'].includes(l.state))
+        ? 'LISTO'
+        : lines.some((l) => ['PREPARACION', 'LISTO', 'ENTREGADO'].includes(l.state))
+          ? 'PREPARACION'
+          : 'REGISTRADO';
+};
+export function act(input, action, p = {}) {
+  const s = structuredClone(input);
+  let result;
+  const o = p.order ? s.orders.find((o) => o.id === Number(p.order)) : null;
+  const row = (key, id) => {
+    const r = s[key]?.find((r) => r.id === Number(id));
+    requireValue(r, 'No se encontró el registro.');
+    return r;
+  };
+  switch (action) {
+    case 'newOrder': {
+      requireValue(
+        ['SALON', 'LLEVAR', 'DELIVERY'].includes(p.type),
+        'Selecciona un tipo de pedido.',
+      );
+      if (p.type === 'SALON')
+        requireValue(availableTable(s, +p.table), 'La mesa no está disponible.');
+      requireValue(+p.guests >= 1 && Number.isInteger(+p.guests), 'Indica al menos un comensal.');
+      if (p.type === 'SALON')
+        requireValue(
+          +p.guests <= row('tables', p.table).capacity,
+          'La cantidad supera la capacidad de la mesa.',
+        );
+      if (p.type === 'DELIVERY')
+        requireValue(
+          p.address?.trim() && p.customer?.trim() && p.phone?.trim(),
+          'Completa cliente, teléfono y dirección del delivery.',
+        );
+      result = next(s.orders);
+      s.orders.push({
+        id: result,
+        table: p.type === 'SALON' ? +p.table : null,
+        type: p.type,
+        guests: +p.guests,
+        customer: p.customer?.trim() || 'Público general',
+        phone: p.phone || '',
+        address: p.address || '',
+        waiter: 'Valeria',
+        state: 'REGISTRADO',
+        deliveryState: p.type === 'DELIVERY' ? 'PENDIENTE' : null,
+        courier: '',
+        createdAt: now(),
+        closedAt: null,
+        accounts: [1],
+        lines: [],
+      });
+      audit(s, 'Pedidos', '#' + result, 'CREAR', 'Nuevo pedido ' + p.type);
+      break;
+    }
+    case 'addLine': {
+      requireValue(o, 'Pedido no encontrado.');
+      mutable(s, o);
+      const product = row('products', p.product);
+      requireValue(product.es_activo && product.disponible, 'El producto no está disponible.');
+      requireValue(
+        Number.isInteger(+p.qty) && +p.qty > 0 && +p.qty <= 99,
+        'Cantidad válida: entre 1 y 99.',
+      );
+      requireValue(o.accounts.includes(+p.account), 'Cuenta no válida.');
+      o.lines.push({
+        id: next(s.orders.flatMap((o) => o.lines)),
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        qty: +p.qty,
+        state: 'NUEVO',
+        account: +p.account,
+        note: p.note || '',
+        sent: false,
+        consumed: false,
+        station: product.station,
+      });
+      syncOrder(o);
+      audit(s, 'Detalles de pedido', '#' + o.id, 'CREAR', p.qty + ' × ' + product.name);
+      break;
+    }
+    case 'removeLine': {
+      mutable(s, o);
+      const l = o.lines.find((l) => l.id === +p.line);
+      requireValue(l && !l.sent, 'Solo puedes retirar líneas aún no enviadas.');
+      l.state = 'CANCELADO';
+      syncOrder(o);
+      audit(s, 'Detalles de pedido', '#' + o.id, 'CANCELAR', l.name);
+      break;
+    }
+    case 'send': {
+      requireValue(o && !o.closedAt, 'Pedido cerrado.');
+      const pending = o.lines.filter((l) => !l.sent && l.state !== 'CANCELADO');
+      requireValue(pending.length, 'No hay productos nuevos para enviar.');
+      pending.forEach((l) => {
+        l.sent = true;
+        l.state = 'PENDIENTE';
+      });
+      syncOrder(o);
+      audit(s, 'Comandas', '#' + o.id, 'CREAR', pending.length + ' líneas enviadas a preparación');
+      break;
+    }
+    case 'lineState': {
+      requireValue(o && !o.closedAt && o.state !== 'CANCELADO', 'Pedido cerrado.');
+      const l = o.lines.find((l) => l.id === +p.line);
+      const allowed = { PENDIENTE: 'PREPARACION', PREPARACION: 'LISTO', LISTO: 'ENTREGADO' };
+      requireValue(l && allowed[l.state] === p.state, 'La transición del estado no es válida.');
+      if (p.state === 'PREPARACION' && !l.consumed) {
+        for (const r of s.recipes[l.productId] || []) {
+          requireValue(
+            stock(s, r.item) >= round(r.qty * l.qty),
+            'Stock insuficiente de ' +
+              row('ingredients', r.item).name +
+              '. Registra el ingreso antes de preparar.',
+          );
+          s.movements.push({
+            id: next(s.movements),
+            item: r.item,
+            qty: -round(r.qty * l.qty),
+            type: 'CONSUMO',
+            note: 'Preparación pedido #' + o.id + ' · ' + l.name,
+            at: now(),
+            actor: 'Valeria Torres',
+          });
+        }
+        l.consumed = true;
+      }
+      l.state = p.state;
+      syncOrder(o);
+      audit(s, 'Comanda', '#' + o.id, 'ACTUALIZAR', l.name + ': ' + p.state);
+      break;
+    }
+    case 'split': {
+      mutable(s, o);
+      const ids = p.lines.map(Number);
+      requireValue(ids.length > 0, 'Selecciona al menos una línea.');
+      const account = Math.max(...o.accounts) + 1;
+      o.accounts.push(account);
+      o.lines
+        .filter((l) => ids.includes(l.id) && l.state !== 'CANCELADO')
+        .forEach((l) => (l.account = account));
+      audit(s, 'Cuentas', '#' + o.id, 'CREAR', 'Consumos asignados a cuenta ' + account);
+      break;
+    }
+    case 'cancelOrder': {
+      mutable(s, o);
+      requireValue(p.reason?.trim(), 'Indica el motivo de cancelación.');
+      o.state = 'CANCELADO';
+      o.closedAt = now();
+      o.cancelReason = p.reason.trim();
+      o.lines.forEach((l) => (l.state = 'CANCELADO'));
+      audit(
+        s,
+        'Pedidos',
+        '#' + o.id,
+        'CANCELAR',
+        p.reason.trim() + ' · Los consumos ya registrados permanecen en el kardex.',
+      );
+      break;
+    }
+    case 'pay': {
+      requireValue(s.session.state === 'ABIERTA', 'Abre una sesión de caja para cobrar.');
+      requireValue(o && !o.closedAt && o.state !== 'CANCELADO', 'Pedido no disponible.');
+      requireValue(o.accounts.includes(+p.account), 'Cuenta no válida.');
+      requireValue(
+        o.lines.some((l) => l.state !== 'CANCELADO') && !o.lines.some((l) => l.state === 'NUEVO'),
+        'Envía todos los productos a preparación antes de cobrar.',
+      );
+      requireValue(
+        ['EFECTIVO', 'YAPE', 'PLIN', 'TARJETA', 'TRANSFERENCIA'].includes(p.method),
+        'Método de pago no válido.',
+      );
+      requireValue(
+        Number.isInteger(p.amount) && p.amount > 0 && p.amount <= balance(s, o, +p.account),
+        'El importe debe ser mayor a cero y no superar el saldo de la cuenta.',
+      );
+      if (p.method === 'EFECTIVO')
+        requireValue(p.received >= p.amount, 'El efectivo recibido es menor al importe.');
+      else requireValue(p.reference?.trim(), 'Indica la referencia del pago.');
+      s.payments.push({
+        id: next(s.payments),
+        order: o.id,
+        account: +p.account,
+        method: p.method,
+        amount: p.amount,
+        received: p.method === 'EFECTIVO' ? p.received : p.amount,
+        reference: p.reference || '',
+        at: now(),
+        actor: 'Valeria Torres',
+        session: s.session.id,
+      });
+      audit(s, 'Pagos', '#' + o.id, 'CREAR', p.method + ' · ' + money(p.amount));
+      break;
+    }
+    case 'closeOrder': {
+      requireValue(o && !o.closedAt, 'Pedido ya cerrado.');
+      requireValue(
+        total(o) > 0 && balance(s, o) === 0,
+        'Cobra el saldo pendiente antes de cerrar.',
+      );
+      requireValue(
+        o.lines.filter((l) => l.state !== 'CANCELADO').every((l) => l.state === 'ENTREGADO'),
+        'Entrega todos los productos antes de cerrar.',
+      );
+      if (o.type === 'DELIVERY')
+        requireValue(
+          o.deliveryState === 'ENTREGADO',
+          'Confirma la entrega del delivery antes de cerrar.',
+        );
+      o.closedAt = now();
+      audit(s, 'Pedidos', '#' + o.id, 'CERRAR', 'Pedido cerrado; mesa liberada.');
+      break;
+    }
+    case 'refund': {
+      requireValue(s.session.state === 'ABIERTA', 'Abre la caja para registrar la devolución.');
+      const payment = row('payments', p.payment);
+      const prior = s.refunds
+        .filter((r) => r.payment === payment.id)
+        .reduce((a, r) => a + r.amount, 0);
+      requireValue(
+        p.amount > 0 && Number.isInteger(p.amount) && p.amount <= payment.amount - prior,
+        'El importe supera el monto disponible para devolver.',
+      );
+      requireValue(p.reason?.trim(), 'Indica un motivo.');
+      s.refunds.push({
+        id: next(s.refunds),
+        payment: payment.id,
+        amount: p.amount,
+        method: payment.method,
+        reason: p.reason,
+        at: now(),
+        actor: 'Valeria Torres',
+        session: s.session.id,
+      });
+      audit(s, 'Devoluciones', '#' + payment.order, 'CREAR', money(p.amount) + ' · ' + p.reason);
+      break;
+    }
+    case 'cashMovement': {
+      requireValue(s.session.state === 'ABIERTA', 'La caja está cerrada.');
+      requireValue(
+        Number.isInteger(p.amount) && p.amount > 0 && p.reason?.trim(),
+        'Completa importe y motivo.',
+      );
+      s.cashMovements.push({
+        id: next(s.cashMovements),
+        amount: p.type === 'SALIDA' ? -p.amount : p.amount,
+        reason: p.reason,
+        session: s.session.id,
+        at: now(),
+        actor: 'Valeria Torres',
+      });
+      audit(
+        s,
+        'Movimientos de caja',
+        'Caja principal',
+        'CREAR',
+        p.type + ' · ' + money(p.amount) + ' · ' + p.reason,
+      );
+      break;
+    }
+    case 'closeCash': {
+      requireValue(s.session.state === 'ABIERTA', 'La caja ya está cerrada.');
+      requireValue(
+        Number.isInteger(p.counted) && p.counted >= 0,
+        'El efectivo contado no es válido.',
+      );
+      const expected = expectedCash(s);
+      s.session = {
+        ...s.session,
+        state: 'CERRADA',
+        counted: p.counted,
+        expected,
+        difference: p.counted - expected,
+        closedAt: now(),
+      };
+      s.sessionHistory.push({ ...s.session });
+      audit(
+        s,
+        'Sesiones de caja',
+        s.session.id,
+        'CERRAR',
+        'Diferencia: ' + money(p.counted - expected),
+      );
+      break;
+    }
+    case 'openCash': {
+      requireValue(s.session.state === 'CERRADA', 'Ya existe una sesión abierta.');
+      requireValue(Number.isInteger(p.opening) && p.opening >= 0, 'El fondo inicial no es válido.');
+      s.session = {
+        id: s.session.id + 1,
+        state: 'ABIERTA',
+        opening: p.opening,
+        openedAt: now(),
+        actor: 'Valeria Torres',
+      };
+      audit(s, 'Sesiones de caja', s.session.id, 'CREAR', 'Fondo: ' + money(p.opening));
+      break;
+    }
+    case 'reservation': {
+      const table = row('tables', p.table);
+      requireValue(table.es_activo && table.habilitada, 'Mesa no habilitada.');
+      requireValue(p.name?.trim() && p.phone?.trim(), 'Completa nombre y teléfono.');
+      requireValue(
+        p.date >= today() && p.start < p.end,
+        'Usa una fecha desde hoy y una hora final posterior a la inicial.',
+      );
+      requireValue(
+        +p.guests > 0 && +p.guests <= table.capacity && Number.isInteger(+p.guests),
+        'La cantidad de personas supera la capacidad o no es válida.',
+      );
+      requireValue(
+        !s.reservations.some(
+          (r) =>
+            r.table === table.id &&
+            r.date === p.date &&
+            ['PENDIENTE', 'CONFIRMADA'].includes(r.state) &&
+            r.start < p.end &&
+            r.end > p.start,
+        ),
+        'La mesa ya tiene una reserva en ese horario.',
+      );
+      s.reservations.push({
+        id: next(s.reservations),
+        name: p.name.trim(),
+        phone: p.phone,
+        table: table.id,
+        guests: +p.guests,
+        date: p.date,
+        start: p.start,
+        end: p.end,
+        state: 'CONFIRMADA',
+        note: p.note || '',
+      });
+      audit(s, 'Reservas', p.name, 'CREAR', table.name + ' · ' + p.date + ' ' + p.start);
+      break;
+    }
+    case 'reservationState': {
+      const r = row('reservations', p.id);
+      requireValue(['PENDIENTE', 'CONFIRMADA'].includes(r.state), 'Esta reserva ya terminó.');
+      requireValue(
+        ['CONFIRMADA', 'CANCELADA', 'NO_ASISTIO', 'ATENDIDA'].includes(p.state),
+        'Estado no válido.',
+      );
+      if (p.state === 'ATENDIDA') {
+        requireValue(
+          availableTable(s, r.table),
+          'La mesa todavía está ocupada o no está habilitada.',
+        );
+        result = next(s.orders);
+        s.orders.push({
+          id: result,
+          table: r.table,
+          type: 'SALON',
+          guests: r.guests,
+          customer: r.name,
+          waiter: 'Valeria',
+          state: 'REGISTRADO',
+          createdAt: now(),
+          closedAt: null,
+          accounts: [1],
+          lines: [],
+        });
+        audit(s, 'Pedidos', '#' + result, 'CREAR', 'Apertura desde reserva ' + r.name);
+      }
+      r.state = p.state;
+      audit(s, 'Reservas', r.name, 'ACTUALIZAR', p.state);
+      break;
+    }
+    case 'deliveryState': {
+      requireValue(o?.type === 'DELIVERY' && o.state !== 'CANCELADO', 'Delivery no disponible.');
+      if (p.state === 'EN_RUTA') {
+        requireValue(
+          ['LISTO', 'ENTREGADO'].includes(o.state),
+          'Cocina debe terminar todos los productos antes del despacho.',
+        );
+        requireValue(p.courier?.trim(), 'Indica el repartidor.');
+        requireValue(o.deliveryState === 'PENDIENTE', 'Delivery ya despachado.');
+        o.courier = p.courier;
+        o.lines.filter((l) => l.state === 'LISTO').forEach((l) => (l.state = 'ENTREGADO'));
+        syncOrder(o);
+      } else
+        requireValue(
+          p.state === 'ENTREGADO' && o.deliveryState === 'EN_RUTA',
+          'La entrega debe estar en ruta.',
+        );
+      o.deliveryState = p.state;
+      audit(s, 'Delivery', '#' + o.id, 'ACTUALIZAR', p.state);
+      break;
+    }
+    case 'movement': {
+      const ingredient = row('ingredients', p.item);
+      requireValue(ingredient.es_activo, 'Insumo dado de baja.');
+      requireValue(
+        +p.qty > 0 && Number.isFinite(+p.qty) && p.reason?.trim(),
+        'Completa cantidad y motivo.',
+      );
+      requireValue(
+        ['AJUSTE_ENTRADA', 'AJUSTE_SALIDA', 'MERMA'].includes(p.type),
+        'Tipo de movimiento no válido.',
+      );
+      const qty = round(+p.qty) * (p.type === 'AJUSTE_ENTRADA' ? 1 : -1);
+      requireValue(stock(s, ingredient.id) + qty >= 0, 'El movimiento produciría stock negativo.');
+      s.movements.push({
+        id: next(s.movements),
+        item: ingredient.id,
+        qty,
+        type: p.type,
+        note: p.reason,
+        at: now(),
+        actor: 'Valeria Torres',
+      });
+      audit(
+        s,
+        'Inventario',
+        ingredient.name,
+        'CREAR',
+        p.type + ' · ' + qty + ' ' + ingredient.unit + ' · ' + p.reason,
+      );
+      break;
+    }
+    case 'purchase': {
+      const supplier = row('suppliers', p.supplier);
+      requireValue(supplier.es_activo, 'Proveedor dado de baja.');
+      requireValue(p.reference?.trim(), 'Indica la referencia de compra.');
+      requireValue(
+        !s.purchases.some((c) => c.supplier === supplier.id && c.reference === p.reference.trim()),
+        'Ya existe una compra de este proveedor con esa referencia.',
+      );
+      requireValue(p.lines.length > 0, 'Agrega al menos un insumo.');
+      p.lines.forEach((l) =>
+        requireValue(
+          row('ingredients', l.item).es_activo &&
+            l.qty > 0 &&
+            Number.isFinite(l.qty) &&
+            Number.isInteger(l.cost) &&
+            l.cost >= 0,
+          'Revisa cantidad y costo de la compra.',
+        ),
+      );
+      s.purchases.push({
+        id: next(s.purchases),
+        supplier: supplier.id,
+        reference: p.reference.trim(),
+        state: 'BORRADOR',
+        at: now(),
+        lines: p.lines,
+      });
+      audit(s, 'Compras', p.reference, 'CREAR', 'Borrador de compra');
+      break;
+    }
+    case 'receivePurchase': {
+      const c = row('purchases', p.id);
+      requireValue(c.state === 'BORRADOR', 'La compra ya fue procesada.');
+      c.lines.forEach((l) =>
+        s.movements.push({
+          id: next(s.movements),
+          item: l.item,
+          qty: round(l.qty),
+          type: 'COMPRA',
+          note: c.reference,
+          at: now(),
+          actor: 'Valeria Torres',
+        }),
+      );
+      c.state = 'CONFIRMADA';
+      c.receivedAt = now();
+      audit(
+        s,
+        'Compras',
+        c.reference,
+        'CONFIRMAR',
+        'Mercadería recibida. Ingreso registrado una sola vez.',
+      );
+      break;
+    }
+    case 'cancelPurchase': {
+      const c = row('purchases', p.id);
+      requireValue(c.state === 'BORRADOR', 'Una compra recibida requiere una devolución.');
+      c.state = 'CANCELADA';
+      audit(s, 'Compras', c.reference, 'CANCELAR', 'Borrador cancelado');
+      break;
+    }
+    case 'saveProduct': {
+      requireValue(
+        p.name?.trim() && p.code?.trim() && Number.isInteger(p.price) && p.price > 0,
+        'Completa nombre, código y precio.',
+      );
+      requireValue(
+        !s.products.some(
+          (r) => r.code.toLowerCase() === p.code.trim().toLowerCase() && r.id !== +p.id,
+        ),
+        'El código ya existe, incluso si el producto está de baja. Restaura el registro original.',
+      );
+      const rec = p.id
+        ? row('products', p.id)
+        : { id: next(s.products), ...metadata(), disponible: true };
+      requireValue(rec.es_activo, 'Restaura el producto antes de editarlo.');
+      Object.assign(rec, {
+        name: p.name.trim(),
+        code: p.code.trim(),
+        price: p.price,
+        category: p.category,
+        station: p.station,
+        type: p.type,
+        actualizado_por: 'Valeria Torres',
+        actualizado_en: now(),
+      });
+      if (!p.id) s.products.push(rec);
+      audit(
+        s,
+        'Productos',
+        rec.name,
+        p.id ? 'ACTUALIZAR' : 'CREAR',
+        'Datos de carta guardados; precios históricos preservados.',
+      );
+      break;
+    }
+    case 'availability': {
+      const r = row('products', p.id);
+      requireValue(r.es_activo, 'Restaura el producto para ofrecerlo.');
+      r.disponible = !r.disponible;
+      r.actualizado_por = 'Valeria Torres';
+      r.actualizado_en = now();
+      audit(
+        s,
+        'Productos',
+        r.name,
+        'ACTUALIZAR',
+        r.disponible ? 'Disponible en carta' : 'Pausado en carta',
+      );
+      break;
+    }
+    case 'softDelete': {
+      requireValue(
+        ['products', 'customers', 'suppliers', 'users', 'tables', 'ingredients'].includes(p.entity),
+        'Esta entidad no admite baja lógica en el prototipo.',
+      );
+      const r = row(p.entity, p.id);
+      requireValue(r.es_activo, 'Ya está de baja.');
+      if (p.entity !== 'tables')
+        requireValue(p.reason?.trim(), 'El motivo de baja es obligatorio.');
+      if (p.entity === 'users')
+        requireValue(r.id !== 1, 'No puedes dar de baja a tu propio usuario.');
+      if (p.entity === 'tables')
+        requireValue(
+          !openOrders(s).some((o) => o.table === r.id),
+          'Cierra el pedido de la mesa antes de darla de baja.',
+        );
+      Object.assign(r, {
+        es_activo: false,
+        actualizado_en: now(),
+        actualizado_por: 'Valeria Torres',
+      });
+      if (p.entity === 'tables') {
+        delete r.eliminado_en;
+        delete r.eliminado_por;
+        delete r.motivo_eliminacion;
+      } else
+        Object.assign(r, {
+          eliminado_en: now(),
+          eliminado_por: 'Valeria Torres',
+          motivo_eliminacion: p.reason.trim(),
+        });
+      audit(
+        s,
+        p.entity,
+        r.name,
+        p.entity === 'tables' ? 'DESACTIVAR' : 'BAJA LÓGICA',
+        p.entity === 'tables' ? 'Mesa desactivada' : p.reason.trim(),
+      );
+      break;
+    }
+    case 'restore': {
+      const r = row(p.entity, p.id);
+      requireValue(!r.es_activo, 'El registro ya está activo.');
+      Object.assign(r, {
+        es_activo: true,
+        actualizado_en: now(),
+        actualizado_por: 'Valeria Torres',
+      });
+      if (p.entity === 'tables') {
+        delete r.eliminado_en;
+        delete r.eliminado_por;
+        delete r.motivo_eliminacion;
+      } else
+        Object.assign(r, { eliminado_en: null, eliminado_por: null, motivo_eliminacion: null });
+      audit(s, p.entity, r.name, 'RESTAURAR', 'Se conserva la identidad y el historial.');
+      break;
+    }
+    case 'saveContact': {
+      requireValue(['customers', 'suppliers'].includes(p.entity), 'Tipo de contacto inválido.');
+      requireValue(p.name?.trim() && p.document?.trim(), 'Completa nombre y documento.');
+      requireValue(
+        p.entity !== 'suppliers' || /^\d{11}$/.test(p.document),
+        'El RUC debe tener 11 dígitos.',
+      );
+      requireValue(
+        !s[p.entity].some((r) => r.document === p.document && r.id !== +p.id),
+        'El documento ya existe, incluso en registros dados de baja.',
+      );
+      const r = p.id ? row(p.entity, p.id) : { id: next(s[p.entity]), ...metadata() };
+      requireValue(r.es_activo, 'Restaura el contacto para editarlo.');
+      Object.assign(r, {
+        name: p.name.trim(),
+        document: p.document.trim(),
+        phone: p.phone,
+        email: p.email,
+        actualizado_en: now(),
+        actualizado_por: 'Valeria Torres',
+      });
+      if (!p.id) s[p.entity].push(r);
+      audit(s, p.entity, r.name, p.id ? 'ACTUALIZAR' : 'CREAR', 'Datos de contacto guardados');
+      break;
+    }
+    case 'userRole': {
+      const r = row('users', p.id);
+      requireValue(r.es_activo, 'Usuario dado de baja.');
+      requireValue(r.id !== 1, 'El rol de tu sesión se mantiene para esta demostración.');
+      requireValue(
+        ['Administradora', 'Mesero', 'Mesera', 'Cocinero', 'Cajero'].includes(p.role),
+        'Rol inválido.',
+      );
+      r.role = p.role;
+      r.actualizado_en = now();
+      r.actualizado_por = 'Valeria Torres';
+      audit(s, 'Usuarios', r.name, 'ACTUALIZAR', 'Rol: ' + p.role);
+      break;
+    }
+    case 'tableEnabled': {
+      const t = row('tables', p.id);
+      requireValue(t.es_activo, 'Mesa dada de baja.');
+      requireValue(
+        !openOrders(s).some((o) => o.table === t.id),
+        'No puedes deshabilitar una mesa ocupada.',
+      );
+      t.habilitada = !t.habilitada;
+      t.actualizado_en = now();
+      t.actualizado_por = 'Valeria Torres';
+      audit(s, 'Mesas', t.name, 'ACTUALIZAR', t.habilitada ? 'Habilitada' : 'Deshabilitada');
+      break;
+    }
+    case 'settings': {
+      requireValue(p.name?.trim() && p.branch?.trim(), 'Nombre y sede son obligatorios.');
+      s.settings = {
+        ...s.settings,
+        name: p.name.trim(),
+        branch: p.branch.trim(),
+        address: p.address.trim(),
+      };
+      audit(s, 'Negocio', 'Configuración', 'ACTUALIZAR', 'Datos comerciales actualizados');
+      break;
+    }
+    case 'invoice': {
+      requireValue(
+        o && total(o) > 0 && balance(s, o) === 0,
+        'Selecciona un pedido cobrado completamente.',
+      );
+      requireValue(
+        !s.invoices.some((i) => i.order === o.id),
+        'Este pedido ya tiene un comprobante simulado.',
+      );
+      requireValue(['Boleta', 'Factura'].includes(p.type), 'Tipo no válido.');
+      if (p.type === 'Factura')
+        requireValue(
+          /^\d{11}$/.test(p.document) && p.customer?.trim(),
+          'La factura requiere RUC de 11 dígitos y razón social.',
+        );
+      const id = next(s.invoices);
+      s.invoices.push({
+        id,
+        number: 'DEMO-' + (p.type === 'Factura' ? 'F' : 'B') + '001-' + String(id).padStart(6, '0'),
+        type: p.type,
+        order: o.id,
+        customer: p.customer?.trim() || o.customer,
+        document: p.document || '',
+        amount: total(o),
+        state: 'SIMULADO',
+        at: now(),
+        lines: structuredClone(o.lines),
+      });
+      audit(
+        s,
+        'Comprobantes',
+        '#' + o.id,
+        'SIMULAR',
+        'Documento de demostración, sin validez tributaria.',
+      );
+      break;
+    }
+    default:
+      throw new Error('Acción no disponible.');
+  }
+  return { state: s, result };
+}
+export function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem('mesa-demo-v1'));
+    return s?.version === 1 ? s : seed();
+  } catch {
+    return seed();
+  }
+}

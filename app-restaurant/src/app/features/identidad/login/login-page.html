@@ -1,0 +1,103 @@
+<a class="skip-link" href="#login-main">Ir al acceso</a>
+<div class="login-layout">
+  <app-login-story />
+
+  <section class="access-panel flex min-w-0 flex-col" aria-label="Acceso a Mesa">
+    <header class="access-top flex items-center justify-end gap-4">
+      <button type="button" class="help-link" (click)="help()">
+        <app-icon name="help" /> ¿Necesitas ayuda?
+      </button>
+    </header>
+    <main id="login-main" class="login-main" tabindex="-1">
+      <div class="welcome-icon grid h-12 w-12 place-items-center"><app-icon name="store" /></div>
+      <p class="form-eyebrow">BIENVENIDO A MESA</p>
+      <h1>Qué bueno verte&ngsp;<br />de nuevo<span>.</span></h1>
+      <p class="form-description">Un nuevo día, todo listo para empezar.</p>
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        novalidate
+        aria-label="Iniciar sesión"
+        [attr.aria-busy]="busy()"
+      >
+        <div class="login-field">
+          <label for="login-username">Usuario</label>
+          <div class="input-wrap" [class.invalid]="invalid('username')">
+            <app-icon name="user" /><input
+              id="login-username"
+              type="text"
+              formControlName="username"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              maxlength="80"
+              placeholder="Tu usuario"
+              required
+              [attr.aria-invalid]="invalid('username')"
+              [attr.aria-describedby]="invalid('username') ? 'username-error' : null"
+            />
+          </div>
+          @if (invalid('username')) {
+            <p id="username-error" class="field-error">Ingresa tu usuario.</p>
+          }
+        </div>
+        <div class="login-field">
+          <div class="flex items-center justify-between gap-3">
+            <label for="login-password">Contraseña</label
+            ><button type="button" class="recovery-link" (click)="help(true)">
+              ¿La olvidaste?
+            </button>
+          </div>
+          <div class="input-wrap" [class.invalid]="invalid('password')">
+            <app-icon name="lock" /><input
+              id="login-password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="Ingresa tu contraseña"
+              required
+              [attr.aria-invalid]="invalid('password')"
+              [attr.aria-describedby]="invalid('password') ? 'password-error' : null"
+            /><button
+              type="button"
+              class="password-toggle"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-pressed]="showPassword()"
+              (click)="showPassword.set(!showPassword())"
+            >
+              <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" />
+            </button>
+          </div>
+          @if (invalid('password')) {
+            <p id="password-error" class="field-error">Ingresa tu contraseña.</p>
+          }
+        </div>
+        @if (message()) {
+          <p class="access-message" role="alert">{{ message() }}</p>
+        }
+        <button type="submit" class="login-submit" [disabled]="busy()">
+          {{ busy() ? 'Ingresando…' : 'Iniciar sesión' }}
+          @if (!busy()) {
+            <app-icon name="arrow" />
+          }
+        </button>
+      </form>
+
+      <div class="demo-divider"><span>¿Primera vez por aquí?</span></div>
+      <a routerLink="/salon" class="demo-link" (click)="enterDemo()"
+        ><span class="grid h-8 w-8 place-items-center rounded-lg bg-[#e2ead7] text-[#526b40]"
+          ><app-icon name="spark" /></span
+        ><span><strong>Explorar la demo</strong><small>Conoce Mesa sin una cuenta</small></span
+        ><app-icon name="arrow"
+      /></a>
+      <p class="access-invite">
+        ¿Eres parte del equipo? Solicita tu acceso<br class="invite-break" />
+        a la persona que administra tu restaurante.
+      </p>
+    </main>
+    <footer class="access-footer flex items-center justify-between gap-4">
+      <span>© {{ year }} Mesa</span><span>Hecho para tu día a día.</span>
+    </footer>
+  </section>
+</div>

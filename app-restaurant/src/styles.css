@@ -1,0 +1,339 @@
+@import 'tailwindcss';
+@import '@angular/cdk/overlay-prebuilt.css';
+@import '@fontsource-variable/dm-sans';
+@import '@fontsource-variable/manrope';
+@import './prototype.css';
+@import './themes.css';
+@theme {
+  --color-forest: #2e6554;
+  --color-paper: #f6f7f3;
+  --color-terracotta: #ce663a;
+  --font-sans: 'DM Sans Variable', system-ui, sans-serif;
+}
+:root {
+  font-family: 'DM Sans Variable', system-ui, sans-serif;
+}
+h1,
+h2,
+h3,
+h4,
+.brand,
+.metric-value {
+  font-family: 'Manrope Variable', system-ui, sans-serif;
+}
+app-root {
+  display: block;
+}
+app-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+app-page-header {
+  display: block;
+}
+.nav-link app-icon .icon {
+  width: 18px;
+  height: 18px;
+}
+.app-dialog {
+  background: var(--paper);
+  border-radius: 16px;
+  overflow: hidden;
+  width: 580px;
+  max-width: calc(100vw - 28px);
+  max-height: calc(100dvh - 40px);
+  display: flex;
+  box-shadow: 0 25px 90px #172e3540;
+}
+.app-dialog > * {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+.app-dialog .modal-body {
+  min-height: 0;
+}
+.cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+  background: #122b2566;
+  backdrop-filter: blur(3px);
+}
+.app-toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  background: #223c35;
+  color: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 15px 20px;
+  max-width: calc(100vw - 28px);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 13px;
+}
+.app-toast button {
+  color: white;
+  font-size: 23px;
+}
+.metric {
+  height: 100%;
+}
+.metric-value {
+  display: block;
+}
+.table-card {
+  width: 100%;
+}
+.table-card:disabled {
+  opacity: 0.5;
+}
+.order-panel {
+  align-self: start;
+}
+.page-head .btn {
+  font-size: 12px;
+}
+.btn,
+.icon-btn {
+  min-height: 40px;
+}
+.icon-btn {
+  min-width: 36px;
+}
+.field input,
+.field select,
+.field textarea {
+  font-size: 14px;
+}
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
+  border-color: var(--red);
+}
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--white);
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+}
+.empty-state h2 {
+  color: var(--ink);
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+.empty-state p {
+  margin: 10px 0 18px;
+}
+.mobile-backdrop {
+  display: none;
+}
+.info-row {
+  gap: 20px;
+}
+.info-row strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.table-scroll table {
+  width: 100%;
+}
+.table-scroll caption {
+  text-align: left;
+  padding: 18px 22px;
+  font-weight: 600;
+}
+.panel {
+  min-width: 0;
+}
+.order-item {
+  gap: 12px;
+}
+.order-item > .grow {
+  min-width: 0;
+}
+.product-visual app-icon .icon {
+  width: 52px;
+  height: 52px;
+  stroke-width: 1.1;
+}
+.text-link {
+  color: var(--green);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ticket-line {
+  padding: 14px;
+  border-top: 1px solid var(--line);
+}
+.ticket-line strong {
+  font-size: 13px;
+}
+.ticket-top h3 {
+  font-size: 15px;
+}
+.ticket {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.form-error {
+  font-size: 13px;
+}
+.note-box {
+  line-height: 1.7;
+}
+.section-toolbar {
+  flex-wrap: wrap;
+}
+.search input {
+  min-width: 0;
+}
+.content {
+  min-height: calc(100vh - 76px);
+}
+.order-summary {
+  padding: 18px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-subtle);
+}
+.order-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 5px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.order-summary .total {
+  margin-top: 8px;
+  padding-top: 12px;
+  color: var(--ink);
+  border-top: 1px solid var(--line);
+}
+.order-summary .total strong:last-child {
+  font-size: 24px;
+  letter-spacing: -1px;
+}
+.reservation-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  border: 1px solid #e1e7d9;
+  background: #ecefe5;
+  border-radius: 10px;
+  margin-top: 18px;
+  padding: 14px;
+  font-size: 11px;
+  color: #61735d;
+}
+.reservation-strip app-icon .icon {
+  width: 18px;
+  height: 18px;
+}
+.table-capacity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.table-capacity .icon {
+  width: 12px;
+  height: 12px;
+}
+.table-card small {
+  font-size: 10px;
+  margin-top: 6px;
+}
+.order-item .grow > strong {
+  font-size: 12px;
+}
+.order-title {
+  gap: 10px;
+}
+.order-item .grow .flex {
+  flex-wrap: wrap;
+}
+.order-actions .btn {
+  font-size: 12px;
+}
+.order-bottom-note {
+  font-size: 10px;
+}
+.setting-block {
+  flex-wrap: wrap;
+}
+.pill {
+  font-size: 10px;
+}
+td {
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .sidebar {
+    visibility: hidden;
+    box-shadow: none;
+  }
+  .sidebar.open {
+    visibility: visible;
+    box-shadow: 20px 0 80px #1e342d33;
+  }
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-card-content {
+    padding: 14px;
+  }
+}
+@media (min-width: 1550px) {
+  .sidebar {
+    width: 244px;
+  }
+}
+@media (max-width: 760px) {
+  .mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #152d2666;
+    z-index: 29;
+  }
+  .app-toast {
+    width: max-content;
+  }
+  .metrics app-metric {
+    min-width: 0;
+  }
+  .nav-link {
+    min-height: 44px;
+  }
+  .table-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .order-actions {
+    grid-template-columns: 1fr;
+  }
+}
+@media print {
+  .sidebar,
+  .topbar,
+  .footer,
+  .head-actions,
+  .app-toast {
+    display: none !important;
+  }
+  .main-shell {
+    margin: 0;
+    width: 100%;
+  }
+}
