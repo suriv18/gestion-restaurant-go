@@ -1,12 +1,22 @@
-name: ci
+name: service-restaurant-ci
 
 on:
   push:
     branches: [main]
+    paths:
+      - "service-restaurant/**"
+      - ".github/workflows/service-restaurant-ci.yml"
   pull_request:
+    paths:
+      - "service-restaurant/**"
+      - ".github/workflows/service-restaurant-ci.yml"
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: service-restaurant
 
 jobs:
   test:
@@ -15,7 +25,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: service-restaurant/go.mod
+          cache-dependency-path: service-restaurant/go.sum
       - name: Formato
         run: test -z "$(gofmt -l .)"
       - name: Vet
