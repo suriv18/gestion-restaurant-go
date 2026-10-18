@@ -56,6 +56,25 @@ El SQL V4 se dividió en 6 migraciones por dominio sin cambiar sus sentencias (e
 | Integración | `tests/integration`: testcontainers + PostgreSQL 18; esquema (49/664/187), semillas, actor, runner (commit, rechazo, error técnico, fallo de commit) |
 | CI | GitHub Actions (`.github/workflows/service-restaurant-ci.yml`): formato, vet, `-race`, integración, build, imagen |
 
-## 8. Pendiente
+## 8. Estado e implementación de I1 (identidad)
 
-Autenticación y sesiones (DEC-06, I1); permisos faltantes, idempotencia general y outbox (migraciones nuevas); contrato HTTP contra `api/openapi.yaml`; paginación real; rol de BD de operación separado del propietario del esquema (ADR-07); roles de operación, despliegue y respaldo (DEC-03, DEC-08).
+Implementado: acceso (login, logout, sesión; JWT HS256 + sesión en BD, ADR-004), autorización por permiso y sede (), idempotencia genérica (), opción de actor en transacciones y administración de accesos (RES-RF-033: roles, permisos, usuarios, asignaciones, baja y restauración).
+
+Reglas de seguridad de la administración, verificadas con pruebas (y por mutación):
+- Todas las rutas exigen  en alguna sede; las asignaciones solo agregan o quitan sedes donde el administrador lo tiene.
+- Ningún cambio puede dejar al sistema sin un administrador efectivo (se aplica, se cuenta y, si queda en 0, se revierte).
+- Nadie se da de baja a sí mismo; el actor técnico  es invisible para la API (404).
+- La baja de un usuario revoca sus sesiones y restaurarlo no las revive.
+- La autoría (/) sale del actor autenticado (), nunca del cuerpo.
+
+### Desviaciones y huecos del contrato OpenAPI 0.2.0
+-  no existe en el contrato; se agregó y debe incorporarse al OpenAPI.
+-  no existe en el contrato (ni lo pide RF-033): no se implementó.
+-  se acepta pero no se persiste (la tabla  no tiene nombre; pertenece a empleados).
+-  y  declaran el parámetro : se ignora (son catálogos globales).
+- Las respuestas repetidas por idempotencia no marcan la repetición con un encabezado.
+- El token JWT no incluye refresh (el esquema  no lo prevé).
+
+## 9. Pendiente
+
+Recuperación de contraseña, MFA, rate limiting por IP, rotación de claves JWT (), refresh de sesión; token de edición concurrente (ETag) en PATCH; rol de BD de operación separado del propietario del esquema (ADR-07); limpieza de registros de idempotencia y sesiones expiradas; módulos de negocio de I2 en adelante; contrato HTTP contra ; despliegue y respaldo (DEC-03, DEC-08).

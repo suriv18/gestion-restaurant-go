@@ -139,6 +139,7 @@ func asSystem(t *testing.T, stmts ...string) {
 // crearUsuario inserta un usuario humano con el rol y la sucursal del administrador.
 func crearUsuario(t *testing.T, username, password, rol string) {
 	t.Helper()
+	app(t) // la instalación inicial debe ocurrir antes que cualquier otro usuario humano
 	h, err := security.NewArgon2Hasher(security.Argon2ParamsTest)
 	if err != nil {
 		t.Fatal(err)

@@ -2,7 +2,7 @@
 
 ## Módulos
 
-Hoy existe un único módulo: `catalogo`, **esqueleto de ejemplo sustituible** de la plantilla (archivos con solo `package`). Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
+Módulos hoy: **`identidad`** (implementado en I1: acceso, autorización y administración de accesos) y `catalogo`, **esqueleto de ejemplo sustituible** de la plantilla (archivos con solo `package`). Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
 
 | Módulo (ADR-01) | Tablas (migración) | Incremento |
 |---|---|---|

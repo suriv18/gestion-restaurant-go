@@ -1,0 +1,5 @@
+package policy
+
+// UsuarioAdministrar es el permiso funcional que protege la administración de accesos.
+// Es un permiso de la aplicación (semilla de la V4), no un privilegio de PostgreSQL.
+const UsuarioAdministrar = "USUARIO_ADMINISTRAR"

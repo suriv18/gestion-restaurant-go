@@ -33,14 +33,25 @@ func TestMigrationsCreateFullSchema(t *testing.T) {
 }
 
 func TestMigrationsSeeds(t *testing.T) {
-	cases := map[string]int{
-		"roles": 5, "permisos": 10, "roles_permisos": 10,
-		"unidades_medida": 5, "impuestos": 1, "metodos_pago": 6,
+	// Por código y no por conteo total: otras pruebas crean roles y permisos en la misma base.
+	semillas := []struct {
+		tabla, codigos string
+		esperadas      int
+	}{
+		{"roles", "'ADMIN','CAJERO','MESERO','COCINA','ALMACEN'", 5},
+		{"permisos", "'PEDIDO_CREAR','PEDIDO_ANULAR','DESCUENTO_AUTORIZAR','CAJA_OPERAR','PAGO_DEVOLVER','COMPRA_REGISTRAR','INVENTARIO_AJUSTAR','COCINA_OPERAR','COMPROBANTE_EMITIR','USUARIO_ADMINISTRAR'", 10},
+		{"unidades_medida", "'KG','G','L','ML','UND'", 5},
+		{"metodos_pago", "'EFECTIVO','TARJETA','TRANSFERENCIA','YAPE','PLIN','OTROS'", 6},
+		{"impuestos", "'IGV_TOTAL'", 1},
 	}
-	for table, want := range cases {
-		if got := scalar(t, "SELECT count(*) FROM sch_restaurante."+table); got != want {
-			t.Errorf("%s = %d filas, quería %d", table, got, want)
+	for _, s := range semillas {
+		if got := scalar(t, "SELECT count(*) FROM sch_restaurante."+s.tabla+" WHERE codigo IN ("+s.codigos+")"); got != s.esperadas {
+			t.Errorf("%s: %d semillas, quería %d", s.tabla, got, s.esperadas)
 		}
+	}
+	// El rol ADMIN conserva sus diez permisos de la semilla.
+	if got := scalar(t, "SELECT count(*) FROM sch_restaurante.roles_permisos rp JOIN sch_restaurante.roles r ON r.id=rp.rol_id WHERE r.codigo='ADMIN' AND rp.es_activo"); got < 10 {
+		t.Errorf("ADMIN tiene %d permisos activos, quería al menos 10", got)
 	}
 	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.usuarios WHERE es_sistema AND password_hash IS NULL`); n != 1 {
 		t.Errorf("usuario __sistema__ = %d, quería 1", n)
