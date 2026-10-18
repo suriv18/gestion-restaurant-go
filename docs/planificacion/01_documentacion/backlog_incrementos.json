@@ -19,7 +19,7 @@
     "max_h": 64,
     "dependencias": "I0",
     "criterio": "Autenticación, permisos por sede y migraciones",
-    "estado": "PROPUESTO",
+    "estado": "EN_CURSO",
     "requisitos_cierre": [
       "RES-RF-001",
       "RES-RF-002",
@@ -32,7 +32,8 @@
       "ADR-04",
       "ADR-06",
       "ADR-07"
-    ]
+    ],
+    "avance": "Acceso, autorización y administración de accesos implementados (RES-RF-001 y RES-RF-033 aprobados). RES-RF-002 queda PARCIAL hasta I3 (pedidos por sede)."
   },
   {
     "id": "I2",

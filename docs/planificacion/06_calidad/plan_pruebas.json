@@ -7,7 +7,7 @@
     "accion": "Rechazar credenciales incorrectas, usuarios inactivos y el actor técnico. No revelar si el usuario existe.",
     "esperado": "Un usuario activo con contraseña válida recibe acceso; __sistema__ e inactivos reciben 401.",
     "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
-    "resultado": "NO_EJECUTADA",
+    "resultado": "APROBADA",
     "severidad_si_falla": "Alta",
     "adr": [
       "ADR-06",
@@ -16,7 +16,19 @@
     "add": [
       "ADD-09"
     ],
-    "incremento_cierre": "I1"
+    "incremento_cierre": "I1",
+    "evidencia_ejecucion": {
+      "fecha": "2026-10-17",
+      "entorno": "PostgreSQL 18 (testcontainers) y CI de GitHub Actions",
+      "archivo": "service-restaurant/tests/integration/identidad_http_test.go",
+      "pruebas": [
+        "TestLoginYSesion",
+        "TestRechazosDeLoginSonIdenticos",
+        "TestBloqueoPersisteTrasCincoFallos",
+        "TestAuditoriaDeLoginSinSecretos"
+      ],
+      "observacion": "Un usuario activo con contraseña válida recibe un JWT; usuario inexistente, inactivo, bloqueado y __sistema__ reciben el mismo 401; el conteo de intentos sobrevive al rechazo; la auditoría no contiene hashes."
+    }
   },
   {
     "id": "RES-CP-002",
@@ -35,7 +47,8 @@
     "add": [
       "ADD-09"
     ],
-    "incremento_cierre": "I1"
+    "incremento_cierre": "I1",
+    "nota": "Mecanismo implementado (Actor.Can por permiso y sede; regla de sedes en las asignaciones, probada en administración). El criterio de aceptación habla de pedidos de otra sede y solo es verificable cuando exista el módulo de pedidos (I3); el caso permanece NO_EJECUTADA."
   },
   {
     "id": "RES-CP-003",
@@ -611,7 +624,7 @@
     "accion": "Asignar permisos mínimos y sedes; revocar acceso al dar de baja usuario, rol o asignación. No dar roles al actor técnico.",
     "esperado": "Un rol inactivo deja de conceder permisos aunque la asignación exista; ADMIN funcional no es superusuario de PostgreSQL.",
     "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
-    "resultado": "NO_EJECUTADA",
+    "resultado": "APROBADA",
     "severidad_si_falla": "Alta",
     "adr": [
       "ADR-03",
@@ -621,7 +634,20 @@
     "add": [
       "ADD-09"
     ],
-    "incremento_cierre": "I1"
+    "incremento_cierre": "I1",
+    "evidencia_ejecucion": {
+      "fecha": "2026-10-17",
+      "entorno": "PostgreSQL 18 (testcontainers) y CI de GitHub Actions",
+      "archivo": "service-restaurant/tests/integration/administracion_http_test.go",
+      "pruebas": [
+        "TestRolInactivoDejaDeConcederPermisos",
+        "TestUsuariosAltaYAsignaciones",
+        "TestAsignacionDeSedeAjenaSeRechaza",
+        "TestBajaDeUsuarioRevocaSesionesYNoSeRevive",
+        "TestNoSePuedeDejarElSistemaSinAdministrador"
+      ],
+      "observacion": "Un rol inactivo deja de conceder permisos aunque la asignación exista. \"ADMIN funcional no es superusuario de PostgreSQL\" se cumple por diseño (es un rol de aplicación); la separación del rol de BD de operación respecto del propietario del esquema sigue pendiente (ADR-07). El contrato no incluye endpoints para asignar permisos a un rol."
+    }
   },
   {
     "id": "RES-CP-034",

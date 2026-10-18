@@ -439,3 +439,39 @@ func TestEscriturasDeLaAPIAuditanAlActor(t *testing.T) {
 	// El cuerpo no puede suplantar la autoría.
 	esperar(t, post(t, "/api/v1/roles", `{"codigo":"SUPLANTA","nombre":"x","creado_por":"1"}`, tk), http.StatusBadRequest, "json_invalido")
 }
+
+// RES-CP-033: un rol inactivo deja de conceder permisos aunque la asignación exista.
+func TestRolInactivoDejaDeConcederPermisos(t *testing.T) {
+	tk := adminToken(t)
+	r := post(t, "/api/v1/roles", `{"codigo":"ROL_PRUEBA_PERMISOS","nombre":"Rol de prueba"}`, tk)
+	esperar(t, r, http.StatusCreated, "")
+	var rol entidad
+	r.json(t, &rol)
+	// La API no expone la asignación rol-permiso (hueco del contrato): se prepara por SQL.
+	asSystem(t, `INSERT INTO sch_restaurante.roles_permisos(rol_id, permiso_id)
+		SELECT r.id, p.id FROM sch_restaurante.roles r, sch_restaurante.permisos p
+		WHERE r.codigo='ROL_PRUEBA_PERMISOS' AND p.codigo='PEDIDO_CREAR'`)
+	crearUsuario(t, "conrolprueba", "ConRol2026ClaveOk", "ROL_PRUEBA_PERMISOS")
+	usuario := token(t, "conrolprueba", "ConRol2026ClaveOk")
+
+	permisos := func() string {
+		s := call(t, "GET", "/api/v1/sesion", "", usuario)
+		esperar(t, s, http.StatusOK, "")
+		return s.Body.String()
+	}
+	if !strings.Contains(permisos(), "PEDIDO_CREAR") {
+		t.Fatal("el rol activo debe conceder PEDIDO_CREAR")
+	}
+	esperar(t, post(t, "/api/v1/roles/"+rol.ID+"/baja", "", tk), http.StatusOK, "")
+	if strings.Contains(permisos(), "PEDIDO_CREAR") {
+		t.Fatal("con el rol inactivo no debe conceder permisos, aunque la asignación exista")
+	}
+	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.usuarios_roles ur JOIN sch_restaurante.roles r ON r.id=ur.rol_id
+		JOIN sch_restaurante.usuarios u ON u.id=ur.usuario_id WHERE u.username='conrolprueba' AND r.codigo='ROL_PRUEBA_PERMISOS' AND ur.es_activo`); n != 1 {
+		t.Fatal("la asignación usuario-rol debe seguir existiendo y activa")
+	}
+	esperar(t, post(t, "/api/v1/roles/"+rol.ID+"/restauracion", "", tk), http.StatusOK, "")
+	if !strings.Contains(permisos(), "PEDIDO_CREAR") {
+		t.Fatal("al restaurar el rol vuelve a conceder el permiso")
+	}
+}

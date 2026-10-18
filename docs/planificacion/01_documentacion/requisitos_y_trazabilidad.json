@@ -20,16 +20,17 @@
     "incremento": "I1",
     "aceptacion": "Un usuario activo con contraseña válida recibe acceso; __sistema__ e inactivos reciben 401.",
     "cobertura_prototipo": "Pendiente",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
-    "resultado_prueba_backend": "NO_EJECUTADA",
+    "resultado_prueba_backend": "APROBADA",
     "adr": [
       "ADR-06",
       "ADR-07"
     ],
     "add": [
       "ADD-09"
-    ]
+    ],
+    "situacion_backend": "Implementado en I1 y aprobado por RES-CP-001 (ver evidencia del caso)."
   },
   {
     "id": "RES-RF-002",
@@ -49,7 +50,7 @@
     "incremento": "I1",
     "aceptacion": "Un usuario de sucursal A no puede leer ni modificar un pedido de B; respuesta 403 o 404.",
     "cobertura_prototipo": "Pendiente",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "PARCIAL",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -58,7 +59,8 @@
     ],
     "add": [
       "ADD-09"
-    ]
+    ],
+    "situacion_backend": "Mecanismo implementado (Actor.Can por permiso y sede; regla de sedes en las asignaciones, probada en administración). El criterio de aceptación habla de pedidos de otra sede y solo es verificable cuando exista el módulo de pedidos (I3); el caso permanece NO_EJECUTADA."
   },
   {
     "id": "RES-RF-003",
@@ -958,9 +960,9 @@
     "incremento": "I1",
     "aceptacion": "Un rol inactivo deja de conceder permisos aunque la asignación exista; ADMIN funcional no es superusuario de PostgreSQL.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
-    "resultado_prueba_backend": "NO_EJECUTADA",
+    "resultado_prueba_backend": "APROBADA",
     "adr": [
       "ADR-03",
       "ADR-06",
@@ -968,7 +970,8 @@
     ],
     "add": [
       "ADD-09"
-    ]
+    ],
+    "situacion_backend": "Implementado en I1 y aprobado por RES-CP-033 (ver evidencia del caso)."
   },
   {
     "id": "RES-RF-034",

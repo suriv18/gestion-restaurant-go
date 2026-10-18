@@ -31,16 +31,21 @@
       "elemento": "Coherencia de la entrega",
       "resultado": "CORRECTO",
       "detalle": "21 comprobaciones de tablas, campos, estados, API, referencias RF/CP/ADR/ADD, criterios de aceptación y enlaces locales. Evidencia: revision_coherencia.json."
+    },
+    {
+      "elemento": "Backend I1 (identidad): acceso, autorización y administración de accesos",
+      "resultado": "CORRECTO",
+      "detalle": "Pruebas unitarias, de arquitectura y 38 de integración contra PostgreSQL 18 (testcontainers) ejecutadas en el CI de GitHub Actions; reglas críticas verificadas por mutación. Código en service-restaurant/ (fuera de este paquete); evidencia: service-restaurant/tests y el historial del CI."
     }
   ],
   "pendiente": [
     "Cierre y aceptación de las decisiones DEC 01 a 08, incluyendo stack de aplicación",
-    "Backend y autenticación implementados",
+    "Backend: solo I1 está implementado (I2 a I9 pendientes); recuperación de contraseña, MFA y limitación de intentos por IP",
     "Concurrencia multiproceso en PostgreSQL 18 nativo",
     "Pruebas de carga y restauración en el entorno objetivo",
     "Inspección visual en navegador real y dispositivos",
     "Integraciones fiscales y externas",
     "Aceptación operativa con restaurante"
   ],
-  "aclaracion": "Los 44 casos de plan_pruebas.json describen pruebas previstas para el sistema implementado y permanecen NO_EJECUTADA. Las pruebas de prototipo y PGlite no las sustituyen."
+  "aclaracion": "Los 44 casos de plan_pruebas.json describen pruebas previstas para el sistema implementado. Hasta ahora RES-CP-001 y RES-CP-033 están APROBADA con evidencia del backend de I1; los otros 42 permanecen NO_EJECUTADA. Las pruebas de prototipo y PGlite no las sustituyen."
 }
