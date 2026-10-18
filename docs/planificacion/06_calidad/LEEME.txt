@@ -1,0 +1,21 @@
+CALIDAD Y EVIDENCIA — EXPEDIENTE 1.2 / SQL V4
+
+plan_pruebas.html / .json: 44 casos propuestos para el sistema que se desarrollará.
+validacion_entrega.json: comprobaciones realmente realizadas en esta entrega.
+revision_coherencia.html / .json: comprobación de tablas, campos, API y referencias.
+04_prototipo/tests: 13 escenarios de lógica y flujos de interfaz en DOM simulado.
+sql/validar.mjs: DDL, escenarios funcionales y auditoría del SQL V4 en PGlite.
+sql/resultados_sql.json: evidencia y alcance de la ejecución SQL.
+
+Las pruebas SQL usan datos ficticios en una base temporal en memoria. No ejecutar
+scenarios.sql ni audit_scenarios.sql contra una base operativa.
+La regresión comprueba 9 tablas con marcadores, 13 con estado y relaciones sin
+marcadores; valida baja con motivo en productos y desactivación simple de catálogos.
+
+El contrato OpenAPI 3.1.1 se validó con openapi-spec-validator. No hay backend
+desplegado: validar el contrato no implica que las operaciones estén implementadas.
+Los 4 Word actualizados se renderizan para revisar su presentación: 33 páginas.
+La inspección visual web en navegador real y las pruebas de concurrencia en
+PostgreSQL nativo siguen pendientes; jsdom y PGlite no las sustituyen.
+
+Consulta 00_LEEME.txt para reproducir las pruebas del prototipo y del SQL.

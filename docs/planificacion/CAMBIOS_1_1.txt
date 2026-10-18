@@ -1,0 +1,18 @@
+CONSOLIDACIÓN DOCUMENTAL 1.1
+
+Se formaliza ADR_Sistema_Restaurante.docx con siete registros.
+Se formaliza ADD_Sistema_Restaurante.docx con trece secciones y tres diagramas.
+El ADD sustituye la anterior Arquitectura_y_guia_tecnica_del_restaurante.docx.
+ADR 06: selección del stack. ADR 07: evolución mediante migraciones.
+Se vinculan 36 RF con ADR, ADD, pruebas e incrementos de cierre.
+RES-RF-013 se acepta en I5, con preparación en I3.
+RES-RF-019 se acepta en I4, con preparación en I3.
+G2 requiere circuito pedido, cocina, caja y stock integrado tras I5.
+El plan y el backlog se ajustan a esas dependencias; las horas siguen siendo
+orientativas y deben revisarse al seleccionar el stack y el proveedor fiscal.
+Las ocho resoluciones DEC conservan su identidad y tienen momento de cierre.
+No cambia el SQL V3, el contrato OpenAPI ni el código del prototipo.
+Requisitos Word 1.0 se conserva: sus reglas y aceptación no cambian.
+Los ADR continúan propuestos y las aprobaciones reales no se presuponen.
+
+Orden de lectura: Plan > Requisitos > ADR > ADD > Trazabilidad > Backlog.

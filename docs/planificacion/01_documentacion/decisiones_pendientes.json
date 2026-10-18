@@ -1,0 +1,137 @@
+[
+  {
+    "id": "DEC-01",
+    "tema": "Alcance y procesos",
+    "limite": "Antes de I1 y ante cambios de alcance",
+    "incrementos": [
+      "I0"
+    ],
+    "adr": [
+      "ADR-01"
+    ],
+    "responsable_propuesto": "Responsable de negocio",
+    "evidencia_cierre": "Validación de RF, exclusiones y excepciones",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  },
+  {
+    "id": "DEC-02",
+    "tema": "Stack y versiones",
+    "limite": "Antes de I1",
+    "incrementos": [
+      "I0"
+    ],
+    "adr": [
+      "ADR-06",
+      "ADR-07"
+    ],
+    "responsable_propuesto": "Responsable técnico",
+    "evidencia_cierre": "Comparación de alternativas, versiones y prueba técnica",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  },
+  {
+    "id": "DEC-03",
+    "tema": "Alojamiento y conectividad",
+    "limite": "Diseño antes de I1; ensayo antes de I9",
+    "incrementos": [
+      "I0",
+      "I1",
+      "I9"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-07"
+    ],
+    "responsable_propuesto": "Responsable técnico y operación",
+    "evidencia_cierre": "Entornos, red, dispositivos y responsables definidos",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  },
+  {
+    "id": "DEC-04",
+    "tema": "Impuestos y comprobantes",
+    "limite": "Tasas antes de I2; proveedor antes de I7; resuelto antes del piloto",
+    "incrementos": [
+      "I2",
+      "I7",
+      "I9"
+    ],
+    "adr": [
+      "ADR-05"
+    ],
+    "responsable_propuesto": "Negocio y asesoría contable",
+    "evidencia_cierre": "Vigencias validadas y modalidad fiscal acordada",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  },
+  {
+    "id": "DEC-05",
+    "tema": "Costeo y stock inicial",
+    "limite": "Antes de aceptar I5",
+    "incrementos": [
+      "I5"
+    ],
+    "adr": [
+      "ADR-02"
+    ],
+    "responsable_propuesto": "Negocio y almacén",
+    "evidencia_cierre": "Política de costo y acta de conciliación",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  },
+  {
+    "id": "DEC-06",
+    "tema": "Identidad y sesiones",
+    "limite": "Antes de aceptar I1",
+    "incrementos": [
+      "I1"
+    ],
+    "adr": [
+      "ADR-03",
+      "ADR-04"
+    ],
+    "responsable_propuesto": "Responsable técnico",
+    "evidencia_cierre": "Autenticación, revocación, recuperación y aprovisionamiento definidos",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  },
+  {
+    "id": "DEC-07",
+    "tema": "Reglas de atención",
+    "limite": "Antes de los casos de uso de I2 a I6",
+    "incrementos": [
+      "I2",
+      "I3",
+      "I4",
+      "I5",
+      "I6"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ],
+    "responsable_propuesto": "Responsable de negocio",
+    "evidencia_cierre": "Descuentos, anulaciones, devoluciones y reservas validados",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  },
+  {
+    "id": "DEC-08",
+    "tema": "Continuidad y datos",
+    "limite": "Objetivos en diseño; medición antes de I9",
+    "incrementos": [
+      "I1",
+      "I9"
+    ],
+    "adr": [
+      "ADR-03",
+      "ADR-07"
+    ],
+    "responsable_propuesto": "Negocio y operación",
+    "evidencia_cierre": "RPO, RTO, conservación y restauración medidos",
+    "estado": "PENDIENTE",
+    "fecha_cierre": null
+  }
+]

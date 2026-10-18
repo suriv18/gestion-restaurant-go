@@ -1,0 +1,641 @@
+@startuml
+hide circle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+title Restaurante V4 estructura física
+
+entity "negocio" as negocio {
+  * id : bigint
+  * singleton : boolean
+  * ruc : character varying(11)
+  * razon_social : character varying(250)
+  * nombre_comercial : character varying(150)
+  * direccion_fiscal : text
+  ubigeo : character varying(6)
+  telefono : character varying(30)
+  email : character varying(254)
+  * moneda : character(3)
+  * zona_horaria : character varying(60)
+  * es_activo : boolean
+}
+entity "sucursales" as sucursales {
+  * id : bigint
+  * negocio_id : bigint
+  * codigo : character varying(20)
+  * nombre : character varying(120)
+  * direccion : text
+  ubigeo : character varying(6)
+  codigo_establecimiento_sunat : character varying(10)
+  telefono : character varying(30)
+  * es_activo : boolean
+}
+entity "roles" as roles {
+  * id : bigint
+  * codigo : character varying(40)
+  * nombre : character varying(80)
+  descripcion : text
+  * es_activo : boolean
+}
+entity "permisos" as permisos {
+  * id : bigint
+  * codigo : character varying(80)
+  * descripcion : character varying(250)
+  * es_activo : boolean
+}
+entity "roles_permisos" as roles_permisos {
+  * id : bigint
+  * rol_id : bigint
+  * permiso_id : bigint
+  * es_activo : boolean
+}
+entity "usuarios" as usuarios {
+  * id : bigint
+  * username : character varying(80)
+  password_hash : text
+  * es_sistema : boolean
+  email : character varying(254)
+  * es_activo : boolean
+  ultimo_acceso_en : timestamp with time zone
+  bloqueado_hasta : timestamp with time zone
+  * intentos_fallidos : integer
+}
+entity "usuarios_roles" as usuarios_roles {
+  * id : bigint
+  * usuario_id : bigint
+  * rol_id : bigint
+  * es_activo : boolean
+}
+entity "usuarios_sucursales" as usuarios_sucursales {
+  * id : bigint
+  * usuario_id : bigint
+  * sucursal_id : bigint
+  * es_activo : boolean
+}
+entity "empleados" as empleados {
+  * id : bigint
+  usuario_id : bigint
+  * tipo_documento : character varying(10)
+  * numero_documento : character varying(20)
+  * nombres : character varying(120)
+  * apellidos : character varying(120)
+  telefono : character varying(30)
+  cargo : character varying(80)
+  * fecha_ingreso : date
+  fecha_cese : date
+  * es_activo : boolean
+}
+entity "clientes" as clientes {
+  * id : bigint
+  tipo_documento : character varying(10)
+  numero_documento : character varying(20)
+  * nombre_razon_social : character varying(250)
+  telefono : character varying(30)
+  email : character varying(254)
+  direccion : text
+  * es_activo : boolean
+}
+entity "proveedores" as proveedores {
+  * id : bigint
+  * tipo_documento : character varying(10)
+  * numero_documento : character varying(20)
+  * razon_social : character varying(250)
+  contacto_nombre : character varying(150)
+  telefono : character varying(30)
+  email : character varying(254)
+  direccion : text
+  * es_activo : boolean
+}
+entity "unidades_medida" as unidades_medida {
+  * id : bigint
+  * codigo : character varying(15)
+  * nombre : character varying(60)
+  * dimension : character varying(15)
+  * factor_referencia : numeric(18,9)
+  codigo_sunat : character varying(10)
+  * es_activo : boolean
+}
+entity "categorias" as categorias {
+  * id : bigint
+  * nombre : character varying(100)
+  descripcion : text
+  * orden_visualizacion : integer
+  * es_activo : boolean
+}
+entity "impuestos" as impuestos {
+  * id : bigint
+  * codigo : character varying(30)
+  * nombre : character varying(120)
+  descripcion : text
+  * es_activo : boolean
+}
+entity "tasas_impuesto" as tasas_impuesto {
+  * id : bigint
+  * impuesto_id : bigint
+  * tasa : numeric(7,4)
+  * vigente_desde : date
+  vigente_hasta : date
+  fundamento : text
+}
+entity "estaciones_preparacion" as estaciones_preparacion {
+  * id : bigint
+  * sucursal_id : bigint
+  * codigo : character varying(20)
+  * nombre : character varying(80)
+  * es_activo : boolean
+}
+entity "articulos_inventario" as articulos_inventario {
+  * id : bigint
+  * codigo : character varying(40)
+  * nombre : character varying(180)
+  * tipo : character varying(20)
+  * unidad_base_id : bigint
+  * controla_lote : boolean
+  * controla_vencimiento : boolean
+  * es_activo : boolean
+}
+entity "presentaciones_articulo" as presentaciones_articulo {
+  * id : bigint
+  * articulo_id : bigint
+  * nombre : character varying(100)
+  * factor_unidad_base : numeric(18,6)
+  codigo_barras : character varying(50)
+  * es_activo : boolean
+}
+entity "almacenes" as almacenes {
+  * id : bigint
+  * sucursal_id : bigint
+  * codigo : character varying(20)
+  * nombre : character varying(100)
+  * es_activo : boolean
+}
+entity "articulos_almacen" as articulos_almacen {
+  * id : bigint
+  * almacen_id : bigint
+  * articulo_id : bigint
+  * stock_minimo : numeric(18,6)
+  stock_maximo : numeric(18,6)
+  * es_activo : boolean
+}
+entity "lotes" as lotes {
+  * id : bigint
+  * articulo_id : bigint
+  * codigo : character varying(80)
+  fecha_elaboracion : date
+  fecha_vencimiento : date
+  * estado : character varying(15)
+  motivo_estado : text
+}
+entity "productos" as productos {
+  * id : bigint
+  * categoria_id : bigint
+  * codigo : character varying(40)
+  * nombre : character varying(180)
+  descripcion : text
+  * tipo : character varying(20)
+  articulo_id : bigint
+  * factor_consumo : numeric(18,6)
+  * precio_venta : numeric(14,2)
+  * afectacion_igv : character(2)
+  impuesto_id : bigint
+  imagen_url : text
+  * es_activo : boolean
+}
+entity "productos_sucursal" as productos_sucursal {
+  * id : bigint
+  * producto_id : bigint
+  * sucursal_id : bigint
+  estacion_id : bigint
+  precio_venta : numeric(14,2)
+  * disponible : boolean
+  * es_activo : boolean
+}
+entity "recetas" as recetas {
+  * id : bigint
+  * producto_id : bigint
+  * version : integer
+  * nombre : character varying(150)
+  * rendimiento_porciones : numeric(14,3)
+  instrucciones : text
+  * vigente_desde : date
+  vigente_hasta : date
+}
+entity "receta_detalles" as receta_detalles {
+  * id : bigint
+  * receta_id : bigint
+  * articulo_id : bigint
+  * cantidad_base : numeric(18,6)
+  notas : text
+}
+entity "zonas" as zonas {
+  * id : bigint
+  * sucursal_id : bigint
+  * nombre : character varying(80)
+  * orden_visualizacion : integer
+  * es_activo : boolean
+}
+entity "mesas" as mesas {
+  * id : bigint
+  * sucursal_id : bigint
+  * zona_id : bigint
+  * numero_mesa : character varying(20)
+  * capacidad : integer
+  * habilitada : boolean
+  posicion_x : numeric(10,2)
+  posicion_y : numeric(10,2)
+  * es_activo : boolean
+}
+entity "reservas" as reservas {
+  * id : bigint
+  * sucursal_id : bigint
+  * mesa_id : bigint
+  cliente_id : bigint
+  * nombre_contacto : character varying(150)
+  telefono_contacto : character varying(30)
+  * inicio : timestamp with time zone
+  * fin : timestamp with time zone
+  * cantidad_personas : integer
+  * estado : character varying(20)
+  observaciones : text
+}
+entity "pedidos" as pedidos {
+  * id : bigint
+  * sucursal_id : bigint
+  * codigo_publico : uuid
+  * clave_idempotencia : uuid
+  mesa_id : bigint
+  reserva_id : bigint
+  cliente_id : bigint
+  mesero_id : bigint
+  * tipo : character varying(15)
+  * estado : character varying(20)
+  * moneda : character(3)
+  * comensales : integer
+  * abierto_en : timestamp with time zone
+  cerrado_en : timestamp with time zone
+  notas : text
+  motivo_cancelacion : text
+  * version_bloqueo : integer
+}
+entity "cuentas" as cuentas {
+  * id : bigint
+  * pedido_id : bigint
+  * numero : integer
+  cliente_id : bigint
+  etiqueta : character varying(80)
+  * estado : character varying(15)
+  cerrado_en : timestamp with time zone
+  motivo_cancelacion : text
+}
+entity "detalles_pedido" as detalles_pedido {
+  * id : bigint
+  * pedido_id : bigint
+  * cuenta_id : bigint
+  * producto_id : bigint
+  receta_id : bigint
+  detalle_padre_id : bigint
+  * descripcion : character varying(250)
+  * cantidad : numeric(14,3)
+  * precio_unitario : numeric(14,6)
+  * descuento_total : numeric(14,2)
+  * afectacion_igv : character(2)
+  * tasa_impuesto : numeric(7,4)
+  importe_total : numeric(14,2)
+  base_imponible : numeric(14,2)
+  * estado : character varying(15)
+  notas_preparacion : text
+  anulado_en : timestamp with time zone
+  anulado_por : bigint
+  motivo_anulacion : text
+}
+entity "comandas" as comandas {
+  * id : bigint
+  * pedido_id : bigint
+  * sucursal_id : bigint
+  * estacion_id : bigint
+  * clave_idempotencia : uuid
+  * enviado_en : timestamp with time zone
+  * enviado_por : bigint
+  notas : text
+}
+entity "comanda_detalles" as comanda_detalles {
+  * id : bigint
+  * comanda_id : bigint
+  * pedido_id : bigint
+  * detalle_pedido_id : bigint
+  * cantidad : numeric(14,3)
+  * descripcion : character varying(250)
+  instrucciones : text
+  * estado : character varying(20)
+  iniciado_en : timestamp with time zone
+  listo_en : timestamp with time zone
+  entregado_en : timestamp with time zone
+  motivo_cancelacion : text
+}
+entity "pedidos_delivery" as pedidos_delivery {
+  * id : bigint
+  * pedido_id : bigint
+  * destinatario : character varying(150)
+  * telefono : character varying(30)
+  * direccion : text
+  referencia : text
+  ubigeo : character varying(6)
+  latitud : numeric(10,7)
+  longitud : numeric(10,7)
+  * canal : character varying(40)
+  codigo_externo : character varying(100)
+  repartidor_id : bigint
+  * estado : character varying(20)
+  programado_en : timestamp with time zone
+  salida_en : timestamp with time zone
+  entrega_en : timestamp with time zone
+  * costo_logistico : numeric(14,2)
+}
+entity "metodos_pago" as metodos_pago {
+  * id : bigint
+  * codigo : character varying(25)
+  * nombre : character varying(80)
+  * es_efectivo : boolean
+  * requiere_referencia : boolean
+  * es_activo : boolean
+}
+entity "cajas" as cajas {
+  * id : bigint
+  * sucursal_id : bigint
+  * codigo : character varying(20)
+  * nombre : character varying(80)
+  * es_activo : boolean
+}
+entity "sesiones_caja" as sesiones_caja {
+  * id : bigint
+  * caja_id : bigint
+  * sucursal_id : bigint
+  * moneda : character(3)
+  * abierto_por : bigint
+  cerrado_por : bigint
+  * apertura_en : timestamp with time zone
+  cierre_en : timestamp with time zone
+  * estado : character varying(10)
+  * fondo_inicial : numeric(14,2)
+  efectivo_contado : numeric(14,2)
+  observaciones : text
+}
+entity "movimientos_caja" as movimientos_caja {
+  * id : bigint
+  * sesion_caja_id : bigint
+  * tipo : character varying(10)
+  * monto : numeric(14,2)
+  * concepto : character varying(200)
+  referencia : character varying(100)
+  * clave_idempotencia : uuid
+}
+entity "pagos" as pagos {
+  * id : bigint
+  * cuenta_id : bigint
+  * sesion_caja_id : bigint
+  * metodo_pago_id : bigint
+  * monto : numeric(14,2)
+  efectivo_recibido : numeric(14,2)
+  vuelto : numeric(14,2)
+  * estado : character varying(15)
+  proveedor_operacion : character varying(60)
+  referencia_operacion : character varying(120)
+  * clave_idempotencia : uuid
+  confirmado_en : timestamp with time zone
+}
+entity "devoluciones_pago" as devoluciones_pago {
+  * id : bigint
+  * pago_id : bigint
+  * sesion_caja_id : bigint
+  * metodo_pago_id : bigint
+  * monto : numeric(14,2)
+  * motivo : text
+  referencia_operacion : character varying(120)
+  * clave_idempotencia : uuid
+  * autorizado_por : bigint
+}
+entity "compras" as compras {
+  * id : bigint
+  * sucursal_id : bigint
+  * almacen_id : bigint
+  * proveedor_id : bigint
+  * tipo_documento : character varying(10)
+  * serie : character varying(20)
+  * numero : character varying(40)
+  * fecha_documento : date
+  * fecha_recepcion : timestamp with time zone
+  * moneda : character(3)
+  * tipo_cambio : numeric(18,6)
+  * condicion_pago : character varying(10)
+  fecha_vencimiento : date
+  * estado : character varying(15)
+  notas : text
+}
+entity "compra_detalles" as compra_detalles {
+  * id : bigint
+  * compra_id : bigint
+  * numero_linea : integer
+  * articulo_id : bigint
+  presentacion_id : bigint
+  * cantidad_compra : numeric(18,6)
+  * factor_unidad_base : numeric(18,6)
+  cantidad_base : numeric(18,6)
+  * precio_unitario : numeric(18,6)
+  * descuento_total : numeric(14,2)
+  * tasa_impuesto : numeric(7,4)
+  importe_total : numeric(14,2)
+  lote_id : bigint
+}
+entity "movimientos_inventario" as movimientos_inventario {
+  * id : bigint
+  * almacen_id : bigint
+  * tipo : character varying(25)
+  * direccion : smallint
+  * estado : character varying(12)
+  compra_id : bigint
+  detalle_pedido_id : bigint
+  movimiento_referencia_id : bigint
+  * motivo : text
+  * fecha_movimiento : timestamp with time zone
+  confirmado_en : timestamp with time zone
+  * clave_idempotencia : uuid
+}
+entity "movimiento_inventario_detalles" as movimiento_inventario_detalles {
+  * id : bigint
+  * movimiento_id : bigint
+  * almacen_id : bigint
+  * articulo_id : bigint
+  lote_id : bigint
+  compra_detalle_id : bigint
+  * cantidad : numeric(18,6)
+  * costo_unitario : numeric(18,6)
+  costo_total : numeric(18,6)
+}
+entity "series_comprobantes" as series_comprobantes {
+  * id : bigint
+  * sucursal_id : bigint
+  * tipo : character(2)
+  * serie : character varying(4)
+  * ultimo_correlativo : bigint
+  * administracion : character varying(10)
+  * es_activo : boolean
+}
+entity "comprobantes" as comprobantes {
+  * id : bigint
+  * sucursal_id : bigint
+  * cuenta_id : bigint
+  * serie_id : bigint
+  * tipo : character(2)
+  * serie : character varying(4)
+  * numero : bigint
+  * fecha_emision : timestamp with time zone
+  * moneda : character(3)
+  * emisor_ruc : character varying(11)
+  * emisor_razon_social : character varying(250)
+  * emisor_direccion : text
+  receptor_tipo_documento : character varying(10)
+  receptor_numero_documento : character varying(20)
+  * receptor_nombre : character varying(250)
+  receptor_direccion : text
+  receptor_email : character varying(254)
+  comprobante_referencia_id : bigint
+  codigo_motivo : character varying(10)
+  descripcion_motivo : text
+  * estado : character varying(12)
+  emitido_en : timestamp with time zone
+  anulado_en : timestamp with time zone
+  motivo_anulacion : text
+  * clave_idempotencia : uuid
+}
+entity "comprobante_detalles" as comprobante_detalles {
+  * id : bigint
+  * comprobante_id : bigint
+  * numero_linea : integer
+  detalle_pedido_id : bigint
+  codigo_producto : character varying(40)
+  * descripcion : character varying(250)
+  * unidad_sunat : character varying(10)
+  * cantidad : numeric(14,3)
+  * precio_unitario : numeric(14,6)
+  * descuento_total : numeric(14,2)
+  * afectacion_igv : character(2)
+  * tasa_impuesto : numeric(7,4)
+  importe_total : numeric(14,2)
+  base_imponible : numeric(14,2)
+}
+entity "envios_comprobante" as envios_comprobante {
+  * id : bigint
+  * comprobante_id : bigint
+  * numero_intento : integer
+  * proveedor : character varying(80)
+  id_externo : character varying(150)
+  ticket : character varying(150)
+  * estado : character varying(25)
+  codigo_respuesta : character varying(30)
+  descripcion_respuesta : text
+  xml_uri : text
+  cdr_uri : text
+  pdf_uri : text
+  hash_documento : text
+  * enviado_en : timestamp with time zone
+  respondido_en : timestamp with time zone
+}
+entity "auditoria_eventos" as auditoria_eventos {
+  * id : bigint
+  * tabla : character varying(80)
+  * registro_id : bigint
+  * accion : character varying(10)
+  * usuario_bd : text
+  * transaccion : bigint
+  datos_antes : jsonb
+  datos_despues : jsonb
+}
+almacenes --> sucursales : sucursal_id
+articulos_almacen --> almacenes : almacen_id
+articulos_almacen --> articulos_inventario : articulo_id
+articulos_inventario --> unidades_medida : unidad_base_id
+cajas --> sucursales : sucursal_id
+comanda_detalles --> comandas : comanda_id, pedido_id
+comanda_detalles --> detalles_pedido : detalle_pedido_id, pedido_id
+comandas --> usuarios : enviado_por
+comandas --> estaciones_preparacion : estacion_id, sucursal_id
+comandas --> pedidos : pedido_id, sucursal_id
+compra_detalles --> articulos_inventario : articulo_id
+compra_detalles --> compras : compra_id
+compra_detalles --> lotes : lote_id, articulo_id
+compra_detalles --> presentaciones_articulo : presentacion_id, articulo_id
+compras --> almacenes : almacen_id, sucursal_id
+compras --> proveedores : proveedor_id
+compras --> sucursales : sucursal_id
+comprobante_detalles --> comprobantes : comprobante_id
+comprobante_detalles --> detalles_pedido : detalle_pedido_id
+comprobantes --> comprobantes : comprobante_referencia_id
+comprobantes --> cuentas : cuenta_id
+comprobantes --> series_comprobantes : serie_id, sucursal_id, tipo, serie
+comprobantes --> sucursales : sucursal_id
+cuentas --> clientes : cliente_id
+cuentas --> pedidos : pedido_id
+detalles_pedido --> usuarios : anulado_por
+detalles_pedido --> cuentas : cuenta_id, pedido_id
+detalles_pedido --> detalles_pedido : detalle_padre_id, pedido_id
+detalles_pedido --> pedidos : pedido_id
+detalles_pedido --> productos : producto_id
+detalles_pedido --> recetas : receta_id, producto_id
+devoluciones_pago --> usuarios : autorizado_por
+devoluciones_pago --> metodos_pago : metodo_pago_id
+devoluciones_pago --> pagos : pago_id
+devoluciones_pago --> sesiones_caja : sesion_caja_id
+empleados --> usuarios : usuario_id
+envios_comprobante --> comprobantes : comprobante_id
+estaciones_preparacion --> sucursales : sucursal_id
+lotes --> articulos_inventario : articulo_id
+mesas --> sucursales : sucursal_id
+mesas --> zonas : zona_id, sucursal_id
+movimiento_inventario_detalles --> compra_detalles : compra_detalle_id, articulo_id
+movimiento_inventario_detalles --> articulos_almacen : almacen_id, articulo_id
+movimiento_inventario_detalles --> lotes : lote_id, articulo_id
+movimiento_inventario_detalles --> movimientos_inventario : movimiento_id, almacen_id
+movimientos_caja --> sesiones_caja : sesion_caja_id
+movimientos_inventario --> almacenes : almacen_id
+movimientos_inventario --> compras : compra_id, almacen_id
+movimientos_inventario --> detalles_pedido : detalle_pedido_id
+movimientos_inventario --> movimientos_inventario : movimiento_referencia_id
+pagos --> cuentas : cuenta_id
+pagos --> metodos_pago : metodo_pago_id
+pagos --> sesiones_caja : sesion_caja_id
+pedidos --> clientes : cliente_id
+pedidos --> mesas : mesa_id, sucursal_id
+pedidos --> empleados : mesero_id
+pedidos --> reservas : reserva_id, sucursal_id
+pedidos --> sucursales : sucursal_id
+pedidos_delivery --> pedidos : pedido_id
+pedidos_delivery --> empleados : repartidor_id
+presentaciones_articulo --> articulos_inventario : articulo_id
+productos --> articulos_inventario : articulo_id
+productos --> categorias : categoria_id
+productos --> impuestos : impuesto_id
+productos_sucursal --> estaciones_preparacion : estacion_id, sucursal_id
+productos_sucursal --> productos : producto_id
+productos_sucursal --> sucursales : sucursal_id
+receta_detalles --> articulos_inventario : articulo_id
+receta_detalles --> recetas : receta_id
+recetas --> productos : producto_id
+reservas --> clientes : cliente_id
+reservas --> mesas : mesa_id, sucursal_id
+reservas --> sucursales : sucursal_id
+roles_permisos --> permisos : permiso_id
+roles_permisos --> roles : rol_id
+series_comprobantes --> sucursales : sucursal_id
+sesiones_caja --> usuarios : abierto_por
+sesiones_caja --> cajas : caja_id, sucursal_id
+sesiones_caja --> usuarios : cerrado_por
+sucursales --> negocio : negocio_id
+tasas_impuesto --> impuestos : impuesto_id
+usuarios_roles --> roles : rol_id
+usuarios_roles --> usuarios : usuario_id
+usuarios_sucursales --> sucursales : sucursal_id
+usuarios_sucursales --> usuarios : usuario_id
+zonas --> sucursales : sucursal_id
+note "Se omiten del gráfico los campos y FKs de auditoría para legibilidad.
+El diccionario conserva las 664 columnas y todas las restricciones.
+Una flecha representa referencia FK y no infiere cardinalidad opcional." as N1
+@enduml

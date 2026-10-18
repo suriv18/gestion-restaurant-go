@@ -1,0 +1,555 @@
+[
+  {
+    "tabla": "negocio",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "sucursales",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "roles",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "permisos",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "roles_permisos",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "usuarios",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "usuarios_roles",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "usuarios_sucursales",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "empleados",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "clientes",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "proveedores",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "unidades_medida",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "categorias",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "impuestos",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "tasas_impuesto",
+    "tipo": "DEPENDIENTE_O_VIGENCIA",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "estaciones_preparacion",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "articulos_inventario",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "presentaciones_articulo",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "almacenes",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "articulos_almacen",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "lotes",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "LIBERADO",
+      "BLOQUEADO",
+      "RETIRADO"
+    ]
+  },
+  {
+    "tabla": "productos",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "productos_sucursal",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "recetas",
+    "tipo": "DEPENDIENTE_O_VIGENCIA",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "receta_detalles",
+    "tipo": "DEPENDIENTE_O_VIGENCIA",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "zonas",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "mesas",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "reservas",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "PENDIENTE",
+      "CONFIRMADA",
+      "ATENDIDA",
+      "CANCELADA",
+      "NO_ASISTIO"
+    ]
+  },
+  {
+    "tabla": "pedidos",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "REGISTRADO",
+      "PREPARACION",
+      "LISTO",
+      "ENTREGADO",
+      "CANCELADO"
+    ]
+  },
+  {
+    "tabla": "cuentas",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "ABIERTA",
+      "CERRADA",
+      "CANCELADA"
+    ]
+  },
+  {
+    "tabla": "detalles_pedido",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "ACTIVO",
+      "ANULADO"
+    ]
+  },
+  {
+    "tabla": "comandas",
+    "tipo": "DEPENDIENTE_O_VIGENCIA",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "comanda_detalles",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "PENDIENTE",
+      "PREPARACION",
+      "LISTO",
+      "ENTREGADO",
+      "CANCELADO"
+    ]
+  },
+  {
+    "tabla": "pedidos_delivery",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "PENDIENTE",
+      "ASIGNADO",
+      "EN_RUTA",
+      "ENTREGADO",
+      "FALLIDO",
+      "CANCELADO"
+    ]
+  },
+  {
+    "tabla": "metodos_pago",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "cajas",
+    "tipo": "MAESTRO_PRINCIPAL",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": true,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "sesiones_caja",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "ABIERTA",
+      "CERRADA"
+    ]
+  },
+  {
+    "tabla": "movimientos_caja",
+    "tipo": "INMUTABLE",
+    "creado_por": true,
+    "actualizado_por": false,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "pagos",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "PENDIENTE",
+      "CONFIRMADO",
+      "FALLIDO",
+      "CANCELADO"
+    ]
+  },
+  {
+    "tabla": "devoluciones_pago",
+    "tipo": "INMUTABLE",
+    "creado_por": true,
+    "actualizado_por": false,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "compras",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "BORRADOR",
+      "CONFIRMADA",
+      "CANCELADA"
+    ]
+  },
+  {
+    "tabla": "compra_detalles",
+    "tipo": "DEPENDIENTE_O_VIGENCIA",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "movimientos_inventario",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "BORRADOR",
+      "CONFIRMADO"
+    ]
+  },
+  {
+    "tabla": "movimiento_inventario_detalles",
+    "tipo": "DEPENDIENTE_O_VIGENCIA",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "series_comprobantes",
+    "tipo": "ACTIVIDAD_SIMPLE",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": true,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "comprobantes",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "BORRADOR",
+      "EMITIDO",
+      "ANULADO"
+    ]
+  },
+  {
+    "tabla": "comprobante_detalles",
+    "tipo": "DEPENDIENTE_O_VIGENCIA",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  },
+  {
+    "tabla": "envios_comprobante",
+    "tipo": "OPERATIVA_ESTADO",
+    "creado_por": true,
+    "actualizado_por": true,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": true,
+    "valores_estado": [
+      "PENDIENTE",
+      "ENVIADO",
+      "ACEPTADO",
+      "ACEPTADO_OBSERVADO",
+      "RECHAZADO",
+      "ERROR",
+      "BAJA_ACEPTADA"
+    ]
+  },
+  {
+    "tabla": "auditoria_eventos",
+    "tipo": "INMUTABLE",
+    "creado_por": true,
+    "actualizado_por": false,
+    "es_activo": false,
+    "marcadores_eliminacion": false,
+    "estado": false,
+    "valores_estado": []
+  }
+]

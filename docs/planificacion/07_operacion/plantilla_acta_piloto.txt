@@ -1,0 +1,20 @@
+ACTA DE PILOTO — PLANTILLA POR COMPLETAR
+No representa una aceptación obtenida.
+
+Versión del producto:
+Versión/migración de base:
+Restaurante y sucursal:
+Fecha y participantes:
+Ambiente, equipos y volumen observado:
+Alcance y requisitos evaluados:
+Pruebas ejecutadas y enlaces de evidencia:
+Conciliación de caja:
+Conciliación de inventario:
+Resultado de respaldo/restauración:
+Resultado de comprobantes e integración:
+Hallazgos, gravedad, responsable y fecha prevista:
+Restricciones y riesgos residuales:
+Decisión: ACEPTADO / OBSERVADO / RECHAZADO
+Responsable de negocio y conformidad:
+Responsable técnico y conformidad:
+Próxima revisión:

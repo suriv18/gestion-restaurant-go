@@ -1,0 +1,13 @@
+CONTRATO PROPUESTO — NO IMPLEMENTADO
+
+Abrir openapi.yaml en un visor OpenAPI 3.1 compatible. El endpoint localhost es una referencia para el desarrollo; no existe backend incluido. La versión 0.2.0 define recursos, DTO, autenticación propuesta, errores y comandos. No sustituye los checks, las transiciones y las transacciones del SQL.
+
+Los valores de auditoría solo se devuelven. El actor de escritura se deriva de la sesión validada y se establece con set_config local a la transacción. Las claves UUID de idempotencia se conservan entre reintentos. Los maestros dados de baja no liberan sus códigos.
+
+Los permisos que no existen en las diez semillas del SQL requieren migración. Autenticación, refresh/revocación, outbox, registro general de idempotencia y token de edición concurrente deben resolverse antes del corte productivo. Las transiciones fiscales no son un PATCH libre sobre el estado del comprobante.
+
+Todos los ejemplos del paquete son ficticios. No contiene tokens, certificados ni credenciales.
+
+V4: los tres marcadores de baja solo existen en nueve maestros principales.
+Los catálogos simples usan es_activo y sus rutas /baja no requieren body.
+La matriz 02_base_datos/politica_campos_por_tabla.json define el alcance exacto.

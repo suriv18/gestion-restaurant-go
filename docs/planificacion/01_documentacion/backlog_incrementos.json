@@ -1,0 +1,201 @@
+[
+  {
+    "id": "I0",
+    "titulo": "Cerrar alcance y decisiones",
+    "min_h": 16,
+    "max_h": 24,
+    "dependencias": "Ninguna",
+    "criterio": "Alcance delimitado y decisiones calendarizadas por dependencia; DEC 02 listo antes de I1.",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [],
+    "adr": [
+      "ADR-06"
+    ]
+  },
+  {
+    "id": "I1",
+    "titulo": "Plataforma y accesos",
+    "min_h": 40,
+    "max_h": 64,
+    "dependencias": "I0",
+    "criterio": "Autenticación, permisos por sede y migraciones",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-001",
+      "RES-RF-002",
+      "RES-RF-033"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-03",
+      "ADR-04",
+      "ADR-06",
+      "ADR-07"
+    ]
+  },
+  {
+    "id": "I2",
+    "titulo": "Maestros y formularios",
+    "min_h": 36,
+    "max_h": 56,
+    "dependencias": "I1",
+    "criterio": "Carta, personas, mesas, tasas y baja lógica",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-003",
+      "RES-RF-004",
+      "RES-RF-005",
+      "RES-RF-008",
+      "RES-RF-027",
+      "RES-RF-030",
+      "RES-RF-036"
+    ],
+    "adr": [
+      "ADR-02",
+      "ADR-03",
+      "ADR-05",
+      "ADR-06",
+      "ADR-07"
+    ]
+  },
+  {
+    "id": "I3",
+    "titulo": "Pedidos y cocina",
+    "min_h": 64,
+    "max_h": 96,
+    "dependencias": "I2",
+    "criterio": "Pedidos, cuentas, envío y estados de cocina; cierre preparado para I4 y consumo integrado en I5.",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-009",
+      "RES-RF-010",
+      "RES-RF-011",
+      "RES-RF-012",
+      "RES-RF-014"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ]
+  },
+  {
+    "id": "I4",
+    "titulo": "Caja y pagos",
+    "min_h": 48,
+    "max_h": 80,
+    "dependencias": "I3",
+    "criterio": "Pagos, devoluciones, caja y cierre de pedido con saldo validado; consumo real se integra en I5.",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-015",
+      "RES-RF-016",
+      "RES-RF-017",
+      "RES-RF-018",
+      "RES-RF-019",
+      "RES-RF-034"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04",
+      "ADR-05",
+      "ADR-07"
+    ]
+  },
+  {
+    "id": "I5",
+    "titulo": "Compras y existencias",
+    "min_h": 64,
+    "max_h": 104,
+    "dependencias": "I2, I3 e I4",
+    "criterio": "Recetas, recepción, kardex y lotes; consumo de cocina atómico y circuito pedido-cobro-stock integrado.",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-006",
+      "RES-RF-007",
+      "RES-RF-013",
+      "RES-RF-020",
+      "RES-RF-021",
+      "RES-RF-022",
+      "RES-RF-023",
+      "RES-RF-024"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-03",
+      "ADR-04"
+    ]
+  },
+  {
+    "id": "I6",
+    "titulo": "Reservas y delivery",
+    "min_h": 32,
+    "max_h": 48,
+    "dependencias": "I3, I4 e I5",
+    "criterio": "Agenda y entrega trazables",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-025",
+      "RES-RF-026"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ]
+  },
+  {
+    "id": "I7",
+    "titulo": "Comprobantes e integración",
+    "min_h": 40,
+    "max_h": 80,
+    "dependencias": "I4 y decisión fiscal",
+    "criterio": "Contrato de proveedor y pruebas de integración",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-028",
+      "RES-RF-029"
+    ],
+    "adr": [
+      "ADR-04",
+      "ADR-05"
+    ]
+  },
+  {
+    "id": "I8",
+    "titulo": "Auditoría y reportes",
+    "min_h": 24,
+    "max_h": 40,
+    "dependencias": "I4 e I5",
+    "criterio": "Conciliación y consultas por sede",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-031",
+      "RES-RF-032"
+    ],
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-03",
+      "ADR-07"
+    ]
+  },
+  {
+    "id": "I9",
+    "titulo": "Endurecimiento y piloto",
+    "min_h": 64,
+    "max_h": 96,
+    "dependencias": "I1 a I8",
+    "criterio": "Concurrencia, recuperación, UAT y salida",
+    "estado": "PROPUESTO",
+    "requisitos_cierre": [
+      "RES-RF-035"
+    ],
+    "adr": [
+      "ADR-05",
+      "ADR-07"
+    ]
+  }
+]

@@ -1,0 +1,835 @@
+[
+  {
+    "id": "RES-CP-001",
+    "requisito": "RES-RF-001",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Rechazar credenciales incorrectas, usuarios inactivos y el actor técnico. No revelar si el usuario existe.",
+    "esperado": "Un usuario activo con contraseña válida recibe acceso; __sistema__ e inactivos reciben 401.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-06",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-09"
+    ],
+    "incremento_cierre": "I1"
+  },
+  {
+    "id": "RES-CP-002",
+    "requisito": "RES-RF-002",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Verificar permiso efectivo y pertenencia a la sucursal en cada comando y consulta, aunque se conozca el ID del recurso.",
+    "esperado": "Un usuario de sucursal A no puede leer ni modificar un pedido de B; respuesta 403 o 404.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-06",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-09"
+    ],
+    "incremento_cierre": "I1"
+  },
+  {
+    "id": "RES-CP-003",
+    "requisito": "RES-RF-003",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Mantener una empresa por base, moneda y zona horaria, y varias sucursales activas.",
+    "esperado": "No se puede crear una segunda empresa; desactivar una sede no borra sus operaciones.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-01",
+      "ADD-05"
+    ],
+    "incremento_cierre": "I2"
+  },
+  {
+    "id": "RES-CP-004",
+    "requisito": "RES-RF-004",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Validar campos obligatorios y unicidad del tipo y número de documento incluso después de una baja.",
+    "esperado": "El documento duplicado se rechaza; el contacto dado de baja puede restaurarse con el mismo ID.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-05"
+    ],
+    "incremento_cierre": "I2"
+  },
+  {
+    "id": "RES-CP-005",
+    "requisito": "RES-RF-005",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Separar maestro activo, disponibilidad comercial y precio por sucursal. Preservar los precios de ventas anteriores.",
+    "esperado": "Pausar un plato impide agregarlo a pedidos nuevos, sin alterar consumos ya registrados.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-05",
+      "ADD-06"
+    ],
+    "incremento_cierre": "I2"
+  },
+  {
+    "id": "RES-CP-006",
+    "requisito": "RES-RF-006",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Registrar unidad base, factor positivo de presentación y controles de lote y vencimiento. No mezclar dimensiones.",
+    "esperado": "Una presentación de 5 KG convierte 2 unidades compradas en 10 KG; el factor cero se rechaza.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-007",
+    "requisito": "RES-RF-007",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Crear una versión nueva cuando cambie una composición ya utilizada. Calcular consumo a partir de la versión histórica y el rendimiento.",
+    "esperado": "Una receta usada no se sobreescribe; un pedido ya preparado conserva su consumo original.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-008",
+    "requisito": "RES-RF-008",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Mantener zona, capacidad, habilitación y actividad. La ocupación se deriva de pedidos abiertos.",
+    "esperado": "Una mesa deshabilitada no permite nuevas atenciones. Una mesa ocupada no admite otro pedido abierto.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-02",
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-04"
+    ],
+    "incremento_cierre": "I2"
+  },
+  {
+    "id": "RES-CP-009",
+    "requisito": "RES-RF-009",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Crear pedido y primera cuenta en una misma transacción. Validar mesa, capacidad, sede y canal de atención.",
+    "esperado": "Si falla la creación de la cuenta no queda una cabecera de pedido huérfana.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I3"
+  },
+  {
+    "id": "RES-CP-010",
+    "requisito": "RES-RF-010",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Persistir producto, descripción, cantidad, precio, descuento e impuesto aplicable como instantánea. La API calcula importes.",
+    "esperado": "Cambiar el precio de carta no modifica un detalle existente; cantidades no positivas se rechazan.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ],
+    "incremento_cierre": "I3"
+  },
+  {
+    "id": "RES-CP-011",
+    "requisito": "RES-RF-011",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Reasignar líneas antes del primer pago confirmado; conservar identidad del pedido y trazabilidad de cocina.",
+    "esperado": "La suma de las cuentas antes y después coincide. Con pago confirmado se bloquea el cambio.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I3"
+  },
+  {
+    "id": "RES-CP-012",
+    "requisito": "RES-RF-012",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Asignar cantidades pendientes a Cocina o Barra, sin reenviar cantidades ya despachadas. Reimprimir no crea un nuevo envío.",
+    "esperado": "Dos reintentos de un mismo envío producen una sola comanda por clave; no exceden la cantidad solicitada.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I3"
+  },
+  {
+    "id": "RES-CP-013",
+    "requisito": "RES-RF-013",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Controlar PENDIENTE a PREPARACION a LISTO a ENTREGADO; generar consumo una sola vez al comenzar a preparar.",
+    "esperado": "Si falta un insumo, se revierte todo el consumo y no se inicia la preparación.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-014",
+    "requisito": "RES-RF-014",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Cancelar atención o detalle conforme a su situación. Separar la anulación de servicio de una devolución financiera o ajuste físico.",
+    "esperado": "Una cancelación conserva las líneas y su auditoría; el consumo ya confirmado no se devuelve automáticamente.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ],
+    "incremento_cierre": "I3"
+  },
+  {
+    "id": "RES-CP-015",
+    "requisito": "RES-RF-015",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Una sesión abierta por caja. Registrar fondo, efectivo contado, diferencia y cierre. Resolver pagos pendientes antes de cerrar.",
+    "esperado": "Se impide una segunda apertura simultánea y un cierre con pagos pendientes sin resolver.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-CP-016",
+    "requisito": "RES-RF-016",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Admitir importes parciales por cuenta, método y sesión; exigir referencia cuando corresponde y evitar sobrepago concurrente.",
+    "esperado": "Para un saldo 32.00, efectivo 12.00 y Yape 20.00 saldan la cuenta; un cobro adicional se rechaza.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-CP-017",
+    "requisito": "RES-RF-017",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Registrar movimientos extraordinarios de efectivo con concepto e idempotencia. No repetir allí cobros ni devoluciones.",
+    "esperado": "Un egreso 10.00 reduce el esperado una vez; el registro confirmado no se edita ni borra.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-CP-018",
+    "requisito": "RES-RF-018",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Conservar el pago original y registrar una devolución ejecutada, con motivo, autorizador, método y límite acumulado.",
+    "esperado": "De un pago 50.00 con devolución 20.00, solo quedan 30.00 reembolsables.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-CP-019",
+    "requisito": "RES-RF-019",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Cerrar la atención tras verificar consumos entregados y cuentas resueltas. El cierre libera la ocupación de la mesa.",
+    "esperado": "No se cierra con saldo o productos pendientes; cerrar dos veces no libera una mesa ajena.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-CP-020",
+    "requisito": "RES-RF-020",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Crear borrador, confirmar y generar ingreso por cada detalle en la misma transacción. No hay recepción parcial en V4.",
+    "esperado": "La compra de 5 KG aumenta el stock en 5 KG una vez; un segundo envío devuelve el mismo resultado o conflicto.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-021",
+    "requisito": "RES-RF-021",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Derivar stock solo de movimientos confirmados; ofrecer filtros por almacén, artículo y lote, con saldo verificable.",
+    "esperado": "La suma de cantidades confirmadas coincide con existencia; un maestro de baja no hace desaparecer movimientos históricos.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-02",
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-04"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-022",
+    "requisito": "RES-RF-022",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Confirmar cantidades firmadas por tipo, costo y referencia, con motivo. Impedir stock negativo con bloqueo del recurso.",
+    "esperado": "Una salida mayor al saldo falla y no deja líneas parciales ni cabecera confirmada.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-023",
+    "requisito": "RES-RF-023",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Aplicar selección y bloqueo de lotes según política FEFO aprobada; no confundir cantidad física con stock utilizable.",
+    "esperado": "Un lote bloqueado sigue en las existencias físicas pero no puede consumirse ni venderse.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Media",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-024",
+    "requisito": "RES-RF-024",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Confirmar salida y entrada equivalentes en una transacción, con artículo, lote, cantidad y costo consistentes.",
+    "esperado": "Si falla el ingreso, la salida también se revierte; el total entre almacenes se conserva.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Media",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CP-025",
+    "requisito": "RES-RF-025",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Validar intervalo, capacidad y mesa; impedir solapamientos pendientes o confirmados; abrir atención al recibir.",
+    "esperado": "19:00 a 20:30 impide otra reserva de 20:00 a 21:00; 20:30 a 21:30 es admisible.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Media",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ],
+    "incremento_cierre": "I6"
+  },
+  {
+    "id": "RES-CP-026",
+    "requisito": "RES-RF-026",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Guardar dirección histórica, teléfono, canal y repartidor; controlar asignación, ruta, entrega y fallo. Cobrar envío como línea.",
+    "esperado": "No se despacha sin productos listos ni repartidor; cambiar la dirección del cliente no altera la entrega histórica.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Media",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-08"
+    ],
+    "incremento_cierre": "I6"
+  },
+  {
+    "id": "RES-CP-027",
+    "requisito": "RES-RF-027",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Registrar impuestos y vigencias sin asignar una tasa por asumir que todo restaurante tiene el mismo tratamiento.",
+    "esperado": "Una venta utiliza la tasa vigente aprobada y conserva esa tasa; no recalcular documentos antiguos.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-05"
+    ],
+    "add": [
+      "ADD-06",
+      "ADD-09"
+    ],
+    "incremento_cierre": "I2"
+  },
+  {
+    "id": "RES-CP-028",
+    "requisito": "RES-RF-028",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Construir boleta, factura o nota desde cuenta y líneas históricas. Validar receptor, redondeo, referencia y correlativo.",
+    "esperado": "Una cuenta no se factura dos veces con documento principal; un documento emitido conserva sus importes.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Media",
+    "adr": [
+      "ADR-05"
+    ],
+    "add": [
+      "ADD-08"
+    ],
+    "incremento_cierre": "I7"
+  },
+  {
+    "id": "RES-CP-029",
+    "requisito": "RES-RF-029",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Encapsular proveedor, reintentos y conciliación de respuestas; no igualar EMITIDO con ACEPTADO. Resolver bajas por flujo fiscal.",
+    "esperado": "Tras una desconexión se consulta el estado antes de reenviar; una respuesta aceptada no dispara otra emisión.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Media",
+    "adr": [
+      "ADR-04",
+      "ADR-05"
+    ],
+    "add": [
+      "ADD-09"
+    ],
+    "incremento_cierre": "I7"
+  },
+  {
+    "id": "RES-CP-030",
+    "requisito": "RES-RF-030",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Distinguir 9 maestros con baja y motivo de 17 catálogos o relaciones con desactivación simple. Conservar es_activo, claves e historial; el actor procede de la sesión.",
+    "esperado": "Los 9 maestros registran motivo, usuario y fecha de baja. Las otras 17 tablas se desactivan sin esos campos; auditoría conserva actor y cambios. Reactivar conserva ID; DELETE no está permitido.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-03",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-05"
+    ],
+    "incremento_cierre": "I2"
+  },
+  {
+    "id": "RES-CP-031",
+    "requisito": "RES-RF-031",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Mostrar actor, fecha, tabla, acción y datos permitidos; proteger historial y excluir secretos de consulta y exportación.",
+    "esperado": "El editor no cambia creado_por; password_hash no aparece en eventos ni exportaciones.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-03",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-05"
+    ],
+    "incremento_cierre": "I8"
+  },
+  {
+    "id": "RES-CP-032",
+    "requisito": "RES-RF-032",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Separar atención, ventas, pagos, devoluciones y caja física. Filtrar por sede, fecha de negocio y moneda.",
+    "esperado": "El total de pagos no se presenta como ventas emitidas; el reporte concilia con vistas y registros fuente.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Media",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ],
+    "incremento_cierre": "I8"
+  },
+  {
+    "id": "RES-CP-033",
+    "requisito": "RES-RF-033",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Asignar permisos mínimos y sedes; revocar acceso al dar de baja usuario, rol o asignación. No dar roles al actor técnico.",
+    "esperado": "Un rol inactivo deja de conceder permisos aunque la asignación exista; ADMIN funcional no es superusuario de PostgreSQL.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-03",
+      "ADR-06",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-09"
+    ],
+    "incremento_cierre": "I1"
+  },
+  {
+    "id": "RES-CP-034",
+    "requisito": "RES-RF-034",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Persistir claves idempotentes, reconciliar pagos o envíos en resultado incierto y reintentar sin duplicar efectos.",
+    "esperado": "Repetir la misma clave y mismo contenido conserva el resultado; clave repetida con otro contenido produce 409.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-04",
+      "ADR-05",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-08"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-CP-035",
+    "requisito": "RES-RF-035",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Automatizar copias y ensayar restauración con roles, configuración y artefactos externos. Definir RPO y RTO medidos.",
+    "esperado": "Una restauración en entorno aislado concilia pedidos, pagos, kardex y auditoría.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-10"
+    ],
+    "incremento_cierre": "I9"
+  },
+  {
+    "id": "RES-CP-036",
+    "requisito": "RES-RF-036",
+    "tipo": "Aceptación backend y datos",
+    "precondicion": "Ambiente de prueba con usuario y sucursal autorizados, catálogos y operaciones necesarias preparados según el requisito.",
+    "accion": "Listar, crear, editar, detallar, dar de baja y restaurar con mensajes por campo, foco accesible y acciones según permiso/estado.",
+    "esperado": "Error de campo conserva datos; baja de maestro principal pide motivo; desactivación simple no lo exige; doble clic no duplica el comando.",
+    "evidencia_requerida": "Solicitud, respuesta, estado persistido y consulta de conciliación sin secretos.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Alta",
+    "adr": [
+      "ADR-06"
+    ],
+    "add": [
+      "ADD-08"
+    ],
+    "incremento_cierre": "I2"
+  },
+  {
+    "id": "RES-CON-01",
+    "requisito": "Transversal",
+    "tipo": "Dos cajas cobran la misma cuenta",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "Saldo 100.00. Dos transacciones intentan confirmar 80.00 simultáneamente.",
+    "esperado": "A lo sumo una confirma; la otra informa saldo insuficiente o conflicto. Total confirmado no supera 100.00.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07",
+      "ADD-12"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-CON-02",
+    "requisito": "Transversal",
+    "tipo": "Dos salidas del mismo insumo",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "Stock 5 KG. Dos conexiones intentan salidas de 4 KG.",
+    "esperado": "Una confirma y la otra falla. Stock final 1 KG; sin líneas o estados parciales.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07",
+      "ADD-12"
+    ],
+    "incremento_cierre": "I5"
+  },
+  {
+    "id": "RES-CON-03",
+    "requisito": "Transversal",
+    "tipo": "Reservas simultáneas",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "Dos conexiones reservan la misma mesa en intervalos superpuestos.",
+    "esperado": "Una confirma; la otra se rechaza. No quedan intervalos activos cruzados.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07",
+      "ADD-12"
+    ],
+    "incremento_cierre": "I6"
+  },
+  {
+    "id": "RES-CON-04",
+    "requisito": "Transversal",
+    "tipo": "Reintento después de timeout",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "Enviar pago; cortar respuesta después del commit y reenviar la misma clave.",
+    "esperado": "Se obtiene la identidad y estado del pago original sin repetir cargo o monto aplicado.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-08",
+      "ADD-12"
+    ],
+    "incremento_cierre": "I4"
+  },
+  {
+    "id": "RES-SEG-01",
+    "requisito": "Transversal",
+    "tipo": "Acceso a otra sucursal",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "JWT válido de sede A consulta y modifica pedido de sede B.",
+    "esperado": "Se deniega lectura y escritura; no se filtran datos, importes ni auditoría de B.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-09"
+    ],
+    "incremento_cierre": "I1"
+  },
+  {
+    "id": "RES-SEG-02",
+    "requisito": "Transversal",
+    "tipo": "Actor inyectado desde cliente",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "Body contiene creado_por y actualizado_por de otro usuario.",
+    "esperado": "El DTO rechaza campos adicionales o los ignora explícitamente; el actor real siempre proviene de sesión.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-05",
+      "ADD-09"
+    ],
+    "incremento_cierre": "I1"
+  },
+  {
+    "id": "RES-OPS-01",
+    "requisito": "Transversal",
+    "tipo": "Recuperación y conciliación",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "Restaurar copia y WAL en entorno aislado después de un fallo simulado.",
+    "esperado": "Medir RPO y RTO; conciliar saldos, pagos, kardex, roles y auditoría; registrar tiempos.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-10",
+      "ADD-12"
+    ],
+    "incremento_cierre": "I9"
+  },
+  {
+    "id": "RES-FIS-01",
+    "requisito": "Transversal",
+    "tipo": "Respuesta fiscal incierta",
+    "precondicion": "Dos sesiones independientes o infraestructura controlada de prueba según el caso.",
+    "accion": "El proveedor acepta y se corta la conexión antes de recibir respuesta.",
+    "esperado": "Consultar estado y conservar el mismo documento; no consumir nuevo correlativo ni duplicar envío con efecto.",
+    "evidencia_requerida": "Registro de conexiones, tiempos y consultas de verificación.",
+    "resultado": "NO_EJECUTADA",
+    "severidad_si_falla": "Crítica",
+    "adr": [
+      "ADR-05"
+    ],
+    "add": [
+      "ADD-09",
+      "ADD-12"
+    ],
+    "incremento_cierre": "I7"
+  }
+]

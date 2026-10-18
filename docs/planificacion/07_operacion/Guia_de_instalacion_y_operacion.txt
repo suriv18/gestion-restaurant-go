@@ -1,0 +1,106 @@
+GUÍA DE INSTALACIÓN Y OPERACIÓN — DISEÑO PARA IMPLEMENTAR
+
+1. ENTORNO LOCAL DEL PROTOTIPO
+Seguir 00_LEEME.txt. Node 24.19.0 fue el entorno de validación. El servidor
+incluido entrega archivos estáticos: no es el backend de la API propuesta.
+Si el puerto 5173 está ocupado, detén el proceso propio que lo usa o cambia
+el puerto en servidor.mjs y utiliza esa misma dirección en el navegador.
+localhost y 127.0.0.1 representan orígenes diferentes para el almacenamiento.
+Para recuperar los ejemplos: Configuración > Restablecer demostración.
+
+2. INSTALACIÓN NUEVA DEL MODELO SQL
+Requiere PostgreSQL 18 con psql y una base nueva, vacía y dedicada a pruebas.
+El script crea sch_restaurante, pero no crea base, cuentas PostgreSQL ni claves.
+Configura la conexión mediante el mecanismo seguro del entorno, sin guardar
+contraseñas en el repositorio. Usa el rol propietario para esta instalación.
+
+Ejemplo, desde la carpeta Sistema_Restaurante, una vez configurada la conexión:
+  createdb restaurante_pruebas
+  psql -v ON_ERROR_STOP=1 -d restaurante_pruebas -f 02_base_datos/modelo_de_base_de_datos_para_restaurante.sql
+
+Comprobaciones en esa base:
+  SELECT count(*) FROM information_schema.tables
+  WHERE table_schema = 'sch_restaurante' AND table_type = 'BASE TABLE';
+  -- Resultado esperado: 49
+
+  SELECT count(*) FROM information_schema.views
+  WHERE table_schema = 'sch_restaurante';
+  -- Resultado esperado: 11
+
+El script se detiene si sch_restaurante ya existe. No es una migración.
+No lo modifiques y vuelvas a ejecutar sobre una instalación operativa.
+Los cambios posteriores deben ir en migraciones nuevas, revisadas y versionadas.
+
+3. APROVISIONAMIENTO QUE DEBE CONSTRUIR EL BACKEND
+La semilla __sistema__ es un actor técnico sin contraseña ni roles, no un login.
+El instalador debe abrir una transacción, fijar app.usuario_id al actor técnico,
+crear el usuario humano con hash seguro y asignarle rol y sucursal.
+A continuación configurar negocio, sedes, almacenes, cajas, mesas, catálogos,
+precios, recetas, impuestos con sus vigencias, series y permisos operativos.
+No se entrega contraseña predeterminada ni un instalador de backend funcional.
+Las tasas tributarias deben configurarse según la decisión fiscal validada.
+Los diez permisos iniciales del SQL no completan todos los permisos de la API:
+preparar la migración de permisos finos antes de implementar su autorización.
+
+4. TRANSACCIONES Y AUDITORÍA
+El backend toma el actor de la identidad autenticada. No lo acepta del body.
+En cada transacción establece, mediante consulta parametrizada:
+  SELECT set_config('app.usuario_id', :actor_id_texto, true);
+:actor_id_texto es un parámetro del driver, no una cadena que se concatena.
+Usar READ COMMITTED, search_path controlado y permisos mínimos.
+El contexto local a transacción evita reutilizar la identidad al volver al pool.
+Creación y última modificación no sustituyen el historial auditoria_eventos.
+
+La baja de los 9 maestros principales cambia es_activo y motivo_eliminacion;
+el SQL registra eliminado_por y eliminado_en. Los otros 17 catálogos y relaciones
+solo cambian es_activo, con creado_por/actualizado_por y auditoria_eventos.
+Restaurar conserva la identidad. estado representa el ciclo de negocio en 13 tablas. Pagos, documentos, kardex y
+operaciones se cancelan o compensan según su estado, sin esconderlos por baja.
+Consultar la matriz de auditoría para la política exacta de las 49 tablas.
+
+5. ENTORNOS Y DESPLIEGUE PROPUESTO
+Separar desarrollo, pruebas y producción. Mantener secretos y credenciales
+fuera de código y documentos. Definir lenguaje/frameworks y herramienta de
+migración en DEC 02; este paquete no presupone un stack elegido anteriormente.
+Pipeline a implementar: dependencias fijadas, pruebas de dominio y SQL,
+contrato HTTP, migración de prueba, controles de acceso y revisión de artefactos.
+Antes de desplegar: verificar compatibilidad app/esquema y copia recuperable.
+Volver a una imagen anterior no revierte una migración ni un efecto externo.
+
+6. COPIAS Y RESTAURACIÓN
+Acordar con el restaurante cuánto dato se puede perder (RPO) y cuánto tiempo
+puede durar la recuperación (RTO). Los valores del plan son propuestas.
+Un dump diario no alcanza por sí solo un RPO de 15 minutos. Para ese objetivo
+se necesita diseñar archivado WAL y recuperación a un punto temporal, medirlos
+y vigilar la continuidad del archivado.
+
+Ejemplo de copia lógica de una base de pruebas, con conexión ya configurada:
+  pg_dump -Fc -d restaurante_pruebas -f restaurante_pruebas.dump
+
+Ejemplo de ensayo de recuperación en una base NUEVA y aislada:
+  createdb restaurante_restauracion
+  pg_restore --exit-on-error --no-owner -d restaurante_restauracion restaurante_pruebas.dump
+
+Los roles, privilegios y archivos externos requieren su propia estrategia.
+El ejemplo no conserva propietarios con --no-owner: aplicar el rol apropiado
+según el entorno de recuperación. No restaurar este ensayo sobre producción.
+Conciliar filas, saldos, kardex, auditoría y versión de migración; verificar
+operaciones representativas y registrar duración y fecha de recuperación.
+La recuperación de esta aplicación todavía no se ha ensayado en producción.
+
+7. RESPUESTA A INCIDENTES Y CONTINUIDAD
+Registrar hora, sede, operación, traceId y resultado, sin secretos.
+Ante un cobro o emisión con respuesta incierta, consultar la operación antes
+de reintentar. Reutilizar la misma intención y clave idempotente.
+Si falla stock, caja o autorización, detener el comando y revertir la unidad
+transaccional; no corregir saldos editando filas históricas.
+Acordar contingencia de atención y posterior conciliación ante falta de red.
+
+8. SALIDA A PILOTO
+Cerrar decisiones DEC 01–08, implementar requisitos P0, resolver modalidad
+fiscal, preparar datos iniciales conciliados y permisos por rol/sucursal.
+Ejecutar los 44 casos propuestos según alcance, añadir cobertura del proveedor
+y probar dos sesiones reales para pagos, inventario, reserva e idempotencia.
+Revisar escritorio/móvil, teclado, impresión y accesibilidad con usuarios.
+Ensayar un turno, cierre, devolución, caída y recuperación; registrar hallazgos.
+El responsable del restaurante acepta resultados, soporte y riesgos residuales.

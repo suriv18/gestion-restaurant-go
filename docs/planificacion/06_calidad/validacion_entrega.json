@@ -1,0 +1,46 @@
+{
+  "version_paquete": "1.2",
+  "generado_utc": "2026-10-13T01:46:13.498043+00:00",
+  "ejecutado": [
+    {
+      "elemento": "SQL V4",
+      "resultado": "CORRECTO",
+      "detalle": "Instalación y escenarios funcionales y de auditoría en PGlite 0.5.9 / PostgreSQL 18.6 WASM. Regresión de 9 tripletes, 13 estados, relaciones sin marcadores, baja principal con motivo y desactivación simple. Evidencia: sql/resultados_sql.json."
+    },
+    {
+      "elemento": "Lógica del prototipo Mesa 1.1",
+      "resultado": "CORRECTO",
+      "detalle": "12 escenarios anteriores más una regresión de desactivación/reactivación de mesa sin motivo ni marcadores: 13 en total. tests/model.test.mjs."
+    },
+    {
+      "elemento": "Interfaz del prototipo",
+      "resultado": "CORRECTO",
+      "detalle": "jsdom: 14 rutas y flujos principales, incluida desactivación/reactivación de mesa sin campo de motivo ni errores JavaScript. tests/ui.test.mjs."
+    },
+    {
+      "elemento": "Contrato OpenAPI 3.1.1, versión 0.2.0",
+      "resultado": "CORRECTO",
+      "detalle": "openapi-spec-validator; 112 rutas, 153 operaciones, referencias internas, operationId únicos y 49 schemas contrastados con la política de campos. No hay backend desplegado."
+    },
+    {
+      "elemento": "Documentación Word 1.2",
+      "resultado": "CORRECTO",
+      "detalle": "Render e inspección visual de todas las páginas: Plan 6, Requisitos 6, ADR 8 y ADD 13; total 33. Se corrigieron referencias de versión y conteos."
+    },
+    {
+      "elemento": "Coherencia de la entrega",
+      "resultado": "CORRECTO",
+      "detalle": "21 comprobaciones de tablas, campos, estados, API, referencias RF/CP/ADR/ADD, criterios de aceptación y enlaces locales. Evidencia: revision_coherencia.json."
+    }
+  ],
+  "pendiente": [
+    "Cierre y aceptación de las decisiones DEC 01 a 08, incluyendo stack de aplicación",
+    "Backend y autenticación implementados",
+    "Concurrencia multiproceso en PostgreSQL 18 nativo",
+    "Pruebas de carga y restauración en el entorno objetivo",
+    "Inspección visual en navegador real y dispositivos",
+    "Integraciones fiscales y externas",
+    "Aceptación operativa con restaurante"
+  ],
+  "aclaracion": "Los 44 casos de plan_pruebas.json describen pruebas previstas para el sistema implementado y permanecen NO_EJECUTADA. Las pruebas de prototipo y PGlite no las sustituyen."
+}

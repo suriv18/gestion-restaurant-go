@@ -1,0 +1,79 @@
+[
+  {
+    "id": "F01",
+    "titulo": "PostgreSQL 18 restricciones",
+    "url": "https://www.postgresql.org/docs/18/ddl-constraints.html",
+    "uso": "Restricciones de integridad; diseño físico.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F02",
+    "titulo": "PostgreSQL 18 transacciones",
+    "url": "https://www.postgresql.org/docs/18/sql-set-transaction.html",
+    "uso": "Semántica READ COMMITTED; consistencia y bloqueo.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F03",
+    "titulo": "PostgreSQL 18 copias lógicas",
+    "url": "https://www.postgresql.org/docs/18/backup-dump.html",
+    "uso": "Exportación lógica y restauración.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F04",
+    "titulo": "PostgreSQL 18 archivado continuo",
+    "url": "https://www.postgresql.org/docs/18/continuous-archiving.html",
+    "uso": "Recuperación a un punto temporal; diseño de continuidad.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F05",
+    "titulo": "OpenAPI 3 1 1",
+    "url": "https://spec.openapis.org/oas/v3.1.1.html",
+    "uso": "Formato del contrato de API propuesto.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F06",
+    "titulo": "OWASP ASVS",
+    "url": "https://owasp.org/projects/asvs",
+    "uso": "Referencia para seleccionar controles verificables, sin afirmar certificación.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F07",
+    "titulo": "arc42 visión general",
+    "url": "https://arc42.org/overview/",
+    "uso": "Estructura adaptable de documentación arquitectónica.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F08",
+    "titulo": "Odoo 19 punto de venta restaurante",
+    "url": "https://www.odoo.com/documentation/19.0/applications/sales/point_of_sale/restaurant.html",
+    "uso": "Referencia funcional de mesas y flujos de atención; no prueba de aceptación del negocio.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F09",
+    "titulo": "SUNAT boleta electrónica",
+    "url": "https://cpe.sunat.gob.pe/tipos_de_comprobantes/boleta",
+    "uso": "Referencia de integración fiscal; modalidad y obligaciones aplicables por validar.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F10",
+    "titulo": "Spring Boot requisitos del sistema",
+    "url": "https://docs.spring.io/spring-boot/system-requirements.html",
+    "uso": "Referencia para evaluar compatibilidad si se selecciona este framework; stack no aprobado.",
+    "consultado": "2026-10-12 America/Lima"
+  },
+  {
+    "id": "F11",
+    "titulo": "AWS proceso de registros de decisiones arquitectónicas",
+    "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/architectural-decision-records/adr-process.html",
+    "uso": "Contexto, decisión, consecuencias, estados y sustitución de ADR aceptados.",
+    "consultado": "2026-10-12 America/Lima"
+  }
+]

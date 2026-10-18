@@ -1,0 +1,471 @@
+[
+  {
+    "id": "ADR-01",
+    "titulo": "Monolito modular con transacciones locales",
+    "base": "Diseño propuesto; backend pendiente",
+    "contexto": "Abrir un pedido, distribuir sus consumos, cobrar y confirmar movimientos de inventario requiere preservar reglas compartidas. El equipo de implementación aún no necesita despliegues independientes por dominio y el SQL V4 reúne el negocio en un esquema.",
+    "alternativas": [
+      "Microservicios por dominio: permiten despliegues independientes, pero incorporan coordinación distribuida y operación adicional.",
+      "Monolito sin límites internos: facilita el inicio, pero favorece accesos cruzados y reglas duplicadas."
+    ],
+    "decision": "Organizar un backend como monolito modular y una aplicación web. Separar Identidad, Catálogos, Atención, Producción, Caja, Abastecimiento, Comprobantes y Consulta. Un caso de uso puede coordinar varios módulos dentro de una transacción PostgreSQL.",
+    "justificacion": "Las operaciones críticas pueden confirmarse o revertirse juntas. Cada módulo expone servicios internos y concentra sus reglas; esta separación permite cambiar la interfaz sin repartir prematuramente la consistencia entre servicios.",
+    "consecuencias": "Reduce componentes desplegables y facilita pruebas integradas. Exige controlar dependencias y evitar que un módulo escriba directamente en las tablas de otro. Las consultas de reportes pueden combinar proyecciones autorizadas sin asumir autoridad de escritura.",
+    "verificacion": "Revisar dependencias y ejecutar apertura de pedido, cobro y consumo con fallos inyectados. Ningún fallo debe dejar cabeceras, pagos o movimientos parciales.",
+    "revision": "Reconsiderar separación de servicios cuando una necesidad medida de escala, equipos o aislamiento supere el costo de coordinación.",
+    "nfr": [
+      "NFR-02",
+      "NFR-09"
+    ],
+    "add": [
+      "ADD-02",
+      "ADD-03",
+      "ADD-07"
+    ],
+    "incrementos": [
+      "I1",
+      "I3",
+      "I4",
+      "I5",
+      "I6",
+      "I8"
+    ],
+    "dec": [
+      "DEC-02",
+      "DEC-03"
+    ],
+    "fuentes": [
+      "F07"
+    ],
+    "estado": "PROPUESTO",
+    "version": "1.2",
+    "fecha": "2026-10-12",
+    "responsable_propuesto": "Responsable técnico del restaurante",
+    "aprobado_por": null,
+    "fecha_aprobacion": null,
+    "requisitos": [
+      "RES-RF-006",
+      "RES-RF-007",
+      "RES-RF-009",
+      "RES-RF-011",
+      "RES-RF-012",
+      "RES-RF-013",
+      "RES-RF-014",
+      "RES-RF-015",
+      "RES-RF-016",
+      "RES-RF-019",
+      "RES-RF-020",
+      "RES-RF-023",
+      "RES-RF-026",
+      "RES-RF-032"
+    ],
+    "pruebas": [
+      "RES-CP-006",
+      "RES-CP-007",
+      "RES-CP-009",
+      "RES-CP-011",
+      "RES-CP-012",
+      "RES-CP-013",
+      "RES-CP-014",
+      "RES-CP-015",
+      "RES-CP-016",
+      "RES-CP-019",
+      "RES-CP-020",
+      "RES-CP-023",
+      "RES-CP-026",
+      "RES-CP-032"
+    ]
+  },
+  {
+    "id": "ADR-02",
+    "titulo": "PostgreSQL como autoridad de integridad",
+    "base": "SQL V4 existente; integración de aplicación pendiente",
+    "contexto": "El modelo cuenta con 49 tablas, restricciones, funciones y triggers. Un servicio, una importación o un proceso interno pueden escribir datos; una validación exclusiva del formulario no protege a todos los escritores.",
+    "alternativas": [
+      "Validar solo en interfaz u ORM: deja huecos ante procesos externos o escrituras concurrentes.",
+      "Mover toda regla a la base: dificulta autorización, integración externa y coordinación de casos de uso."
+    ],
+    "decision": "Mantener claves, unicidad, restricciones y protecciones transaccionales de la V4 en PostgreSQL 18. El backend valida permisos, sucursal, estados permitidos y unidades de trabajo. Usar READ COMMITTED conforme a las funciones existentes y orden consistente de bloqueos.",
+    "justificacion": "La protección de dinero, stock e identidad debe mantenerse incluso si una solicitud llega por un canal distinto. La base conserva integridad; el servicio aporta contexto funcional y mensajes adecuados.",
+    "consecuencias": "Requiere pruebas contra PostgreSQL nativo, migraciones revisadas y un rol de ejecución limitado. No se pueden reemplazar reglas SQL por validaciones del ORM sin demostrar cobertura equivalente. Las pruebas temporales PGlite no prueban concurrencia multiproceso.",
+    "verificacion": "Comprobar dos cobros sobre una misma cuenta y dos salidas del mismo artículo. Debe impedirse sobrepago y stock negativo sin efectos parciales. Verificar también restricciones y reservas.",
+    "revision": "Revisar cualquier cambio de aislamiento o motor junto con las funciones críticas y sus pruebas. El catálogo estructural describe la implementación V4.",
+    "nfr": [
+      "NFR-02",
+      "NFR-10"
+    ],
+    "add": [
+      "ADD-04",
+      "ADD-06",
+      "ADD-07"
+    ],
+    "incrementos": [
+      "I1",
+      "I2",
+      "I3",
+      "I4",
+      "I5",
+      "I6",
+      "I8"
+    ],
+    "dec": [
+      "DEC-05"
+    ],
+    "fuentes": [
+      "F01",
+      "F02"
+    ],
+    "estado": "PROPUESTO",
+    "version": "1.2",
+    "fecha": "2026-10-12",
+    "responsable_propuesto": "Responsable técnico del restaurante",
+    "aprobado_por": null,
+    "fecha_aprobacion": null,
+    "requisitos": [
+      "RES-RF-006",
+      "RES-RF-007",
+      "RES-RF-008",
+      "RES-RF-009",
+      "RES-RF-010",
+      "RES-RF-011",
+      "RES-RF-013",
+      "RES-RF-014",
+      "RES-RF-015",
+      "RES-RF-016",
+      "RES-RF-018",
+      "RES-RF-019",
+      "RES-RF-020",
+      "RES-RF-021",
+      "RES-RF-022",
+      "RES-RF-023",
+      "RES-RF-024",
+      "RES-RF-025",
+      "RES-RF-026",
+      "RES-RF-032"
+    ],
+    "pruebas": [
+      "RES-CP-006",
+      "RES-CP-007",
+      "RES-CP-008",
+      "RES-CP-009",
+      "RES-CP-010",
+      "RES-CP-011",
+      "RES-CP-013",
+      "RES-CP-014",
+      "RES-CP-015",
+      "RES-CP-016",
+      "RES-CP-018",
+      "RES-CP-019",
+      "RES-CP-020",
+      "RES-CP-021",
+      "RES-CP-022",
+      "RES-CP-023",
+      "RES-CP-024",
+      "RES-CP-025",
+      "RES-CP-026",
+      "RES-CP-032"
+    ]
+  },
+  {
+    "id": "ADR-03",
+    "titulo": "Auditoría contextual y baja lógica selectiva",
+    "base": "Campos y protecciones existentes en SQL V4",
+    "contexto": "El usuario solicitó creado_por, actualizado_por y eliminación lógica sin confundirlos con el estado del negocio. Los documentos, pagos y movimientos deben permanecer conciliables aunque un maestro deje de utilizarse.",
+    "alternativas": [
+      "Borrar físicamente: rompe historia y referencias.",
+      "Agregar es_activo a toda tabla y ocultar filas: puede esconder saldos, documentos o movimientos confirmados."
+    ],
+    "decision": "Conservar creado_en/por en 49 tablas y actualizado_en/por en 46. Usar es_activo en 26: nueve maestros principales con tres marcadores de eliminación y 17 catálogos o relaciones sin ellos. El backend fija app.usuario_id; los 13 estados operativos permanecen independientes de la baja.",
+    "justificacion": "La baja impide nuevas selecciones sin destruir la identidad histórica. Separar última edición del historial auditoria_eventos permite seguir tanto el estado actual como los cambios relevantes.",
+    "consecuencias": "Restaurar reutiliza el mismo ID; los códigos únicos no se liberan por la baja. Las consultas nuevas deben verificar toda la cadena activa. Los históricos y saldos no se filtran según la actividad actual del maestro. Retención y purga requieren una política aparte.",
+    "verificacion": "Dar de baja y restaurar un producto o cliente, verificar actor, fecha y motivo, y confirmar que el historial y la unicidad se conservan. Rechazar intento de suplantar creado_por y excluir secretos del evento.",
+    "revision": "Revisar retención de datos y futuras entidades mediante migración. La matriz de auditoría conserva el inventario exacto y es preferible a generalizar por nombre de módulo.",
+    "nfr": [
+      "NFR-01",
+      "NFR-07"
+    ],
+    "add": [
+      "ADD-05",
+      "ADD-09"
+    ],
+    "incrementos": [
+      "I1",
+      "I2",
+      "I5",
+      "I8"
+    ],
+    "dec": [
+      "DEC-06",
+      "DEC-08"
+    ],
+    "fuentes": [
+      "F01",
+      "F06"
+    ],
+    "estado": "PROPUESTO",
+    "version": "1.2",
+    "fecha": "2026-10-12",
+    "responsable_propuesto": "Responsable técnico del restaurante",
+    "aprobado_por": null,
+    "fecha_aprobacion": null,
+    "requisitos": [
+      "RES-RF-003",
+      "RES-RF-004",
+      "RES-RF-005",
+      "RES-RF-008",
+      "RES-RF-021",
+      "RES-RF-030",
+      "RES-RF-031",
+      "RES-RF-033"
+    ],
+    "pruebas": [
+      "RES-CP-003",
+      "RES-CP-004",
+      "RES-CP-005",
+      "RES-CP-008",
+      "RES-CP-021",
+      "RES-CP-030",
+      "RES-CP-031",
+      "RES-CP-033"
+    ],
+    "nota_revision": "Revisión 1.2 solicitada: retirar marcadores de eliminación de relaciones y catálogos simples. La matriz identifica las nueve entidades principales y 13 estados de proceso."
+  },
+  {
+    "id": "ADR-04",
+    "titulo": "Idempotencia persistente por intención",
+    "base": "Claves existentes en V4; coordinación HTTP pendiente",
+    "contexto": "Un doble clic, timeout o reconexión puede repetir un cobro, comanda o recepción. Desactivar botones no permite distinguir una intención repetida de otra operación válida y no protege varias sesiones.",
+    "alternativas": [
+      "Bloqueo de botón: útil para experiencia, insuficiente para integridad.",
+      "Caché efímera de respuestas: puede perder la deduplicación al reiniciar o cambiar de instancia."
+    ],
+    "decision": "Usar una clave estable por intención y persistir la relación entre clave, operación, alcance, huella de entrada y resultado. Repetir el mismo contenido recupera el mismo efecto; contenido diferente con la misma clave produce conflicto. Autorizar antes de revelar un resultado previo.",
+    "justificacion": "La intención permanece identificable tras reinicios. En dinero y stock se verifica además el estado real, porque recibir una clave no confirma por sí mismo que el proveedor externo haya ejecutado una operación.",
+    "consecuencias": "La V4 ya contiene clave_idempotencia en comandas, pagos, devoluciones y movimientos de caja e inventario. Para comandos compuestos sin persistencia suficiente se requiere una migración adicional; no se declara resuelto un almacén genérico de resultados. Deben fijarse ámbito y retención.",
+    "verificacion": "Repetir solicitud idéntica, repetir con contenido distinto, enviar simultáneamente y reintentar tras interrumpir la respuesta. Conciliar un solo efecto y no exponer resultados de otra sucursal.",
+    "revision": "Revisar retención, operaciones compuestas e integración externa antes de ofrecer garantías generales de reintento.",
+    "nfr": [
+      "NFR-02",
+      "NFR-04"
+    ],
+    "add": [
+      "ADD-07",
+      "ADD-08",
+      "ADD-11"
+    ],
+    "incrementos": [
+      "I1",
+      "I3",
+      "I4",
+      "I5",
+      "I7"
+    ],
+    "dec": [
+      "DEC-06"
+    ],
+    "fuentes": [
+      "F02",
+      "F05"
+    ],
+    "estado": "PROPUESTO",
+    "version": "1.2",
+    "fecha": "2026-10-12",
+    "responsable_propuesto": "Responsable técnico del restaurante",
+    "aprobado_por": null,
+    "fecha_aprobacion": null,
+    "requisitos": [
+      "RES-RF-012",
+      "RES-RF-013",
+      "RES-RF-016",
+      "RES-RF-017",
+      "RES-RF-018",
+      "RES-RF-020",
+      "RES-RF-029",
+      "RES-RF-034"
+    ],
+    "pruebas": [
+      "RES-CP-012",
+      "RES-CP-013",
+      "RES-CP-016",
+      "RES-CP-017",
+      "RES-CP-018",
+      "RES-CP-020",
+      "RES-CP-029",
+      "RES-CP-034"
+    ]
+  },
+  {
+    "id": "ADR-05",
+    "titulo": "Integraciones externas recuperables",
+    "base": "Tablas de comprobantes existentes; proveedor pendiente",
+    "contexto": "La base local y un proveedor fiscal o de pagos no participan de una transacción ACID común. Un envío puede completarse en el proveedor mientras la respuesta se pierde en la red.",
+    "alternativas": [
+      "Llamar desde un trigger: acopla integridad a la red.",
+      "Mantener una transacción abierta durante el envío: prolonga bloqueos y tampoco ofrece atomicidad distribuida."
+    ],
+    "decision": "Aislar el proveedor detrás de un adaptador. Persistir la intención y las referencias de negocio antes de ejecutar trabajo externo; registrar intentos y respuesta y conciliar resultados inciertos. Evaluar un outbox durable y su migración según el proveedor y el volumen.",
+    "justificacion": "El servicio puede reanudar trabajo y consultar resultados sin volver a crear el documento o consumir otro correlativo. El estado local EMITIDO y la respuesta fiscal deben seguir ejes distintos.",
+    "consecuencias": "Se acepta consistencia eventual y se necesitan monitoreo, deduplicación y tratamiento de fallos. La V4 incluye envios_comprobante, pero no un outbox genérico ni un adaptador fiscal implementado. Un HTTP 202 indica trabajo recibido, no aceptación tributaria.",
+    "verificacion": "Simular respuesta perdida, repetición y rechazo; consultar estado antes de reenviar y comprobar que no aparece otro documento. Validar callbacks firmados solo si el proveedor elegido los ofrece.",
+    "revision": "Cerrar contrato y modalidad fiscal con DEC 04 antes de I7 y de operar con ventas reales. Reestimar integración después de conocer al proveedor.",
+    "nfr": [
+      "NFR-04",
+      "NFR-09"
+    ],
+    "add": [
+      "ADD-08",
+      "ADD-09",
+      "ADD-10"
+    ],
+    "incrementos": [
+      "I2",
+      "I4",
+      "I7",
+      "I9"
+    ],
+    "dec": [
+      "DEC-04"
+    ],
+    "fuentes": [
+      "F05",
+      "F09"
+    ],
+    "estado": "PROPUESTO",
+    "version": "1.2",
+    "fecha": "2026-10-12",
+    "responsable_propuesto": "Responsable técnico del restaurante",
+    "aprobado_por": null,
+    "fecha_aprobacion": null,
+    "requisitos": [
+      "RES-RF-027",
+      "RES-RF-028",
+      "RES-RF-029",
+      "RES-RF-034"
+    ],
+    "pruebas": [
+      "RES-CP-027",
+      "RES-CP-028",
+      "RES-CP-029",
+      "RES-CP-034"
+    ]
+  },
+  {
+    "id": "ADR-06",
+    "titulo": "Selección explícita del stack de aplicación",
+    "base": "PostgreSQL 18 fijado; backend y frontend por seleccionar",
+    "contexto": "Existen otros proyectos del usuario con tecnologías diferentes. La experiencia previa sirve como criterio, pero no constituye una elección para este restaurante. El prototipo estático tampoco obliga a un framework productivo.",
+    "alternativas": [
+      "Reutilizar un stack conocido: reduce aprendizaje, pero requiere comprobar compatibilidad y operación.",
+      "Elegir otro stack: puede resolver restricciones específicas a cambio de capacitación y mantenimiento adicionales."
+    ],
+    "decision": "Mantener el contrato y el diseño independientes del lenguaje hasta cerrar DEC 02. Comparar al menos dos combinaciones por experiencia, soporte, acceso transaccional a PostgreSQL, seguridad, pruebas, despliegue y costo. Registrar versiones exactas y herramientas de migración al seleccionar.",
+    "justificacion": "Evita trasladar supuestos de ferreterías u otros sistemas y permite estimar con la capacidad real del responsable. La base PostgreSQL 18 y las invariantes V4 se mantienen como restricciones de esta selección.",
+    "consecuencias": "La consolidación documental puede completarse ahora. El inicio de la plataforma productiva I1 requiere la elección del backend, frontend y su operación. Las estimaciones siguen siendo orientativas y deben revisarse al cerrar la decisión.",
+    "verificacion": "Construir una prueba corta con autenticación, una transacción parametrizada y consulta de catálogo; verificar permisos, rollback y empaquetado. Registrar comparación, elección, fecha y responsable real.",
+    "revision": "Cerrar DEC 02 antes de implementar I1. Si cambia el stack después de aceptación, registrar un ADR nuevo que sustituya al anterior.",
+    "nfr": [
+      "NFR-03",
+      "NFR-06",
+      "NFR-08"
+    ],
+    "add": [
+      "ADD-02",
+      "ADD-10",
+      "ADD-13"
+    ],
+    "incrementos": [
+      "I0",
+      "I1",
+      "I2"
+    ],
+    "dec": [
+      "DEC-02"
+    ],
+    "fuentes": [
+      "F10",
+      "F11"
+    ],
+    "estado": "PROPUESTO",
+    "version": "1.2",
+    "fecha": "2026-10-12",
+    "responsable_propuesto": "Responsable técnico del restaurante",
+    "aprobado_por": null,
+    "fecha_aprobacion": null,
+    "requisitos": [
+      "RES-RF-001",
+      "RES-RF-002",
+      "RES-RF-033",
+      "RES-RF-036"
+    ],
+    "pruebas": [
+      "RES-CP-001",
+      "RES-CP-002",
+      "RES-CP-033",
+      "RES-CP-036"
+    ]
+  },
+  {
+    "id": "ADR-07",
+    "titulo": "Evolución del esquema mediante migraciones",
+    "base": "Baseline V4 disponible; proceso de migración por implementar",
+    "contexto": "El SQL V4 instala un esquema nuevo y se detiene si ya existe. Cambiar y volver a ejecutar ese archivo sobre una base operativa no define cómo conservar datos ni cómo actualizar instalaciones anteriores.",
+    "alternativas": [
+      "Modificar el SQL inicial y recrear la base: pierde continuidad.",
+      "Actualizar automáticamente el esquema desde el ORM: dificulta revisión del cambio, trazabilidad y control de transformaciones de datos."
+    ],
+    "decision": "Tratar V4 como baseline inmutable. Añadir migraciones ordenadas con checksum y prueba desde la versión previa. Separar al propietario de esquema del rol de operación. Diseñar cambios compatibles por etapas y definir recuperación para cambios de datos.",
+    "justificacion": "Una evolución reproducible relaciona versión de aplicación, contrato y esquema y permite ensayar el camino real de una instalación existente. Una reversión de aplicación no deshace automáticamente los datos ya transformados.",
+    "consecuencias": "Requiere una herramienta elegida con el stack, copias comprobadas y disciplina de despliegue. Los permisos finos, idempotencia general, posible outbox y control de revisión pueden requerir migraciones; ninguna se presenta como parte ya implementada de V4.",
+    "verificacion": "Aplicar migraciones sobre una base de pruebas V4 y sobre copia representativa anonimizada, comprobar invariantes y ejecutar un ensayo de recuperación. Registrar versión, resultado y duración.",
+    "revision": "Definir herramienta en I1 y aplicar el proceso a cada incremento. Revisar compatibilidad antes de modificar claves, estados, triggers o grandes volúmenes.",
+    "nfr": [
+      "NFR-05",
+      "NFR-08"
+    ],
+    "add": [
+      "ADD-10",
+      "ADD-11",
+      "ADD-12"
+    ],
+    "incrementos": [
+      "I1",
+      "I2",
+      "I4",
+      "I8",
+      "I9"
+    ],
+    "dec": [
+      "DEC-02",
+      "DEC-08"
+    ],
+    "fuentes": [
+      "F01",
+      "F03",
+      "F04"
+    ],
+    "estado": "PROPUESTO",
+    "version": "1.2",
+    "fecha": "2026-10-12",
+    "responsable_propuesto": "Responsable técnico del restaurante",
+    "aprobado_por": null,
+    "fecha_aprobacion": null,
+    "requisitos": [
+      "RES-RF-001",
+      "RES-RF-002",
+      "RES-RF-030",
+      "RES-RF-031",
+      "RES-RF-033",
+      "RES-RF-034",
+      "RES-RF-035"
+    ],
+    "pruebas": [
+      "RES-CP-001",
+      "RES-CP-002",
+      "RES-CP-030",
+      "RES-CP-031",
+      "RES-CP-033",
+      "RES-CP-034",
+      "RES-CP-035"
+    ]
+  }
+]

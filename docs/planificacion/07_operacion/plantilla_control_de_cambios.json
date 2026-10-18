@@ -1,0 +1,17 @@
+{
+  "uso": "Copiar este objeto por cada cambio; es una plantilla, no un cambio aprobado.",
+  "id": "CC-001",
+  "estado": "PENDIENTE",
+  "fecha": null,
+  "solicitante": null,
+  "motivo": null,
+  "requisitos_afectados": [],
+  "tablas_y_migraciones": [],
+  "api_y_pantallas": [],
+  "riesgos": [],
+  "pruebas_requeridas": [],
+  "impacto_en_esfuerzo": null,
+  "decision": null,
+  "responsable_decision": null,
+  "evidencia": null
+}

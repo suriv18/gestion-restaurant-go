@@ -1,0 +1,24 @@
+CAMBIOS DEL EXPEDIENTE 1.2 — SQL V4
+
+Corrección de la política de eliminación, solicitada por el usuario.
+Se retiran eliminado_por, eliminado_en y motivo_eliminacion de 17 tablas.
+Se conservan únicamente en 9 maestros principales:
+sucursales, usuarios, empleados, clientes, proveedores, productos,
+articulos_inventario, almacenes y cajas.
+
+Las relaciones y catálogos simples conservan es_activo y auditoría. No requieren
+motivo de eliminación. Se ajustan triggers, checks, claves foráneas y OpenAPI.
+49 tablas; 664 columnas (51 menos que V3); 11 vistas. No se retira ninguna tabla.
+
+estado ya existía en 13 tablas operativas. Se conserva con sus valores permitidos
+y se documenta expresamente en estados_negocio.html, matriz_auditoria.html y
+politica_campos_por_tabla.json. No se añade estado a relaciones sin ciclo propio.
+
+ADR 03, ADD 05, requisitos y criterios de aceptación reflejan el mismo criterio.
+El prototipo Mesa 1.1 permite desactivar/reactivar mesas sin los tres marcadores.
+OpenAPI pasa a 0.2.0. Las rutas /baja de catálogos simples se conservan por
+compatibilidad, pero no exigen body con motivo; las de maestros principales sí.
+
+El SQL completo V4 es para una instalación nueva; no es una migración V3→V4.
+La versión anterior del expediente conserva la línea base V3. CAMBIOS_1_1.txt es
+un registro histórico, no describe las versiones técnicas actuales.

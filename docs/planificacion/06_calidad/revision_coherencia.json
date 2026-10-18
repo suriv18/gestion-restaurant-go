@@ -1,0 +1,119 @@
+{
+  "version_paquete": "1.2",
+  "revisado_utc": "2026-10-13T01:40:48.469499+00:00",
+  "alcance": "Coherencia estructural y documental de la política de auditoría selectiva y estados; no certifica backend implementado.",
+  "comprobaciones": [
+    {
+      "comprobacion": "Estructura real del SQL V4",
+      "resultado": "CORRECTO",
+      "detalle": "49 tablas, 664 columnas, 11 vistas"
+    },
+    {
+      "comprobacion": "Cobertura de creado_por",
+      "resultado": "CORRECTO",
+      "detalle": "49 tablas"
+    },
+    {
+      "comprobacion": "Cobertura de actualizado_por",
+      "resultado": "CORRECTO",
+      "detalle": "46 tablas"
+    },
+    {
+      "comprobacion": "Cobertura de es_activo",
+      "resultado": "CORRECTO",
+      "detalle": "26 tablas"
+    },
+    {
+      "comprobacion": "Cobertura de eliminado_por",
+      "resultado": "CORRECTO",
+      "detalle": "9 tablas"
+    },
+    {
+      "comprobacion": "Cobertura de eliminado_en",
+      "resultado": "CORRECTO",
+      "detalle": "9 tablas"
+    },
+    {
+      "comprobacion": "Cobertura de motivo_eliminacion",
+      "resultado": "CORRECTO",
+      "detalle": "9 tablas"
+    },
+    {
+      "comprobacion": "Cobertura de estado",
+      "resultado": "CORRECTO",
+      "detalle": "13 tablas"
+    },
+    {
+      "comprobacion": "Maestros principales seleccionados",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Relaciones y catálogos simplificados",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Matriz por tabla coincide con catálogo",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Valores de estado conservados de V3",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Versiones y operaciones de API",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "operationId únicos",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Referencias internas OpenAPI",
+      "resultado": "CORRECTO",
+      "detalle": "1621 referencias resueltas"
+    },
+    {
+      "comprobacion": "Inventario documental",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Trazabilidad RF, CP, ADR, ADD e incrementos",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Pruebas previstas no confundidas con ejecución",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Criterios RF030 y RF036 sincronizados con pruebas",
+      "resultado": "CORRECTO",
+      "detalle": ""
+    },
+    {
+      "comprobacion": "Enlaces locales de anexos HTML",
+      "resultado": "CORRECTO",
+      "detalle": "49 destinos existentes"
+    },
+    {
+      "comprobacion": "49 schemas API respetan eliminación selectiva y estado",
+      "resultado": "CORRECTO",
+      "detalle": "9 schemas con triplete; 13 con estado. Contrato validado además con openapi-spec-validator."
+    }
+  ],
+  "resultado": "CORRECTO",
+  "revision_visual": {
+    "documentos": 4,
+    "paginas": 33,
+    "resultado": "CORRECTO",
+    "detalle": "Todas las páginas renderizadas revisadas; Plan 6, Requisitos 6, ADR 8, ADD 13."
+  }
+}

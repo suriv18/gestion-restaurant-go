@@ -1,0 +1,75 @@
+SISTEMA DE RESTAURANTE MYPE / PYME — EXPEDIENTE DE DESARROLLO
+Versión documental 1.2 · Modelo SQL V4 · Prototipo Mesa 1.1
+
+EMPEZAR AQUÍ
+1. Extrae TODO el archivo RAR en una carpeta de tu equipo.
+2. Abre 00_INICIO.html para navegar por documentos y anexos.
+3. Lee el Plan de desarrollo, los Requisitos, el ADR y el ADD, en ese orden.
+4. Revisa el prototipo con las instrucciones siguientes.
+5. Usa los 36 requisitos y los incrementos I0–I9 para organizar la implementación.
+
+EJECUTAR EL PROTOTIPO
+Necesitas Node.js. Esta entrega fue comprobada con Node 24.19.0.
+Para reproducir todas las pruebas incluidas, usar Node 24.15.0 o superior de la rama 24.
+
+Windows:
+- Abre 04_prototipo/INICIAR_WINDOWS.bat.
+- Mantén la consola abierta y visita http://127.0.0.1:5173.
+
+Linux o macOS:
+- Abre una terminal dentro de 04_prototipo.
+- Ejecuta: node servidor.mjs
+- Visita http://127.0.0.1:5173.
+- En Linux también puedes ejecutar: bash iniciar_linux.sh
+
+Ctrl+C detiene el servidor. No se necesita instalar paquetes ni PostgreSQL
+para navegar por la demostración. No abras dist/index.html con doble clic:
+los módulos JavaScript necesitan servirse por HTTP.
+
+Los cambios se guardan en el navegador para ese origen. Son datos ficticios;
+no se sincronizan entre equipos. En Configuración puedes restablecerlos.
+Las fuentes tipográficas externas son opcionales: hay tipografía de respaldo.
+El servidor incluido es solo para desarrollo local y escucha en 127.0.0.1.
+
+CONTENIDO
+01_documentacion: cuatro documentos Word editables, requisitos y trazabilidad,
+                  backlog, guía de 14 pantallas, decisiones y fuentes web.
+02_base_datos: SQL completo PostgreSQL 18, diccionario de 49 tablas y 664
+               columnas, restricciones, índices, vistas, funciones y triggers;
+               matriz de auditoría y baja lógica por tabla; estados de negocio con valores.
+               9 maestros con datos de eliminación, 17 catálogos/relaciones sin ellos.
+               13 tablas operativas conservan estado; es_activo no lo sustituye.
+03_api: contrato OpenAPI 3.1.1 propuesto: 112 rutas y 153 operaciones.
+04_prototipo: código HTML/CSS/JavaScript, datos ficticios, servidor y pruebas.
+05_diagramas: arquitectura y atención en SVG, modelo físico editable PlantUML.
+06_calidad: 44 casos previstos para el sistema implementado, pruebas ejecutables
+            del SQL y resultados de validación de esta entrega.
+07_operacion: preparación del entorno, instalación SQL, recuperación y salida.
+SHA256SUMS.txt: integridad de todos los archivos, excepto el propio manifiesto.
+
+QUÉ ESTÁ ENTREGADO Y QUÉ SIGUE
+Entregado: planificación, diseño, SQL, contrato propuesto y prototipo navegable.
+Pendiente: seleccionar y construir el backend/frontend productivo, autenticación,
+autorización, integración fiscal, concurrencia real, despliegue y piloto.
+El prototipo no está conectado a PostgreSQL ni emite comprobantes con validez fiscal.
+Las tecnologías de aplicación quedan por decidir; PostgreSQL 18 es la base elegida.
+Las estimaciones del plan son orientativas, no fechas ni presupuesto comprometidos.
+
+PRUEBAS REPRODUCIBLES
+Dentro de 04_prototipo:
+  npm test              (13 escenarios de lógica, no necesita npm install)
+  npm install           (descarga la dependencia de pruebas jsdom 30.1.2)
+  npm run test:ui        (pruebas de interfaz en DOM simulado)
+
+Dentro de 06_calidad/sql:
+  npm install           (descarga PGlite 0.5.9)
+  npm test              (base temporal en memoria; nunca usa tu PostgreSQL)
+
+La descarga de dependencias requiere internet. No se incluye node_modules.
+Después de instalar, conservar el package-lock.json generado para futuras ejecuciones.
+Las pruebas SQL regeneran resultados_sql.json y cambian su checksum.
+No ejecutes scenarios.sql ni audit_scenarios.sql contra datos reales.
+
+La revisión visual en navegador real, concurrencia en PostgreSQL nativo,
+carga, restauración y aceptación del restaurante siguen pendientes.
+Consulta 06_calidad/validacion_entrega.json para separar evidencia y pendientes.

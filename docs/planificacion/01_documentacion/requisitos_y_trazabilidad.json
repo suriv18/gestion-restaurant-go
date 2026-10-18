@@ -1,0 +1,1065 @@
+[
+  {
+    "id": "RES-RF-001",
+    "regla": "RES-RN-001",
+    "prueba": "RES-CP-001",
+    "modulo": "Identidad",
+    "titulo": "Autenticar usuarios humanos",
+    "regla_detallada": "Rechazar credenciales incorrectas, usuarios inactivos y el actor técnico. No revelar si el usuario existe.",
+    "tablas": [
+      "usuarios",
+      "usuarios_roles",
+      "roles",
+      "permisos",
+      "roles_permisos",
+      "usuarios_sucursales"
+    ],
+    "pantalla": "Equipo y accesos",
+    "api": "POST /auth/login",
+    "prioridad": "P0",
+    "incremento": "I1",
+    "aceptacion": "Un usuario activo con contraseña válida recibe acceso; __sistema__ e inactivos reciben 401.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-06",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-09"
+    ]
+  },
+  {
+    "id": "RES-RF-002",
+    "regla": "RES-RN-002",
+    "prueba": "RES-CP-002",
+    "modulo": "Identidad",
+    "titulo": "Autorizar por permiso y sucursal",
+    "regla_detallada": "Verificar permiso efectivo y pertenencia a la sucursal en cada comando y consulta, aunque se conozca el ID del recurso.",
+    "tablas": [
+      "usuarios_sucursales",
+      "roles_permisos",
+      "usuarios_roles"
+    ],
+    "pantalla": "Equipo y accesos",
+    "api": "GET /sesion",
+    "prioridad": "P0",
+    "incremento": "I1",
+    "aceptacion": "Un usuario de sucursal A no puede leer ni modificar un pedido de B; respuesta 403 o 404.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-06",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-09"
+    ]
+  },
+  {
+    "id": "RES-RF-003",
+    "regla": "RES-RN-003",
+    "prueba": "RES-CP-003",
+    "modulo": "Configuración",
+    "titulo": "Configurar negocio y sedes",
+    "regla_detallada": "Mantener una empresa por base, moneda y zona horaria, y varias sucursales activas.",
+    "tablas": [
+      "negocio",
+      "sucursales"
+    ],
+    "pantalla": "Configuración",
+    "api": "PATCH /negocio",
+    "prioridad": "P0",
+    "incremento": "I2",
+    "aceptacion": "No se puede crear una segunda empresa; desactivar una sede no borra sus operaciones.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-01",
+      "ADD-05"
+    ]
+  },
+  {
+    "id": "RES-RF-004",
+    "regla": "RES-RN-004",
+    "prueba": "RES-CP-004",
+    "modulo": "Catálogo",
+    "titulo": "Administrar clientes y proveedores",
+    "regla_detallada": "Validar campos obligatorios y unicidad del tipo y número de documento incluso después de una baja.",
+    "tablas": [
+      "clientes",
+      "proveedores"
+    ],
+    "pantalla": "Clientes y proveedores",
+    "api": "POST /clientes",
+    "prioridad": "P0",
+    "incremento": "I2",
+    "aceptacion": "El documento duplicado se rechaza; el contacto dado de baja puede restaurarse con el mismo ID.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-05"
+    ]
+  },
+  {
+    "id": "RES-RF-005",
+    "regla": "RES-RN-005",
+    "prueba": "RES-CP-005",
+    "modulo": "Catálogo",
+    "titulo": "Administrar productos por sucursal",
+    "regla_detallada": "Separar maestro activo, disponibilidad comercial y precio por sucursal. Preservar los precios de ventas anteriores.",
+    "tablas": [
+      "productos",
+      "productos_sucursal",
+      "categorias",
+      "estaciones_preparacion"
+    ],
+    "pantalla": "Carta y recetas",
+    "api": "POST /productos",
+    "prioridad": "P0",
+    "incremento": "I2",
+    "aceptacion": "Pausar un plato impide agregarlo a pedidos nuevos, sin alterar consumos ya registrados.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-05",
+      "ADD-06"
+    ]
+  },
+  {
+    "id": "RES-RF-006",
+    "regla": "RES-RN-006",
+    "prueba": "RES-CP-006",
+    "modulo": "Catálogo",
+    "titulo": "Gestionar insumos y presentaciones",
+    "regla_detallada": "Registrar unidad base, factor positivo de presentación y controles de lote y vencimiento. No mezclar dimensiones.",
+    "tablas": [
+      "articulos_inventario",
+      "presentaciones_articulo",
+      "unidades_medida"
+    ],
+    "pantalla": "Inventario",
+    "api": "POST /articulos",
+    "prioridad": "P0",
+    "incremento": "I5",
+    "aceptacion": "Una presentación de 5 KG convierte 2 unidades compradas en 10 KG; el factor cero se rechaza.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ]
+  },
+  {
+    "id": "RES-RF-007",
+    "regla": "RES-RN-007",
+    "prueba": "RES-CP-007",
+    "modulo": "Producción",
+    "titulo": "Versionar recetas",
+    "regla_detallada": "Crear una versión nueva cuando cambie una composición ya utilizada. Calcular consumo a partir de la versión histórica y el rendimiento.",
+    "tablas": [
+      "recetas",
+      "receta_detalles",
+      "productos",
+      "articulos_inventario"
+    ],
+    "pantalla": "Carta y recetas",
+    "api": "POST /productos/{id}/recetas",
+    "prioridad": "P0",
+    "incremento": "I5",
+    "aceptacion": "Una receta usada no se sobreescribe; un pedido ya preparado conserva su consumo original.",
+    "cobertura_prototipo": "Consulta",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ]
+  },
+  {
+    "id": "RES-RF-008",
+    "regla": "RES-RN-008",
+    "prueba": "RES-CP-008",
+    "modulo": "Salón",
+    "titulo": "Gestionar mesas habilitadas",
+    "regla_detallada": "Mantener zona, capacidad, habilitación y actividad. La ocupación se deriva de pedidos abiertos.",
+    "tablas": [
+      "zonas",
+      "mesas",
+      "pedidos"
+    ],
+    "pantalla": "Salón y pedidos",
+    "api": "GET /mesas",
+    "prioridad": "P0",
+    "incremento": "I2",
+    "aceptacion": "Una mesa deshabilitada no permite nuevas atenciones. Una mesa ocupada no admite otro pedido abierto.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-02",
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-04"
+    ]
+  },
+  {
+    "id": "RES-RF-009",
+    "regla": "RES-RN-009",
+    "prueba": "RES-CP-009",
+    "modulo": "Salón",
+    "titulo": "Abrir pedido y cuenta",
+    "regla_detallada": "Crear pedido y primera cuenta en una misma transacción. Validar mesa, capacidad, sede y canal de atención.",
+    "tablas": [
+      "pedidos",
+      "cuentas",
+      "mesas"
+    ],
+    "pantalla": "Salón y pedidos",
+    "api": "POST /pedidos",
+    "prioridad": "P0",
+    "incremento": "I3",
+    "aceptacion": "Si falla la creación de la cuenta no queda una cabecera de pedido huérfana.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-010",
+    "regla": "RES-RN-010",
+    "prueba": "RES-CP-010",
+    "modulo": "Salón",
+    "titulo": "Agregar consumos históricos",
+    "regla_detallada": "Persistir producto, descripción, cantidad, precio, descuento e impuesto aplicable como instantánea. La API calcula importes.",
+    "tablas": [
+      "detalles_pedido",
+      "tasas_impuesto",
+      "productos"
+    ],
+    "pantalla": "Salón y pedidos",
+    "api": "POST /pedidos/{id}/detalles",
+    "prioridad": "P0",
+    "incremento": "I3",
+    "aceptacion": "Cambiar el precio de carta no modifica un detalle existente; cantidades no positivas se rechazan.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ]
+  },
+  {
+    "id": "RES-RF-011",
+    "regla": "RES-RN-011",
+    "prueba": "RES-CP-011",
+    "modulo": "Salón",
+    "titulo": "Dividir cuentas",
+    "regla_detallada": "Reasignar líneas antes del primer pago confirmado; conservar identidad del pedido y trazabilidad de cocina.",
+    "tablas": [
+      "cuentas",
+      "detalles_pedido",
+      "pagos"
+    ],
+    "pantalla": "Salón y pedidos",
+    "api": "POST /pedidos/{id}/dividir-cuenta",
+    "prioridad": "P0",
+    "incremento": "I3",
+    "aceptacion": "La suma de las cuentas antes y después coincide. Con pago confirmado se bloquea el cambio.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-012",
+    "regla": "RES-RN-012",
+    "prueba": "RES-CP-012",
+    "modulo": "Cocina",
+    "titulo": "Enviar comanda por estación",
+    "regla_detallada": "Asignar cantidades pendientes a Cocina o Barra, sin reenviar cantidades ya despachadas. Reimprimir no crea un nuevo envío.",
+    "tablas": [
+      "comandas",
+      "comanda_detalles",
+      "detalles_pedido"
+    ],
+    "pantalla": "Cocina",
+    "api": "POST /pedidos/{id}/comandas",
+    "prioridad": "P0",
+    "incremento": "I3",
+    "aceptacion": "Dos reintentos de un mismo envío producen una sola comanda por clave; no exceden la cantidad solicitada.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-013",
+    "regla": "RES-RN-013",
+    "prueba": "RES-CP-013",
+    "modulo": "Cocina",
+    "titulo": "Avanzar preparación y consumo",
+    "regla_detallada": "Controlar PENDIENTE a PREPARACION a LISTO a ENTREGADO; generar consumo una sola vez al comenzar a preparar.",
+    "tablas": [
+      "comanda_detalles",
+      "movimientos_inventario",
+      "movimiento_inventario_detalles"
+    ],
+    "pantalla": "Cocina",
+    "api": "POST /comanda-detalles/{id}/transiciones",
+    "prioridad": "P0",
+    "incremento": "I5",
+    "aceptacion": "Si falta un insumo, se revierte todo el consumo y no se inicia la preparación.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "incremento_preparatorio": "I3",
+    "nota_planificacion": "I3 define estados y orquestación; aceptación de consumo atómico e idempotente se cierra en I5.",
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-014",
+    "regla": "RES-RN-014",
+    "prueba": "RES-CP-014",
+    "modulo": "Salón",
+    "titulo": "Cancelar con motivo",
+    "regla_detallada": "Cancelar atención o detalle conforme a su situación. Separar la anulación de servicio de una devolución financiera o ajuste físico.",
+    "tablas": [
+      "pedidos",
+      "detalles_pedido",
+      "comanda_detalles"
+    ],
+    "pantalla": "Salón y pedidos",
+    "api": "POST /pedidos/{id}/cancelacion",
+    "prioridad": "P0",
+    "incremento": "I3",
+    "aceptacion": "Una cancelación conserva las líneas y su auditoría; el consumo ya confirmado no se devuelve automáticamente.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ]
+  },
+  {
+    "id": "RES-RF-015",
+    "regla": "RES-RN-015",
+    "prueba": "RES-CP-015",
+    "modulo": "Caja",
+    "titulo": "Abrir y cerrar sesiones",
+    "regla_detallada": "Una sesión abierta por caja. Registrar fondo, efectivo contado, diferencia y cierre. Resolver pagos pendientes antes de cerrar.",
+    "tablas": [
+      "cajas",
+      "sesiones_caja",
+      "pagos"
+    ],
+    "pantalla": "Caja y cobros",
+    "api": "POST /cajas/{id}/sesiones",
+    "prioridad": "P0",
+    "incremento": "I4",
+    "aceptacion": "Se impide una segunda apertura simultánea y un cierre con pagos pendientes sin resolver.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-016",
+    "regla": "RES-RN-016",
+    "prueba": "RES-CP-016",
+    "modulo": "Caja",
+    "titulo": "Registrar pagos mixtos",
+    "regla_detallada": "Admitir importes parciales por cuenta, método y sesión; exigir referencia cuando corresponde y evitar sobrepago concurrente.",
+    "tablas": [
+      "pagos",
+      "cuentas",
+      "metodos_pago",
+      "sesiones_caja"
+    ],
+    "pantalla": "Caja y cobros",
+    "api": "POST /cuentas/{id}/pagos",
+    "prioridad": "P0",
+    "incremento": "I4",
+    "aceptacion": "Para un saldo 32.00, efectivo 12.00 y Yape 20.00 saldan la cuenta; un cobro adicional se rechaza.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-017",
+    "regla": "RES-RN-017",
+    "prueba": "RES-CP-017",
+    "modulo": "Caja",
+    "titulo": "Controlar entradas y salidas",
+    "regla_detallada": "Registrar movimientos extraordinarios de efectivo con concepto e idempotencia. No repetir allí cobros ni devoluciones.",
+    "tablas": [
+      "movimientos_caja",
+      "sesiones_caja"
+    ],
+    "pantalla": "Caja y cobros",
+    "api": "POST /sesiones-caja/{id}/movimientos",
+    "prioridad": "P0",
+    "incremento": "I4",
+    "aceptacion": "Un egreso 10.00 reduce el esperado una vez; el registro confirmado no se edita ni borra.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-018",
+    "regla": "RES-RN-018",
+    "prueba": "RES-CP-018",
+    "modulo": "Caja",
+    "titulo": "Registrar devoluciones autorizadas",
+    "regla_detallada": "Conservar el pago original y registrar una devolución ejecutada, con motivo, autorizador, método y límite acumulado.",
+    "tablas": [
+      "devoluciones_pago",
+      "pagos",
+      "sesiones_caja"
+    ],
+    "pantalla": "Caja y cobros",
+    "api": "POST /pagos/{id}/devoluciones",
+    "prioridad": "P0",
+    "incremento": "I4",
+    "aceptacion": "De un pago 50.00 con devolución 20.00, solo quedan 30.00 reembolsables.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-019",
+    "regla": "RES-RN-019",
+    "prueba": "RES-CP-019",
+    "modulo": "Salón",
+    "titulo": "Cerrar y liberar mesa",
+    "regla_detallada": "Cerrar la atención tras verificar consumos entregados y cuentas resueltas. El cierre libera la ocupación de la mesa.",
+    "tablas": [
+      "pedidos",
+      "cuentas",
+      "detalles_pedido",
+      "pagos"
+    ],
+    "pantalla": "Salón y pedidos",
+    "api": "POST /pedidos/{id}/cierre",
+    "prioridad": "P0",
+    "incremento": "I4",
+    "aceptacion": "No se cierra con saldo o productos pendientes; cerrar dos veces no libera una mesa ajena.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "incremento_preparatorio": "I3",
+    "nota_planificacion": "I3 prepara el cierre; I4 lo acepta contra pagos reales del backend. El circuito completo con stock se prueba en I5.",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-020",
+    "regla": "RES-RN-020",
+    "prueba": "RES-CP-020",
+    "modulo": "Inventario",
+    "titulo": "Comprar y recibir una sola vez",
+    "regla_detallada": "Crear borrador, confirmar y generar ingreso por cada detalle en la misma transacción. No hay recepción parcial en V4.",
+    "tablas": [
+      "compras",
+      "compra_detalles",
+      "movimientos_inventario",
+      "movimiento_inventario_detalles"
+    ],
+    "pantalla": "Compras",
+    "api": "POST /compras/{id}/recepcion",
+    "prioridad": "P0",
+    "incremento": "I5",
+    "aceptacion": "La compra de 5 KG aumenta el stock en 5 KG una vez; un segundo envío devuelve el mismo resultado o conflicto.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02",
+      "ADR-04"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-021",
+    "regla": "RES-RN-021",
+    "prueba": "RES-CP-021",
+    "modulo": "Inventario",
+    "titulo": "Consultar existencias y kardex",
+    "regla_detallada": "Derivar stock solo de movimientos confirmados; ofrecer filtros por almacén, artículo y lote, con saldo verificable.",
+    "tablas": [
+      "movimientos_inventario",
+      "movimiento_inventario_detalles",
+      "lotes",
+      "articulos_almacen"
+    ],
+    "pantalla": "Inventario",
+    "api": "GET /existencias",
+    "prioridad": "P0",
+    "incremento": "I5",
+    "aceptacion": "La suma de cantidades confirmadas coincide con existencia; un maestro de baja no hace desaparecer movimientos históricos.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-02",
+      "ADR-03"
+    ],
+    "add": [
+      "ADD-04"
+    ]
+  },
+  {
+    "id": "RES-RF-022",
+    "regla": "RES-RN-022",
+    "prueba": "RES-CP-022",
+    "modulo": "Inventario",
+    "titulo": "Registrar mermas y ajustes",
+    "regla_detallada": "Confirmar cantidades firmadas por tipo, costo y referencia, con motivo. Impedir stock negativo con bloqueo del recurso.",
+    "tablas": [
+      "movimientos_inventario",
+      "movimiento_inventario_detalles"
+    ],
+    "pantalla": "Inventario",
+    "api": "POST /movimientos-inventario/{id}/confirmacion",
+    "prioridad": "P0",
+    "incremento": "I5",
+    "aceptacion": "Una salida mayor al saldo falla y no deja líneas parciales ni cabecera confirmada.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-023",
+    "regla": "RES-RN-023",
+    "prueba": "RES-CP-023",
+    "modulo": "Inventario",
+    "titulo": "Controlar lotes y caducidad",
+    "regla_detallada": "Aplicar selección y bloqueo de lotes según política FEFO aprobada; no confundir cantidad física con stock utilizable.",
+    "tablas": [
+      "lotes",
+      "articulos_inventario",
+      "movimiento_inventario_detalles"
+    ],
+    "pantalla": "Inventario",
+    "api": "POST /lotes/{id}/estado",
+    "prioridad": "P1",
+    "incremento": "I5",
+    "aceptacion": "Un lote bloqueado sigue en las existencias físicas pero no puede consumirse ni venderse.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ]
+  },
+  {
+    "id": "RES-RF-024",
+    "regla": "RES-RN-024",
+    "prueba": "RES-CP-024",
+    "modulo": "Inventario",
+    "titulo": "Transferir entre almacenes",
+    "regla_detallada": "Confirmar salida y entrada equivalentes en una transacción, con artículo, lote, cantidad y costo consistentes.",
+    "tablas": [
+      "almacenes",
+      "movimientos_inventario",
+      "movimiento_inventario_detalles"
+    ],
+    "pantalla": "Inventario",
+    "api": "POST /transferencias",
+    "prioridad": "P1",
+    "incremento": "I5",
+    "aceptacion": "Si falla el ingreso, la salida también se revierte; el total entre almacenes se conserva.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-025",
+    "regla": "RES-RN-025",
+    "prueba": "RES-CP-025",
+    "modulo": "Reservas",
+    "titulo": "Reservar y recibir clientes",
+    "regla_detallada": "Validar intervalo, capacidad y mesa; impedir solapamientos pendientes o confirmados; abrir atención al recibir.",
+    "tablas": [
+      "reservas",
+      "mesas",
+      "pedidos",
+      "cuentas"
+    ],
+    "pantalla": "Reservas",
+    "api": "POST /reservas",
+    "prioridad": "P1",
+    "incremento": "I6",
+    "aceptacion": "19:00 a 20:30 impide otra reserva de 20:00 a 21:00; 20:30 a 21:30 es admisible.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-07"
+    ]
+  },
+  {
+    "id": "RES-RF-026",
+    "regla": "RES-RN-026",
+    "prueba": "RES-CP-026",
+    "modulo": "Delivery",
+    "titulo": "Despachar y confirmar entrega",
+    "regla_detallada": "Guardar dirección histórica, teléfono, canal y repartidor; controlar asignación, ruta, entrega y fallo. Cobrar envío como línea.",
+    "tablas": [
+      "pedidos_delivery",
+      "pedidos",
+      "detalles_pedido",
+      "empleados"
+    ],
+    "pantalla": "Delivery",
+    "api": "POST /pedidos/{id}/delivery/transiciones",
+    "prioridad": "P1",
+    "incremento": "I6",
+    "aceptacion": "No se despacha sin productos listos ni repartidor; cambiar la dirección del cliente no altera la entrega histórica.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-08"
+    ]
+  },
+  {
+    "id": "RES-RF-027",
+    "regla": "RES-RN-027",
+    "prueba": "RES-CP-027",
+    "modulo": "Tributación",
+    "titulo": "Configurar tasas vigentes",
+    "regla_detallada": "Registrar impuestos y vigencias sin asignar una tasa por asumir que todo restaurante tiene el mismo tratamiento.",
+    "tablas": [
+      "impuestos",
+      "tasas_impuesto",
+      "productos",
+      "detalles_pedido"
+    ],
+    "pantalla": "Configuración",
+    "api": "POST /tasas-impuesto",
+    "prioridad": "P0",
+    "incremento": "I2",
+    "aceptacion": "Una venta utiliza la tasa vigente aprobada y conserva esa tasa; no recalcular documentos antiguos.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-05"
+    ],
+    "add": [
+      "ADD-06",
+      "ADD-09"
+    ]
+  },
+  {
+    "id": "RES-RF-028",
+    "regla": "RES-RN-028",
+    "prueba": "RES-CP-028",
+    "modulo": "Comprobantes",
+    "titulo": "Preparar documento histórico",
+    "regla_detallada": "Construir boleta, factura o nota desde cuenta y líneas históricas. Validar receptor, redondeo, referencia y correlativo.",
+    "tablas": [
+      "comprobantes",
+      "comprobante_detalles",
+      "series_comprobantes"
+    ],
+    "pantalla": "Comprobantes",
+    "api": "POST /comprobantes",
+    "prioridad": "P1",
+    "incremento": "I7",
+    "aceptacion": "Una cuenta no se factura dos veces con documento principal; un documento emitido conserva sus importes.",
+    "cobertura_prototipo": "Simulado",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-05"
+    ],
+    "add": [
+      "ADD-08"
+    ]
+  },
+  {
+    "id": "RES-RF-029",
+    "regla": "RES-RN-029",
+    "prueba": "RES-CP-029",
+    "modulo": "Comprobantes",
+    "titulo": "Gestionar envío y respuesta fiscal",
+    "regla_detallada": "Encapsular proveedor, reintentos y conciliación de respuestas; no igualar EMITIDO con ACEPTADO. Resolver bajas por flujo fiscal.",
+    "tablas": [
+      "envios_comprobante",
+      "comprobantes"
+    ],
+    "pantalla": "Comprobantes",
+    "api": "POST /comprobantes/{id}/envios",
+    "prioridad": "P1",
+    "incremento": "I7",
+    "aceptacion": "Tras una desconexión se consulta el estado antes de reenviar; una respuesta aceptada no dispara otra emisión.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-04",
+      "ADR-05"
+    ],
+    "add": [
+      "ADD-09"
+    ]
+  },
+  {
+    "id": "RES-RF-030",
+    "regla": "RES-RN-030",
+    "prueba": "RES-CP-030",
+    "modulo": "Gobierno",
+    "titulo": "Aplicar bajas y restauraciones",
+    "regla_detallada": "Distinguir 9 maestros con baja y motivo de 17 catálogos o relaciones con desactivación simple. Conservar es_activo, claves e historial; el actor procede de la sesión.",
+    "tablas": [
+      "productos",
+      "clientes",
+      "proveedores",
+      "usuarios",
+      "roles",
+      "mesas"
+    ],
+    "pantalla": "Carta y recetas / Directorio",
+    "api": "POST /productos/{id}/baja",
+    "prioridad": "P0",
+    "incremento": "I2",
+    "aceptacion": "Los 9 maestros registran motivo, usuario y fecha de baja. Las otras 17 tablas se desactivan sin esos campos; auditoría conserva actor y cambios. Reactivar conserva ID; DELETE no está permitido.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-03",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-05"
+    ]
+  },
+  {
+    "id": "RES-RF-031",
+    "regla": "RES-RN-031",
+    "prueba": "RES-CP-031",
+    "modulo": "Gobierno",
+    "titulo": "Consultar auditoría",
+    "regla_detallada": "Mostrar actor, fecha, tabla, acción y datos permitidos; proteger historial y excluir secretos de consulta y exportación.",
+    "tablas": [
+      "auditoria_eventos",
+      "usuarios"
+    ],
+    "pantalla": "Auditoría",
+    "api": "GET /auditoria",
+    "prioridad": "P0",
+    "incremento": "I8",
+    "aceptacion": "El editor no cambia creado_por; password_hash no aparece en eventos ni exportaciones.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-03",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-05"
+    ]
+  },
+  {
+    "id": "RES-RF-032",
+    "regla": "RES-RN-032",
+    "prueba": "RES-CP-032",
+    "modulo": "Reportes",
+    "titulo": "Conciliar operación y saldos",
+    "regla_detallada": "Separar atención, ventas, pagos, devoluciones y caja física. Filtrar por sede, fecha de negocio y moneda.",
+    "tablas": [
+      "pedidos",
+      "pagos",
+      "devoluciones_pago",
+      "sesiones_caja",
+      "movimientos_inventario"
+    ],
+    "pantalla": "Resumen",
+    "api": "GET /reportes/operacion",
+    "prioridad": "P1",
+    "incremento": "I8",
+    "aceptacion": "El total de pagos no se presenta como ventas emitidas; el reporte concilia con vistas y registros fuente.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-01",
+      "ADR-02"
+    ],
+    "add": [
+      "ADD-06"
+    ]
+  },
+  {
+    "id": "RES-RF-033",
+    "regla": "RES-RN-033",
+    "prueba": "RES-CP-033",
+    "modulo": "Accesos",
+    "titulo": "Administrar roles y asignaciones",
+    "regla_detallada": "Asignar permisos mínimos y sedes; revocar acceso al dar de baja usuario, rol o asignación. No dar roles al actor técnico.",
+    "tablas": [
+      "roles",
+      "permisos",
+      "usuarios_roles",
+      "roles_permisos",
+      "usuarios_sucursales"
+    ],
+    "pantalla": "Equipo y accesos",
+    "api": "PUT /usuarios/{id}/asignaciones",
+    "prioridad": "P0",
+    "incremento": "I1",
+    "aceptacion": "Un rol inactivo deja de conceder permisos aunque la asignación exista; ADMIN funcional no es superusuario de PostgreSQL.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-03",
+      "ADR-06",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-09"
+    ]
+  },
+  {
+    "id": "RES-RF-034",
+    "regla": "RES-RN-034",
+    "prueba": "RES-CP-034",
+    "modulo": "Integridad",
+    "titulo": "Recuperar operaciones interrumpidas",
+    "regla_detallada": "Persistir claves idempotentes, reconciliar pagos o envíos en resultado incierto y reintentar sin duplicar efectos.",
+    "tablas": [
+      "pagos",
+      "devoluciones_pago",
+      "movimientos_caja",
+      "movimientos_inventario",
+      "comandas"
+    ],
+    "pantalla": "Transversal",
+    "api": "GET /pagos/{id}",
+    "prioridad": "P0",
+    "incremento": "I4",
+    "aceptacion": "Repetir la misma clave y mismo contenido conserva el resultado; clave repetida con otro contenido produce 409.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-04",
+      "ADR-05",
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-08"
+    ]
+  },
+  {
+    "id": "RES-RF-035",
+    "regla": "RES-RN-035",
+    "prueba": "RES-CP-035",
+    "modulo": "Operación",
+    "titulo": "Respaldar y restaurar",
+    "regla_detallada": "Automatizar copias y ensayar restauración con roles, configuración y artefactos externos. Definir RPO y RTO medidos.",
+    "tablas": [
+      "Todas",
+      "las",
+      "tablas",
+      "y",
+      "configuración",
+      "operativa"
+    ],
+    "pantalla": "Fuera del prototipo",
+    "api": "Operación interna sin endpoint público",
+    "prioridad": "P0",
+    "incremento": "I9",
+    "aceptacion": "Una restauración en entorno aislado concilia pedidos, pagos, kardex y auditoría.",
+    "cobertura_prototipo": "Pendiente",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-07"
+    ],
+    "add": [
+      "ADD-10"
+    ]
+  },
+  {
+    "id": "RES-RF-036",
+    "regla": "RES-RN-036",
+    "prueba": "RES-CP-036",
+    "modulo": "Experiencia",
+    "titulo": "Guiar formularios y errores",
+    "regla_detallada": "Listar, crear, editar, detallar, dar de baja y restaurar con mensajes por campo, foco accesible y acciones según permiso/estado.",
+    "tablas": [
+      "Entidades",
+      "del",
+      "módulo",
+      "correspondiente"
+    ],
+    "pantalla": "Las 14 pantallas",
+    "api": "Contrato de error transversal",
+    "prioridad": "P0",
+    "incremento": "I2",
+    "aceptacion": "Error de campo conserva datos; baja de maestro principal pide motivo; desactivación simple no lo exige; doble clic no duplica el comando.",
+    "cobertura_prototipo": "Parcial",
+    "estado_backend": "PENDIENTE",
+    "fuente": "SQL V4 y diseño funcional propuesto",
+    "resultado_prueba_backend": "NO_EJECUTADA",
+    "adr": [
+      "ADR-06"
+    ],
+    "add": [
+      "ADD-08"
+    ]
+  }
+]

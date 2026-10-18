@@ -1,0 +1,65 @@
+{
+  "version_paquete": "1.2",
+  "documentos": [
+    {
+      "documento": "Plan de desarrollo",
+      "version": "1.2",
+      "archivo": "Plan_de_desarrollo_del_restaurante.docx",
+      "autoridad": "Alcance, estimaciones, incrementos e hitos"
+    },
+    {
+      "documento": "Requisitos y experiencia",
+      "version": "1.2",
+      "archivo": "Requisitos_y_experiencia_del_restaurante.docx",
+      "autoridad": "Reglas y criterios funcionales; baja selectiva y desactivación simple diferenciadas"
+    },
+    {
+      "documento": "ADR",
+      "version": "1.2",
+      "archivo": "ADR_Sistema_Restaurante.docx",
+      "autoridad": "Decisiones, alternativas y consecuencias"
+    },
+    {
+      "documento": "ADD",
+      "version": "1.2",
+      "archivo": "ADD_Sistema_Restaurante.docx",
+      "autoridad": "Diseño integrado; sustituye la guía de arquitectura 1.0"
+    },
+    {
+      "documento": "Registro ADR estructurado",
+      "version": "1.2",
+      "archivo": "registro_adr.json",
+      "autoridad": "Fuente estructurada de los siete registros"
+    },
+    {
+      "documento": "Trazabilidad",
+      "version": "1.2",
+      "archivo": "requisitos_y_trazabilidad.json",
+      "autoridad": "RF, RN, CP, ADR, ADD, tablas, API e incrementos"
+    },
+    {
+      "documento": "Backlog",
+      "version": "1.2",
+      "archivo": "backlog_incrementos.json",
+      "autoridad": "Incrementos y criterios de cierre actualizados"
+    },
+    {
+      "documento": "Decisiones pendientes",
+      "version": "1.2",
+      "archivo": "decisiones_pendientes.json",
+      "autoridad": "DEC 01 a 08 y momento de resolución"
+    }
+  ],
+  "sustituido": {
+    "archivo": "Arquitectura_y_guia_tecnica_del_restaurante.docx",
+    "por": "ADD_Sistema_Restaurante.docx",
+    "motivo": "Consolidación de diseño y corrección ADR 06 y ADR 07"
+  },
+  "regla_conflicto": "El SQL describe lo implementado; RF/ADD/ADR describen objetivo y decisiones. Una discrepancia se registra como cambio y no se corrige silenciosamente en producción.",
+  "versiones_artefactos": {
+    "sql": "V4",
+    "prototipo": "1.1",
+    "openapi": "0.2.0"
+  },
+  "nota_v4": "V4 corrige el diseño para instalaciones nuevas. No se ejecuta sobre V3 instalada ni sustituye una migración. La entrega 1.1 conserva la línea base V3 anterior."
+}
