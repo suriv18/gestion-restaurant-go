@@ -46,6 +46,8 @@ Los permisos efectivos siguen viniendo de `v_permisos_efectivos` como pares (sed
 
 Quien crea una sede no tiene acceso a ella hasta que se la asignen en Equipo y accesos (las asignaciones son por sede). Es coherente con I1 y la interfaz lo avisa (§5).
 
+**Sedes inactivas.** `v_permisos_efectivos` solo concede permisos sobre sedes activas, de modo que al dar de baja una sede el actor pierde sus permisos sobre ella. Para poder restaurarla, una sede inactiva la ven y la gestionan quienes tienen `SUCURSAL_ADMINISTRAR` en alguna sede; las activas siguen la regla de la tabla. Consecuencia: quien tenía asignada solo esa sede queda sin acceso hasta que otro administrador la restaure o lo reasigne.
+
 ## 4. API
 
 Base `/api/v1`. Los `POST` de creación, baja y restauración exigen `Idempotency-Key` (UUID); sin ella → 400. Listados con `limit` (máx. 100) y `cursor`, orden estable por id, y filtros `sucursal_id` y `es_activo`. Errores en `application/problem+json` con los códigos de I1: 400, 401, 403, 404 (inexistente o de otra sede), 409 (duplicado o conflicto) y 422 (regla); los errores de campo indican el campo (RF-036).
@@ -119,6 +121,7 @@ Cuatro pasos, cada uno con CI en verde:
 
 - **Desviación del expediente:** la baja de mesa con motivo contradice `politica_campos_por_tabla.json`, el contrato y RF-030; se corrige en el paso 3 y queda registrada en el ADR 005. Si el equipo revierte la decisión, basta omitir las columnas y el trigger de §2.
 - **Sede recién creada sin acceso:** depende de la asignación manual en Equipo y accesos; si resulta incómodo, un cambio posterior podría asignar automáticamente al creador (decisión fuera de esta rebanada).
+- **Administradores sin sede activa:** si se da de baja la única sede asignada a todos los administradores de sedes, nadie podría restaurarla por la API; se resuelve con cmd/admin o por SQL. Mitigación posible fuera de esta rebanada: impedir la baja si deja a la empresa sin administradores de sedes.
 - **DEC-07 (reglas de atención)** sigue pendiente; afecta la reserva y ocupación de mesas, no esta rebanada.
 - **Mesa deshabilitada y reservas:** la interacción con `reservas` (I6) se define allí.
 - Fuera de alcance: tasas, series, cajas, almacenes, estaciones, ocupación de mesas, plano del salón con posiciones editables en pantalla y la rebanada 2 de I2.

@@ -17,7 +17,8 @@ import (
 
 // configuracion agrupa los casos de uso de negocio y sucursales (RES-RF-003) ya decorados.
 type configuracion struct {
-	negocio *controller.NegocioHandler
+	negocio    *controller.NegocioHandler
+	sucursales *controller.SucursalesHandler
 }
 
 func armarConfiguracion(db *sql.DB, logger *slog.Logger) *configuracion {
@@ -31,6 +32,7 @@ func armarConfiguracion(db *sql.DB, logger *slog.Logger) *configuracion {
 
 	lector := readadapter.NewConfiguracionReadAdapter(db)
 	return &configuracion{
-		negocio: controller.NewNegocioHandler(uquery.NewObtenerNegocio(lector), inbound.EditarNegocio(editarNegocio)),
+		negocio:    controller.NewNegocioHandler(uquery.NewObtenerNegocio(lector), inbound.EditarNegocio(editarNegocio)),
+		sucursales: controller.NewSucursalesHandler(uquery.NewListarSucursales(lector), uquery.NewObtenerSucursal(lector)),
 	}
 }
