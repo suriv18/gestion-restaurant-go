@@ -12,3 +12,22 @@ type NegocioEdicion struct {
 	Moneda          *string          `json:"moneda,omitempty"`
 	ZonaHoraria     *string          `json:"zona_horaria,omitempty"`
 }
+
+// SucursalAlta: negocio_id no existe aquí; un campo desconocido responde 400.
+type SucursalAlta struct {
+	Codigo                     string  `json:"codigo"`
+	Nombre                     string  `json:"nombre"`
+	Direccion                  string  `json:"direccion"`
+	Ubigeo                     *string `json:"ubigeo"`
+	CodigoEstablecimientoSunat *string `json:"codigo_establecimiento_sunat"`
+	Telefono                   *string `json:"telefono"`
+}
+
+type SucursalEdicion struct {
+	Codigo                     *string          `json:"codigo,omitempty"`
+	Nombre                     *string          `json:"nombre,omitempty"`
+	Direccion                  *string          `json:"direccion,omitempty"`
+	Ubigeo                     Opcional[string] `json:"ubigeo"`
+	CodigoEstablecimientoSunat Opcional[string] `json:"codigo_establecimiento_sunat"`
+	Telefono                   Opcional[string] `json:"telefono"`
+}

@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 	"sort"
@@ -132,5 +133,168 @@ func TestSucursalesFiltroPaginacionEInactivas(t *testing.T) {
 	}
 	if got := []string{p1.Items[0].Codigo, p2.Items[0].Codigo}; !slices.Equal(sortedCopy(got), []string{"CFG-A", "PRINCIPAL"}) {
 		t.Fatalf("las dos páginas suman %v, quería [CFG-A PRINCIPAL]", got)
+	}
+}
+
+const gestorUser, gestorPass = "suc.gestor", "SucGestor2026Clave"
+
+func gestorToken(t *testing.T) string {
+	t.Helper()
+	rolConPermisos(t, "T_SUC_GESTOR", "SUCURSAL_VER", "SUCURSAL_ADMINISTRAR")
+	asegurarUsuario(t, gestorUser, gestorPass, "T_SUC_GESTOR", "PRINCIPAL")
+	return token(t, gestorUser, gestorPass)
+}
+
+func altaSede(codigo string) string {
+	return fmt.Sprintf(`{"codigo":"%s","nombre":"Sede %s","direccion":"Av. Nueva 123","ubigeo":"150101","telefono":"01-555-0000"}`, codigo, codigo)
+}
+
+func TestSucursalCrearConIdempotenciaYValidaciones(t *testing.T) {
+	tk := gestorToken(t)
+	clave := nuevaClave()
+	h := map[string]string{"Idempotency-Key": clave}
+
+	r1 := callH(t, "POST", "/api/v1/sucursales", altaSede("nueva-1"), tk, h)
+	esperar(t, r1, http.StatusCreated, "")
+	var s sedeResp
+	r1.json(t, &s)
+	if s.Codigo != "NUEVA-1" || !s.EsActivo || s.NegocioID == "" || s.CreadoPor != idDe(t, "usuarios", "username", gestorUser) ||
+		s.Ubigeo == nil || *s.Ubigeo != "150101" {
+		t.Fatalf("sede creada: %+v", s)
+	}
+	// Repetir la misma intención no duplica; otro contenido con la misma clave es conflicto.
+	r2 := callH(t, "POST", "/api/v1/sucursales", altaSede("nueva-1"), tk, h)
+	esperar(t, r2, http.StatusCreated, "")
+	var rep sedeResp
+	r2.json(t, &rep)
+	if rep.ID != s.ID || scalar(t, `SELECT count(*) FROM sch_restaurante.sucursales WHERE codigo='NUEVA-1'`) != 1 {
+		t.Fatalf("la repetición debe devolver la misma sede: %+v vs %+v", rep, s)
+	}
+	esperar(t, callH(t, "POST", "/api/v1/sucursales", altaSede("otra-9"), tk, h), http.StatusConflict, "idempotency_key_reutilizada")
+
+	// Otra clave con el mismo código: conflicto de unicidad específico del campo.
+	esperar(t, post(t, "/api/v1/sucursales", altaSede("NUEVA-1"), tk), http.StatusConflict, "codigo_duplicado")
+	// Sin clave, con campos que el cliente no puede fijar, y validaciones por campo.
+	esperar(t, call(t, "POST", "/api/v1/sucursales", altaSede("sin-clave"), tk), http.StatusBadRequest, "idempotency_key_requerida")
+	esperar(t, post(t, "/api/v1/sucursales", `{"codigo":"CON-NEG","nombre":"x","direccion":"y","negocio_id":"1"}`, tk), http.StatusBadRequest, "json_invalido")
+	esperar(t, post(t, "/api/v1/sucursales", `{"codigo":"creado_por","nombre":"x","direccion":"y","creado_por":"1"}`, tk), http.StatusBadRequest, "json_invalido")
+	esperar(t, post(t, "/api/v1/sucursales", `{"codigo":"x","nombre":"x","direccion":"y"}`, tk), http.StatusUnprocessableEntity, "codigo_invalido")
+	esperar(t, post(t, "/api/v1/sucursales", `{"codigo":"BIEN-1","nombre":" ","direccion":"y"}`, tk), http.StatusUnprocessableEntity, "nombre_invalido")
+	esperar(t, post(t, "/api/v1/sucursales", `{"codigo":"BIEN-1","nombre":"x","direccion":""}`, tk), http.StatusUnprocessableEntity, "direccion_invalida")
+	esperar(t, post(t, "/api/v1/sucursales", `{"codigo":"BIEN-1","nombre":"x","direccion":"y","ubigeo":"12"}`, tk), http.StatusUnprocessableEntity, "ubigeo_invalido")
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.sucursales WHERE codigo IN ('BIEN-1','SIN-CLAVE','CON-NEG')`) != 0 {
+		t.Fatal("los rechazos no deben dejar sedes")
+	}
+
+	// Sin SUCURSAL_ADMINISTRAR no se crea.
+	rolConPermisos(t, "T_SUC_VER", "SUCURSAL_VER")
+	asegurarUsuario(t, "suc.ver.w", "SucVerW2026Clave", "T_SUC_VER", "PRINCIPAL")
+	esperar(t, post(t, "/api/v1/sucursales", altaSede("SIN-PODER"), token(t, "suc.ver.w", "SucVerW2026Clave")), http.StatusForbidden, "sin_permiso")
+}
+
+func TestSucursalCreadaNoDaAccesoAlCreadorHastaAsignarla(t *testing.T) {
+	tk := gestorToken(t)
+	r := post(t, "/api/v1/sucursales", altaSede("SIN-ACCESO"), tk)
+	esperar(t, r, http.StatusCreated, "")
+	var s sedeResp
+	r.json(t, &s)
+	// Los permisos son por sede asignada: el creador aún no la ve ni la administra.
+	esperar(t, call(t, "GET", "/api/v1/sucursales/"+s.ID, "", tk), http.StatusNotFound, "no_encontrado")
+	esperar(t, callH(t, "PATCH", "/api/v1/sucursales/"+s.ID, `{"nombre":"X"}`, tk, nil), http.StatusNotFound, "no_encontrado")
+	esperar(t, post(t, "/api/v1/sucursales/"+s.ID+"/baja", `{"motivo":"x"}`, tk), http.StatusNotFound, "no_encontrado")
+
+	asegurarUsuario(t, gestorUser, gestorPass, "T_SUC_GESTOR", "SIN-ACCESO")
+	esperar(t, call(t, "GET", "/api/v1/sucursales/"+s.ID, "", tk), http.StatusOK, "")
+}
+
+func TestSucursalEditar(t *testing.T) {
+	tk := gestorToken(t)
+	crearSedeSQL(t, "EDITABLE")
+	asegurarUsuario(t, gestorUser, gestorPass, "T_SUC_GESTOR", "EDITABLE")
+	id := idDe(t, "sucursales", "codigo", "EDITABLE")
+
+	r := callH(t, "PATCH", "/api/v1/sucursales/"+id, `{"nombre":"Sede Editada","telefono":"999","codigo_establecimiento_sunat":"0001"}`, tk, nil)
+	esperar(t, r, http.StatusOK, "")
+	var s sedeResp
+	r.json(t, &s)
+	if s.Nombre != "Sede Editada" || s.Telefono == nil || *s.Telefono != "999" || s.CodigoSunat == nil || *s.CodigoSunat != "0001" || s.Codigo != "EDITABLE" {
+		t.Fatalf("edición parcial: %+v", s)
+	}
+	r = callH(t, "PATCH", "/api/v1/sucursales/"+id, `{"telefono":null}`, tk, nil)
+	esperar(t, r, http.StatusOK, "")
+	r.json(t, &s)
+	if s.Telefono != nil || s.CodigoSunat == nil || s.Nombre != "Sede Editada" {
+		t.Fatalf("null debe vaciar solo el teléfono: %+v", s)
+	}
+	esperar(t, callH(t, "PATCH", "/api/v1/sucursales/"+id, `{}`, tk, nil), http.StatusUnprocessableEntity, "sin_cambios")
+	esperar(t, callH(t, "PATCH", "/api/v1/sucursales/"+id, `{"codigo":"PRINCIPAL"}`, tk, nil), http.StatusConflict, "codigo_duplicado")
+	esperar(t, callH(t, "PATCH", "/api/v1/sucursales/"+id, `{"negocio_id":"2"}`, tk, nil), http.StatusBadRequest, "json_invalido")
+	esperar(t, callH(t, "PATCH", "/api/v1/sucursales/999999", `{"nombre":"x"}`, tk, nil), http.StatusNotFound, "no_encontrado")
+
+	// Quien solo tiene SUCURSAL_VER no edita, aunque vea la sede.
+	rolConPermisos(t, "T_SUC_VER", "SUCURSAL_VER")
+	asegurarUsuario(t, "suc.ver.w", "SucVerW2026Clave", "T_SUC_VER", "EDITABLE")
+	esperar(t, callH(t, "PATCH", "/api/v1/sucursales/"+id, `{"nombre":"Hack"}`, token(t, "suc.ver.w", "SucVerW2026Clave"), nil),
+		http.StatusForbidden, "sin_permiso")
+}
+
+func TestSucursalBajaYRestauracion(t *testing.T) {
+	tk := gestorToken(t)
+	crearSedeSQL(t, "CICLO")
+	asegurarUsuario(t, gestorUser, gestorPass, "T_SUC_GESTOR", "CICLO")
+	id := idDe(t, "sucursales", "codigo", "CICLO")
+
+	esperar(t, post(t, "/api/v1/sucursales/"+id+"/baja", `{}`, tk), http.StatusUnprocessableEntity, "motivo_requerido")
+	esperar(t, post(t, "/api/v1/sucursales/"+id+"/baja", `{"motivo":"   "}`, tk), http.StatusUnprocessableEntity, "motivo_requerido")
+
+	clave := nuevaClave()
+	h := map[string]string{"Idempotency-Key": clave}
+	r := callH(t, "POST", "/api/v1/sucursales/"+id+"/baja", `{"motivo":"Cierre del local"}`, tk, h)
+	esperar(t, r, http.StatusOK, "")
+	var s sedeResp
+	r.json(t, &s)
+	if s.EsActivo || s.Motivo == nil || *s.Motivo != "Cierre del local" || s.EliminadoPor == nil ||
+		*s.EliminadoPor != idDe(t, "usuarios", "username", gestorUser) {
+		t.Fatalf("baja: %+v", s)
+	}
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.auditoria_eventos WHERE tabla='sucursales' AND accion='UPDATE'
+		AND registro_id=`+id+` AND creado_por=`+idDe(t, "usuarios", "username", gestorUser)) == 0 {
+		t.Fatal("la baja debe quedar auditada con el actor")
+	}
+	// La misma intención se repite sin nuevo efecto; con otra clave la sede ya está de baja.
+	antes := scalar(t, `SELECT count(*) FROM sch_restaurante.auditoria_eventos WHERE tabla='sucursales' AND registro_id=`+id)
+	esperar(t, callH(t, "POST", "/api/v1/sucursales/"+id+"/baja", `{"motivo":"Cierre del local"}`, tk, h), http.StatusOK, "")
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.auditoria_eventos WHERE tabla='sucursales' AND registro_id=`+id) != antes {
+		t.Fatal("repetir la misma clave no debe volver a escribir")
+	}
+	esperar(t, post(t, "/api/v1/sucursales/"+id+"/baja", `{"motivo":"Otra vez"}`, tk), http.StatusConflict, "ya_dada_de_baja")
+
+	// Sin permisos sobre la sede inactiva, la restaura quien administra sedes en otra (PRINCIPAL).
+	r = post(t, "/api/v1/sucursales/"+id+"/restauracion", `{}`, tk)
+	esperar(t, r, http.StatusOK, "")
+	var rest sedeResp
+	r.json(t, &rest)
+	if rest.ID != s.ID || !rest.EsActivo || rest.Motivo != nil || rest.EliminadoPor != nil {
+		t.Fatalf("restauración: %+v (debe conservar el ID y limpiar los marcadores)", rest)
+	}
+	esperar(t, post(t, "/api/v1/sucursales/"+id+"/restauracion", "", tk), http.StatusConflict, "ya_activa")
+	esperar(t, post(t, "/api/v1/sucursales/999999/baja", `{"motivo":"x"}`, tk), http.StatusNotFound, "no_encontrado")
+}
+
+func TestSucursalNoSePuedeDarDeBajaLaUltimaSedeActiva(t *testing.T) {
+	tk := gestorToken(t)
+	crearSedeSQL(t, "OTRA-SEDE")
+	// Deja PRINCIPAL como única sede activa y lo revierte al terminar.
+	const marca = "prueba-ultima-sede"
+	asSystem(t, `UPDATE sch_restaurante.sucursales SET es_activo=false, motivo_eliminacion='`+marca+`'
+		WHERE codigo<>'PRINCIPAL' AND es_activo`)
+	t.Cleanup(func() {
+		asSystem(t, `UPDATE sch_restaurante.sucursales SET es_activo=true WHERE motivo_eliminacion='`+marca+`'`)
+	})
+
+	id := idDe(t, "sucursales", "codigo", "PRINCIPAL")
+	esperar(t, post(t, "/api/v1/sucursales/"+id+"/baja", `{"motivo":"Intento"}`, tk), http.StatusUnprocessableEntity, "ultima_sede_activa")
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.sucursales WHERE codigo='PRINCIPAL' AND es_activo`) != 1 {
+		t.Fatal("PRINCIPAL debe seguir activa")
 	}
 }

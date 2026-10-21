@@ -18,4 +18,8 @@ func RegisterConfiguracionRoutes(mux *http.ServeMux, negocio *NegocioHandler, su
 
 	ruta("GET /sucursales", sucursales.Listar)
 	ruta("GET /sucursales/{id}", sucursales.Obtener)
+	ruta("POST /sucursales", sucursales.Crear)
+	ruta("PATCH /sucursales/{id}", sucursales.Editar)
+	ruta("POST /sucursales/{id}/baja", sucursales.Baja)
+	ruta("POST /sucursales/{id}/restauracion", sucursales.Restauracion)
 }
