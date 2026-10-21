@@ -4,8 +4,15 @@ import (
 	"net/http"
 	"slices"
 	"sort"
+	"strconv"
 	"testing"
 )
+
+func sortedCopy(in []string) []string {
+	out := slices.Clone(in)
+	sort.Strings(out)
+	return out
+}
 
 type sedesPagina struct {
 	Items      []sedeResp `json:"items"`
@@ -48,8 +55,9 @@ func TestSucursalesSoloMuestraLasSedesDelActor(t *testing.T) {
 	if got := listarSedes(t, "", tk).codigos(); !slices.Equal(got, []string{"CFG-A", "PRINCIPAL"}) {
 		t.Fatalf("sedes visibles = %v, quería [CFG-A PRINCIPAL] (CFG-B no es suya)", got)
 	}
-	// El administrador instalado solo tiene PRINCIPAL asignada.
-	if got := listarSedes(t, "", adminToken(t)).codigos(); !slices.Equal(got, []string{"PRINCIPAL"}) {
+	// El administrador instalado solo tiene PRINCIPAL asignada. Como administra sedes también ve
+	// las inactivas de cualquier sede, por eso se filtra por activas para no depender del orden.
+	if got := listarSedes(t, "?es_activo=true", adminToken(t)).codigos(); !slices.Equal(got, []string{"PRINCIPAL"}) {
 		t.Fatalf("el admin ve %v, quería [PRINCIPAL]", got)
 	}
 
@@ -105,7 +113,8 @@ func TestSucursalesFiltroPaginacionEInactivas(t *testing.T) {
 	}
 	esperar(t, call(t, "GET", "/api/v1/sucursales?es_activo=quizas", "", gestor), http.StatusBadRequest, "es_activo_invalido")
 	esperar(t, call(t, "GET", "/api/v1/sucursales?limit=0", "", gestor), http.StatusBadRequest, "limit_invalido")
-	esperar(t, call(t, "GET", "/api/v1/sucursales?cursor=%25%25", "", gestor), http.StatusBadRequest, "")
+	esperar(t, call(t, "GET", "/api/v1/sucursales?cursor=%25%25", "", gestor), http.StatusBadRequest, "cursor_invalido")
+	esperar(t, call(t, "GET", "/api/v1/sucursales?cursor=!!!", "", gestor), http.StatusBadRequest, "cursor_invalido")
 
 	// Paginación por cursor sobre las dos sedes de suc.ver.
 	p1 := listarSedes(t, "?limit=1", ver)
@@ -115,5 +124,13 @@ func TestSucursalesFiltroPaginacionEInactivas(t *testing.T) {
 	p2 := listarSedes(t, "?limit=1&cursor="+*p1.NextCursor, ver)
 	if len(p2.Items) != 1 || p2.Items[0].ID == p1.Items[0].ID || p2.NextCursor != nil {
 		t.Fatalf("segunda página: %+v", p2)
+	}
+	id1, err1 := strconv.Atoi(p1.Items[0].ID)
+	id2, err2 := strconv.Atoi(p2.Items[0].ID)
+	if err1 != nil || err2 != nil || id1 >= id2 {
+		t.Fatalf("orden ascendente por id roto: %q (%v) vs %q (%v)", p1.Items[0].ID, err1, p2.Items[0].ID, err2)
+	}
+	if got := []string{p1.Items[0].Codigo, p2.Items[0].Codigo}; !slices.Equal(sortedCopy(got), []string{"CFG-A", "PRINCIPAL"}) {
+		t.Fatalf("las dos páginas suman %v, quería [CFG-A PRINCIPAL]", got)
 	}
 }
