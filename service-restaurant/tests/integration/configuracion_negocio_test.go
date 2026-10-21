@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 )
@@ -44,9 +45,7 @@ func TestNegocioLecturaYPermisos(t *testing.T) {
 
 func TestNegocioEdicionParcialYValidaciones(t *testing.T) {
 	tk := adminToken(t)
-	t.Cleanup(func() {
-		callH(t, "PATCH", "/api/v1/negocio", `{"nombre_comercial":"Prueba","telefono":null,"email":null,"ubigeo":null}`, tk, nil)
-	})
+	restaurarNegocio(t, tk)
 
 	r := callH(t, "PATCH", "/api/v1/negocio",
 		`{"nombre_comercial":"La Casona","telefono":"01-555-0100","email":"hola@lacasona.pe","ubigeo":"150101"}`, tk, nil)
@@ -91,13 +90,40 @@ func TestNegocioEdicionParcialYValidaciones(t *testing.T) {
 	if scalar(t, `SELECT count(*) FROM sch_restaurante.negocio WHERE ruc='20123456789' AND moneda='PEN' AND razon_social='Restaurante de Prueba SAC'`) != 1 {
 		t.Fatal("un rechazo no debe alterar el negocio")
 	}
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.negocio WHERE email='hola@lacasona.pe' AND ubigeo='150101'`) != 1 {
+		t.Fatal("los PATCH con ubigeo o email inválidos no deben modificar esos campos")
+	}
 }
 
 func TestNegocioEdicionQuedaAuditadaConElActor(t *testing.T) {
 	tk := adminToken(t)
-	esperar(t, callH(t, "PATCH", "/api/v1/negocio", `{"nombre_comercial":"Prueba"}`, tk, nil), http.StatusOK, "")
+	restaurarNegocio(t, tk)
+	esperar(t, callH(t, "PATCH", "/api/v1/negocio", `{"nombre_comercial":"Auditado"}`, tk, nil), http.StatusOK, "")
 	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.auditoria_eventos
 		WHERE tabla='negocio' AND accion='UPDATE' AND creado_por=`+idDe(t, "usuarios", "username", "admin")); n == 0 {
 		t.Fatal("la edición del negocio debe quedar en auditoria_eventos con el actor de la sesión")
 	}
+}
+
+// restaurarNegocio captura los datos editables del negocio y los devuelve a su valor original
+// al terminar la prueba, sin suponer cómo estaban (la base se comparte entre pruebas).
+func restaurarNegocio(t *testing.T, tk string) {
+	t.Helper()
+	r := call(t, "GET", "/api/v1/negocio", "", tk)
+	esperar(t, r, http.StatusOK, "")
+	var orig negocioResp
+	r.json(t, &orig)
+	t.Cleanup(func() {
+		body, err := json.Marshal(map[string]*string{
+			"nombre_comercial": &orig.NombreComercial,
+			"telefono":         orig.Telefono,
+			"email":            orig.Email,
+			"ubigeo":           orig.Ubigeo,
+		})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		esperar(t, callH(t, "PATCH", "/api/v1/negocio", string(body), tk, nil), http.StatusOK, "")
+	})
 }

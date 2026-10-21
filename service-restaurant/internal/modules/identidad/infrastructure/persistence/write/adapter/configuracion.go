@@ -23,10 +23,17 @@ func (a *NegocioWriteAdapter) Actualizar(ctx context.Context, c outbound.Cambios
 }
 
 // SucursalWriteAdapter implementa outbound.SucursalStore.
-type SucursalWriteAdapter struct{ repo *repository.SucursalSQLWriter }
+type SucursalWriteAdapter struct {
+	repo    *repository.SucursalSQLWriter
+	accesos *repository.AccesosSQLWriter
+}
 
 func NewSucursalWriteAdapter(db database.DBTX) *SucursalWriteAdapter {
-	return &SucursalWriteAdapter{repo: repository.NewSucursalSQLWriter(db)}
+	return &SucursalWriteAdapter{repo: repository.NewSucursalSQLWriter(db), accesos: repository.NewAccesosSQLWriter(db)}
+}
+
+func (a *SucursalWriteAdapter) ContarAdministradoresEfectivos(ctx context.Context) (int, error) {
+	return a.accesos.ContarAdministradores(ctx)
 }
 
 var _ outbound.SucursalStore = (*SucursalWriteAdapter)(nil)

@@ -169,6 +169,13 @@ func (uc *CambiarEstadoSucursal) Execute(ctx context.Context, c cmd.CambiarEstad
 	if ae := mapper.Requiere(c.Actor, mensajeSinPermisoCrear, policy.SucursalAdministrar); ae != nil {
 		return rechazar[dtoresult.Sucursal](ae)
 	}
+	actual, ae, err := sedeGestionable(ctx, uc.sucursales, c.Actor, c.ID)
+	if err != nil {
+		return tecnico[dtoresult.Sucursal]("buscar sucursal", err)
+	}
+	if ae != nil {
+		return rechazar[dtoresult.Sucursal](ae)
+	}
 	motivo := ""
 	if !c.Activo {
 		m, err := vo.TextoObligatorio(c.Motivo, maxMotivo)
@@ -176,13 +183,6 @@ func (uc *CambiarEstadoSucursal) Execute(ctx context.Context, c cmd.CambiarEstad
 			return rechazar[dtoresult.Sucursal](mapper.Validacion("motivo_requerido", "la baja exige un motivo (máximo 2000 caracteres)"))
 		}
 		motivo = m
-	}
-	actual, ae, err := sedeGestionable(ctx, uc.sucursales, c.Actor, c.ID)
-	if err != nil {
-		return tecnico[dtoresult.Sucursal]("buscar sucursal", err)
-	}
-	if ae != nil {
-		return rechazar[dtoresult.Sucursal](ae)
 	}
 	if c.Activo {
 		if actual.EsActivo {
@@ -217,6 +217,12 @@ func (uc *CambiarEstadoSucursal) Execute(ctx context.Context, c cmd.CambiarEstad
 	}
 	if !found {
 		return rechazar[dtoresult.Sucursal](mapper.NoEncontrado("sucursal"))
+	}
+	// v_permisos_efectivos excluye las sedes inactivas: la baja puede quitar el último USUARIO_ADMINISTRAR.
+	if ae, err := ultimoAdministrador(ctx, uc.sucursales); err != nil {
+		return tecnico[dtoresult.Sucursal]("contar administradores efectivos", err)
+	} else if ae != nil {
+		return rechazar[dtoresult.Sucursal](ae)
 	}
 	return appresult.Ok(s), nil
 }

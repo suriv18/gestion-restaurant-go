@@ -72,7 +72,7 @@ Base `/api/v1`. Los `POST` de creación, baja y restauración exigen `Idempotenc
 
 Mismo esquema CQRS de I1 (`domain`, `application`, `infrastructure`, `web` por módulo):
 
-- `identidad`: se agregan comandos y consultas de negocio y sucursales (`ObtenerNegocio`, `EditarNegocio`, `ListarSucursales`, `ObtenerSucursal`, `CrearSucursal`, `EditarSucursal`, `DarBajaSucursal`, `RestaurarSucursal`). La consulta existente `sucursales-asignables` sigue en este módulo, que ya es dueño de la tabla.
+- `identidad`: se agregan comandos y consultas de negocio y sucursales (`ObtenerNegocio`, `EditarNegocio`, `ListarSucursales`, `ObtenerSucursal`, `CrearSucursal`, `EditarSucursal`, `CambiarEstadoSucursal` para la baja y la restauración). La consulta existente `sucursales-asignables` sigue en este módulo, que ya es dueño de la tabla.
 - `atencion` (nuevo): zonas y mesas, con puertos de lectura y escritura propios.
 - `atencion` no importa `identidad`: la existencia de la sede la garantizan la clave foránea y `fn_referencias_activas`, y el adaptador traduce el error. La coordinación ocurre en la composición, como exige la regla de imports.
 - `tests/architecture` pasa a cubrir `atencion`.
@@ -122,6 +122,7 @@ Cuatro pasos, cada uno con CI en verde:
 - **Desviación del expediente:** la baja de mesa con motivo contradice `politica_campos_por_tabla.json`, el contrato y RF-030; se corrige en el paso 3 y queda registrada en el ADR 005. Si el equipo revierte la decisión, basta omitir las columnas y el trigger de §2.
 - **Sede recién creada sin acceso:** depende de la asignación manual en Equipo y accesos; si resulta incómodo, un cambio posterior podría asignar automáticamente al creador (decisión fuera de esta rebanada).
 - **Administradores sin sede activa:** si se da de baja la única sede asignada a todos los administradores de sedes, nadie podría restaurarla por la API; se resuelve con cmd/admin o por SQL. Mitigación posible fuera de esta rebanada: impedir la baja si deja a la empresa sin administradores de sedes.
+- **Baja de sede y último administrador de accesos:** dar de baja una sede también está protegido por la regla del último administrador de accesos (USUARIO_ADMINISTRAR efectivo): si la baja dejara al sistema sin ninguno, se rechaza con `ultimo_administrador` y se revierte.
 - **DEC-07 (reglas de atención)** sigue pendiente; afecta la reserva y ocupación de mesas, no esta rebanada.
 - **Mesa deshabilitada y reservas:** la interacción con `reservas` (I6) se define allí.
 - Fuera de alcance: tasas, series, cajas, almacenes, estaciones, ocupación de mesas, plano del salón con posiciones editables en pantalla y la rebanada 2 de I2.

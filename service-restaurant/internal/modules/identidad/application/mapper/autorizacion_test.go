@@ -36,6 +36,13 @@ func TestSedesVisiblesEsLaUnionOrdenadaSinRepetir(t *testing.T) {
 	}
 }
 
+func TestSedesVisiblesSinSedesEsSliceVacioNoNil(t *testing.T) {
+	got := SedesVisibles(actorCon(appctx.Grant{SucursalID: 9, Permiso: policy.NegocioVer}))
+	if got == nil || len(got) != 0 {
+		t.Fatalf("sedes visibles = %#v, quería slice vacío no nil", got)
+	}
+}
+
 func TestVisibilidadYAdministracionDeSedeInactiva(t *testing.T) {
 	soloVer := actorCon(appctx.Grant{SucursalID: 1, Permiso: policy.SucursalVer})
 	admin := actorCon(appctx.Grant{SucursalID: 1, Permiso: policy.SucursalAdministrar})

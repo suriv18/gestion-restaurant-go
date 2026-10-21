@@ -132,7 +132,7 @@ func (r *SucursalSQLWriter) Update(ctx context.Context, id int64, c outbound.Cam
 	return s, true, nil
 }
 
-// LockNegocio bloquea la fila de la empresa: serializa las bajas (y las altas) de sedes.
+// LockNegocio bloquea la fila de la empresa: serializa las bajas de sedes (las altas solo esperan por los locks de FK).
 func (r *SucursalSQLWriter) LockNegocio(ctx context.Context) error {
 	var id int64
 	return r.db.QueryRowContext(ctx, `SELECT id FROM sch_restaurante.negocio WHERE singleton FOR UPDATE`).Scan(&id)

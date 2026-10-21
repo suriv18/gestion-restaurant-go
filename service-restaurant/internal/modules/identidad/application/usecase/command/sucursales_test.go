@@ -7,6 +7,7 @@ import (
 
 	cmd "service-restaurant/internal/modules/identidad/application/dto/command"
 	dtoresult "service-restaurant/internal/modules/identidad/application/dto/result"
+	"service-restaurant/internal/modules/identidad/application/mapper"
 	"service-restaurant/internal/modules/identidad/application/port/outbound"
 	"service-restaurant/internal/modules/identidad/domain/policy"
 	appctx "service-restaurant/internal/shared/application/context"
@@ -22,6 +23,8 @@ type sucursalStoreFake struct {
 	bajas      int
 	restaurada int
 	bloqueos   int
+	// sinAdministradores simula que, tras la baja, nadie conserva USUARIO_ADMINISTRAR efectivo.
+	sinAdministradores bool
 }
 
 func (f *sucursalStoreFake) Crear(_ context.Context, n outbound.NuevaSucursal) (dtoresult.Sucursal, error) {
@@ -179,6 +182,22 @@ func TestDarDeBajaSucursal(t *testing.T) {
 			t.Fatalf("bajas=%d bloqueos=%d: debe bloquear antes de contar y no dar de baja", f.bajas, f.bloqueos)
 		}
 	})
+	t.Run("no deja al sistema sin administrador efectivo", func(t *testing.T) {
+		f := &sucursalStoreFake{existente: dtoresult.Sucursal{ID: 5, EsActivo: true}, activas: 2, sinAdministradores: true}
+		res, err := NewCambiarEstadoSucursal(f).Execute(context.Background(), baja(gestor(5), "Cierre"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		esperarRechazo(t, res.Err(), apperror.KindBusinessRule, mapper.CodigoUltimoAdministrador)
+		if res.Err().Code != "ultimo_administrador" {
+			t.Fatalf("código %q", res.Err().Code)
+		}
+	})
+	t.Run("sede invisible sin motivo responde 404 y no 422", func(t *testing.T) {
+		f := &sucursalStoreFake{existente: dtoresult.Sucursal{ID: 5, EsActivo: true}, activas: 2}
+		res, _ := NewCambiarEstadoSucursal(f).Execute(context.Background(), baja(gestor(1), ""))
+		esperarRechazo(t, res.Err(), apperror.KindNotFound, "no_encontrado")
+	})
 	t.Run("baja correcta", func(t *testing.T) {
 		f := &sucursalStoreFake{existente: dtoresult.Sucursal{ID: 5, EsActivo: true}, activas: 2}
 		res, err := NewCambiarEstadoSucursal(f).Execute(context.Background(), baja(gestor(5), "Cierre del local"))
@@ -213,4 +232,24 @@ func TestRestaurarSucursal(t *testing.T) {
 	esperarRechazo(t, res.Err(), apperror.KindConflict, "ya_activa")
 	res, _ = NewCambiarEstadoSucursal(&sucursalStoreFake{}).Execute(context.Background(), rest(appctx.Actor{}))
 	esperarRechazo(t, res.Err(), apperror.KindUnauthorized, "no_autenticado")
+}
+
+func (f *sucursalStoreFake) ContarAdministradoresEfectivos(context.Context) (int, error) {
+	if f.sinAdministradores {
+		return 0, nil
+	}
+	return 1, nil
+}
+
+func TestBajaDeSedeSoloVisiblePorVerEsSedeNoAutorizada(t *testing.T) {
+	// SUCURSAL_VER en la sede 5 y SUCURSAL_ADMINISTRAR en la 9: ve la 5 pero no la administra.
+	a := appctx.NewActor(7, "a", 1, []appctx.Grant{
+		{SucursalID: 5, Permiso: policy.SucursalVer}, {SucursalID: 9, Permiso: policy.SucursalAdministrar}})
+	f := &sucursalStoreFake{existente: dtoresult.Sucursal{ID: 5, EsActivo: true}, activas: 3}
+	res, _ := NewCambiarEstadoSucursal(f).Execute(context.Background(),
+		cmd.CambiarEstadoSucursal{Actor: a, ID: 5, Activo: false, Motivo: "x"})
+	esperarRechazo(t, res.Err(), apperror.KindForbidden, "sede_no_autorizada")
+	if f.bajas != 0 {
+		t.Fatal("no debe dar de baja")
+	}
 }

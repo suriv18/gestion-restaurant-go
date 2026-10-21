@@ -14,10 +14,16 @@ import (
 
 const maxDescripcionPermiso = 250
 
+// contadorAdministradores es lo mínimo que necesita la regla del último administrador; la
+// cumplen AccesosStore y SucursalStore (dar de baja una sede también quita permisos efectivos).
+type contadorAdministradores interface {
+	ContarAdministradoresEfectivos(ctx context.Context) (int, error)
+}
+
 // ultimoAdministrador comprueba, DESPUÉS de aplicar el cambio dentro de la transacción, que
 // siga existiendo al menos un usuario con USUARIO_ADMINISTRAR efectivo. Si no, devuelve un
 // rechazo y el decorador transaccional revierte el cambio.
-func ultimoAdministrador(ctx context.Context, a outbound.AccesosStore) (*apperror.AppError, error) {
+func ultimoAdministrador(ctx context.Context, a contadorAdministradores) (*apperror.AppError, error) {
 	n, err := a.ContarAdministradoresEfectivos(ctx)
 	if err != nil {
 		return nil, err

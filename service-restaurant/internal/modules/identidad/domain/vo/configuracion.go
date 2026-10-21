@@ -17,6 +17,17 @@ var (
 	codigoSucursalRe = regexp.MustCompile(`^[A-Z0-9][A-Z0-9_-]{1,19}$`)
 )
 
+// mayusculasASCII pasa a mayúscula solo a-z: strings.ToUpper plegaría letras no ASCII
+// ("ı" -> "I", "ſ" -> "S") y las dejaría pasar por la expresión regular.
+func mayusculasASCII(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= 'a' && r <= 'z' {
+			return r - 'a' + 'A'
+		}
+		return r
+	}, s)
+}
+
 // Ubigeo es el código de ubicación de seis dígitos.
 type Ubigeo struct{ value string }
 
@@ -34,7 +45,7 @@ func (u Ubigeo) String() string { return u.value }
 type Moneda struct{ value string }
 
 func NewMoneda(raw string) (Moneda, error) {
-	v := strings.ToUpper(strings.TrimSpace(raw))
+	v := mayusculasASCII(strings.TrimSpace(raw))
 	if !monedaRe.MatchString(v) {
 		return Moneda{}, ErrFormatoInvalido
 	}
@@ -63,7 +74,7 @@ func (z ZonaHoraria) String() string { return z.value }
 type CodigoSucursal struct{ value string }
 
 func NewCodigoSucursal(raw string) (CodigoSucursal, error) {
-	v := strings.ToUpper(strings.TrimSpace(raw))
+	v := mayusculasASCII(strings.TrimSpace(raw))
 	if !codigoSucursalRe.MatchString(v) {
 		return CodigoSucursal{}, ErrCodigoInvalido
 	}

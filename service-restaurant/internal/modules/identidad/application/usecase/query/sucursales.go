@@ -38,7 +38,7 @@ func (uc *ListarSucursales) Execute(ctx context.Context, q qry.ListarSucursales)
 		return appresult.Result[dtoresult.PaginaSucursales]{}, fmt.Errorf("listar sucursales: %w", err)
 	}
 	pagina := dtoresult.PaginaSucursales{Items: items}
-	if len(items) > n {
+	if len(items) > n && n > 0 {
 		pagina.Items = items[:n]
 		pagina.NextCursor = mapper.EncodeCursor(items[n-1].ID)
 	}

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"service-restaurant/internal/platform/database"
 	"service-restaurant/migrations"
 )
 
@@ -105,4 +106,73 @@ func sinComentarios(s string) string {
 		}
 	}
 	return strings.TrimSpace(b.String())
+}
+
+// El backfill de 00008 completa las mesas inactivas previas a la migración. Se simula el estado
+// anterior (sin ck_mesas_baja y con el trigger sin baja lógica) dentro de una transacción que
+// se descarta, y se ejecuta la sentencia UPDATE tal como está escrita en el archivo.
+func TestMigracion00008RellenaMesasInactivasPrevias(t *testing.T) {
+	app(t)
+	raw, err := migrations.FS.ReadFile("00008_configuracion_salon.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	up := strings.SplitN(string(raw), "-- +goose Down", 2)[0]
+	ini := strings.Index(up, "UPDATE mesas")
+	if ini < 0 {
+		t.Fatal("la migración no contiene el UPDATE mesas del backfill")
+	}
+	fin := strings.Index(up[ini:], ";")
+	if fin < 0 {
+		t.Fatal("el UPDATE del backfill no termina en ;")
+	}
+	backfill := up[ini : ini+fin]
+
+	ctx := context.Background()
+	tx, err := testDB.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	var sistema int64
+	if err := tx.QueryRowContext(ctx, `SELECT id FROM sch_restaurante.usuarios WHERE es_sistema`).Scan(&sistema); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SetActor(ctx, tx, sistema); err != nil {
+		t.Fatal(err)
+	}
+	exec := func(s string) {
+		t.Helper()
+		if _, err := tx.ExecContext(ctx, s); err != nil {
+			t.Fatalf("%v\n%s", err, s)
+		}
+	}
+	exec(`INSERT INTO sch_restaurante.zonas(sucursal_id,nombre)
+		SELECT id,'ZONA-BACKFILL' FROM sch_restaurante.sucursales WHERE codigo='PRINCIPAL'`)
+	exec(`INSERT INTO sch_restaurante.mesas(sucursal_id,zona_id,numero_mesa,capacidad)
+		SELECT z.sucursal_id,z.id,'BACKFILL-1',2 FROM sch_restaurante.zonas z WHERE z.nombre='ZONA-BACKFILL'`)
+	// Estado previo a la migración: sin restricción de baja y con el trigger sin baja lógica.
+	exec(`ALTER TABLE sch_restaurante.mesas DROP CONSTRAINT ck_mesas_baja`)
+	exec(`DROP TRIGGER a0_metadatos ON sch_restaurante.mesas`)
+	exec(`CREATE TRIGGER a0_metadatos BEFORE INSERT OR UPDATE ON sch_restaurante.mesas
+		FOR EACH ROW EXECUTE FUNCTION sch_restaurante.fn_metadatos_fila('true','false')`)
+	exec(`UPDATE sch_restaurante.mesas SET es_activo=false WHERE numero_mesa='BACKFILL-1'`)
+
+	var antesEn, antesPor, nulos string
+	if err := tx.QueryRowContext(ctx, `SELECT actualizado_en::text, actualizado_por::text,
+		(eliminado_en IS NULL AND eliminado_por IS NULL AND motivo_eliminacion IS NULL)::text
+		FROM sch_restaurante.mesas WHERE numero_mesa='BACKFILL-1'`).Scan(&antesEn, &antesPor, &nulos); err != nil || nulos != "true" {
+		t.Fatalf("precondición: mesa inactiva con marcadores nulos (%v, %s)", err, nulos)
+	}
+
+	exec(strings.Replace(backfill, "UPDATE mesas", "UPDATE sch_restaurante.mesas", 1))
+
+	var en, por, motivo string
+	if err := tx.QueryRowContext(ctx, `SELECT eliminado_en::text, eliminado_por::text, motivo_eliminacion
+		FROM sch_restaurante.mesas WHERE numero_mesa='BACKFILL-1'`).Scan(&en, &por, &motivo); err != nil {
+		t.Fatal(err)
+	}
+	if en != antesEn || por != antesPor || motivo != "Baja anterior a la migración 00008" {
+		t.Fatalf("backfill: eliminado_en=%s (quería %s), eliminado_por=%s (quería %s), motivo=%q", en, antesEn, por, antesPor, motivo)
+	}
 }

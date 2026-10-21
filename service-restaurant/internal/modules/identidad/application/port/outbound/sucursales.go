@@ -43,9 +43,12 @@ type SucursalStore interface {
 	// Obtener lee la sede bloqueando su fila (FOR UPDATE); found=false si no existe.
 	Obtener(ctx context.Context, id int64) (dtoresult.Sucursal, bool, error)
 	Actualizar(ctx context.Context, id int64, c CambiosSucursal) (dtoresult.Sucursal, bool, error)
-	// BloquearNegocio serializa las bajas concurrentes para que la regla de la última sede sea fiable.
+	// BloquearNegocio serializa las bajas concurrentes para que la regla de la última sede sea
+	// fiable (las altas solo esperan por los locks de FK sobre la fila de la empresa).
 	BloquearNegocio(ctx context.Context) error
 	ContarActivas(ctx context.Context) (int, error)
 	DarBaja(ctx context.Context, id int64, motivo string) (dtoresult.Sucursal, bool, error)
 	Restaurar(ctx context.Context, id int64) (dtoresult.Sucursal, bool, error)
+	// ContarAdministradoresEfectivos cuenta usuarios con USUARIO_ADMINISTRAR efectivo (tras la baja).
+	ContarAdministradoresEfectivos(ctx context.Context) (int, error)
 }

@@ -26,7 +26,11 @@ func Requiere(a appctx.Actor, mensaje string, permisos ...string) *apperror.AppE
 func SedesVisibles(a appctx.Actor) []int64 {
 	ids := append(a.SucursalesCon(policy.SucursalVer), a.SucursalesCon(policy.SucursalAdministrar)...)
 	slices.Sort(ids)
-	return slices.Compact(ids)
+	ids = slices.Compact(ids)
+	if ids == nil {
+		return []int64{}
+	}
+	return ids
 }
 
 // SucursalVisible indica si el actor puede ver la sede. Las sedes inactivas no generan permisos

@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -296,5 +297,51 @@ func TestSucursalNoSePuedeDarDeBajaLaUltimaSedeActiva(t *testing.T) {
 	esperar(t, post(t, "/api/v1/sucursales/"+id+"/baja", `{"motivo":"Intento"}`, tk), http.StatusUnprocessableEntity, "ultima_sede_activa")
 	if scalar(t, `SELECT count(*) FROM sch_restaurante.sucursales WHERE codigo='PRINCIPAL' AND es_activo`) != 1 {
 		t.Fatal("PRINCIPAL debe seguir activa")
+	}
+}
+
+// Dar de baja una sede quita los permisos efectivos de quienes solo los tenían allí: si era la
+// última con USUARIO_ADMINISTRAR efectivo, se rechaza y la baja se revierte.
+func TestSucursalNoSePuedeDarDeBajaLaSedeDelUltimoAdministrador(t *testing.T) {
+	tk := gestorToken(t)
+	crearSedeSQL(t, "CFG-A")
+	principal := idDe(t, "sucursales", "codigo", "PRINCIPAL")
+
+	// Neutraliza (con restauración) a cualquier otro administrador efectivo fuera de PRINCIPAL:
+	// las pruebas comparten la base y otras pueden haber dejado administradores en otras sedes.
+	rows, err := testDB.Query(`SELECT DISTINCT us.id FROM sch_restaurante.usuarios_sucursales us
+		JOIN sch_restaurante.v_permisos_efectivos v ON v.usuario_id=us.usuario_id AND v.sucursal_id=us.sucursal_id
+		WHERE v.permiso='USUARIO_ADMINISTRAR' AND us.es_activo AND us.sucursal_id<>` + principal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		ids = append(ids, id)
+	}
+	rows.Close()
+	if len(ids) > 0 {
+		lista := strings.Join(ids, ",")
+		asSystem(t, `UPDATE sch_restaurante.usuarios_sucursales SET es_activo=false WHERE id IN (`+lista+`)`)
+		t.Cleanup(func() {
+			asSystem(t, `UPDATE sch_restaurante.usuarios_sucursales SET es_activo=true WHERE id IN (`+lista+`)`)
+		})
+	}
+	// Precondición: queda un único administrador efectivo y solo en PRINCIPAL, con otra sede activa.
+	if n := scalar(t, `SELECT count(DISTINCT usuario_id) FROM sch_restaurante.v_permisos_efectivos
+		WHERE permiso='USUARIO_ADMINISTRAR' AND sucursal_id<>`+principal); n != 0 {
+		t.Fatalf("precondición: %d administradores efectivos fuera de PRINCIPAL", n)
+	}
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.sucursales WHERE es_activo AND codigo<>'PRINCIPAL'`) == 0 {
+		t.Fatal("precondición: debe haber otra sede activa")
+	}
+
+	esperar(t, post(t, "/api/v1/sucursales/"+principal+"/baja", `{"motivo":"Intento"}`, tk), http.StatusUnprocessableEntity, "ultimo_administrador")
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.sucursales WHERE codigo='PRINCIPAL' AND es_activo AND motivo_eliminacion IS NULL`) != 1 {
+		t.Fatal("el rechazo debe revertir la baja: PRINCIPAL sigue activa")
 	}
 }
