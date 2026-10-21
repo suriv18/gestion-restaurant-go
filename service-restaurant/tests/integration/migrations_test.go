@@ -22,8 +22,8 @@ func TestMigrationsCreateFullSchema(t *testing.T) {
 	}
 	if n := scalar(t, `SELECT count(*) FROM information_schema.columns c
 		JOIN information_schema.tables t USING (table_schema, table_name)
-		WHERE c.table_schema='sch_restaurante' AND t.table_type='BASE TABLE'`); n != 680 {
-		t.Errorf("columnas = %d, quería 680 (664 de la V4 + 7 de sesiones + 9 de idempotencia)", n)
+		WHERE c.table_schema='sch_restaurante' AND t.table_type='BASE TABLE'`); n != 683 {
+		t.Errorf("columnas = %d, quería 683 (664 de la V4 + 7 de sesiones + 9 de idempotencia + 3 de baja en mesas)", n)
 	}
 	if n := scalar(t, `SELECT count(*) FROM pg_trigger tg
 		JOIN pg_class c ON c.oid=tg.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace

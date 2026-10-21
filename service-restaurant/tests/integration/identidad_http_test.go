@@ -192,7 +192,7 @@ func TestLoginYSesion(t *testing.T) {
 		Permisos   []string `json:"permisos"`
 	}
 	s.json(t, &ses)
-	if ses.Username != adminUser || len(ses.Sucursales) != 1 || len(ses.Permisos) != 10 || ses.UsuarioID == "" {
+	if ses.Username != adminUser || len(ses.Sucursales) != 1 || len(ses.Permisos) != 16 || ses.UsuarioID == "" {
 		t.Fatalf("sesión incorrecta: %+v", ses)
 	}
 }
