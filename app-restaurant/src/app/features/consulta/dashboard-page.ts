@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthSession } from '../../core/auth/auth-session';
 import { RestaurantStore } from '../../core/demo/restaurant-store';
 import { PageHeader } from '../../shared/ui/page-header';
 import { Metric } from '../../shared/ui/metric';
@@ -16,7 +17,7 @@ import { StatusBadge } from '../../shared/ui/status-badge';
     >
     <div class="dashboard-greeting mb-7">
       <div>
-        <span class="eyebrow">BIENVENIDA, VALERIA</span>
+        <span class="eyebrow">{{ greeting() }}</span>
         <h2>Hagamos que cada mesa cuente.</h2>
         <p class="subtle mt-3">
           {{ store.state().settings.name }} · {{ store.state().settings.branch }}
@@ -114,6 +115,12 @@ import { StatusBadge } from '../../shared/ui/status-badge';
 })
 export class DashboardPage {
   readonly store = inject(RestaurantStore);
+  private readonly auth = inject(AuthSession);
+  /** Con sesión real saluda a la persona conectada; en modo demostración, a la de ejemplo. */
+  readonly greeting = computed(() => {
+    const user = this.auth.user();
+    return user ? `HOLA, ${user.username.toUpperCase()}` : 'BIENVENIDA, VALERIA';
+  });
   readonly collected = computed(() =>
     this.store.state().payments.reduce((s, p) => s + p.amount, 0),
   );

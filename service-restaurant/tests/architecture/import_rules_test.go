@@ -248,3 +248,20 @@ func TestRulesDetectViolations(t *testing.T) {
 		}
 	}
 }
+
+// El módulo atencion no puede depender de los internos de identidad (la coordinación entre
+// módulos ocurre en la composición).
+func TestAtencionNoImportaOtrosModulos(t *testing.T) {
+	paquetes := []string{
+		"internal/modules/atencion/domain/vo",
+		"internal/modules/atencion/domain/policy",
+		"internal/modules/atencion/application/usecase/command",
+		"internal/modules/atencion/infrastructure/persistence/write/repository",
+		"internal/modules/atencion/web/controller",
+	}
+	for _, pkg := range paquetes {
+		if violation(pkg, modulePath+"/internal/modules/identidad/domain/policy") == "" {
+			t.Errorf("%s no debe poder importar identidad", pkg)
+		}
+	}
+}

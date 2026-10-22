@@ -1,0 +1,55 @@
+package config
+
+import (
+	"database/sql"
+	"log/slog"
+	"net/http"
+
+	cmd "service-restaurant/internal/modules/identidad/application/dto/command"
+	dtoresult "service-restaurant/internal/modules/identidad/application/dto/result"
+	"service-restaurant/internal/modules/identidad/application/port/inbound"
+	"service-restaurant/internal/modules/identidad/application/usecase/command"
+	uquery "service-restaurant/internal/modules/identidad/application/usecase/query"
+	readadapter "service-restaurant/internal/modules/identidad/infrastructure/persistence/read/adapter"
+	writeadapter "service-restaurant/internal/modules/identidad/infrastructure/persistence/write/adapter"
+	"service-restaurant/internal/modules/identidad/web/controller"
+)
+
+// configuracion agrupa los casos de uso de negocio y sucursales (RES-RF-003) ya decorados.
+type configuracion struct {
+	negocio    *controller.NegocioHandler
+	sucursales *controller.SucursalesHandler
+}
+
+func armarConfiguracion(db *sql.DB, logger *slog.Logger) *configuracion {
+	sinIntencion := func(actorID int64) (int64, cmd.Intencion) { return actorID, cmd.Intencion{} }
+
+	editarNegocio := escritura[cmd.EditarNegocio, dtoresult.Negocio]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.EditarNegocio, dtoresult.Negocio] {
+			return command.NewEditarNegocio(writeadapter.NewNegocioWriteAdapter(q))
+		},
+		meta: func(c cmd.EditarNegocio) (int64, cmd.Intencion) { return sinIntencion(c.Actor.UserID) }}
+
+	crearSucursal := escritura[cmd.CrearSucursal, dtoresult.Sucursal]{db: db, logger: logger, status: http.StatusCreated,
+		build: func(q txQuerier) ejecutor[cmd.CrearSucursal, dtoresult.Sucursal] {
+			return command.NewCrearSucursal(writeadapter.NewSucursalWriteAdapter(q))
+		},
+		meta: func(c cmd.CrearSucursal) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
+	editarSucursal := escritura[cmd.EditarSucursal, dtoresult.Sucursal]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.EditarSucursal, dtoresult.Sucursal] {
+			return command.NewEditarSucursal(writeadapter.NewSucursalWriteAdapter(q))
+		},
+		meta: func(c cmd.EditarSucursal) (int64, cmd.Intencion) { return sinIntencion(c.Actor.UserID) }}
+	estadoSucursal := escritura[cmd.CambiarEstadoSucursal, dtoresult.Sucursal]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.CambiarEstadoSucursal, dtoresult.Sucursal] {
+			return command.NewCambiarEstadoSucursal(writeadapter.NewSucursalWriteAdapter(q))
+		},
+		meta: func(c cmd.CambiarEstadoSucursal) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
+
+	lector := readadapter.NewConfiguracionReadAdapter(db)
+	return &configuracion{
+		negocio: controller.NewNegocioHandler(uquery.NewObtenerNegocio(lector), inbound.EditarNegocio(editarNegocio)),
+		sucursales: controller.NewSucursalesHandler(uquery.NewListarSucursales(lector), uquery.NewObtenerSucursal(lector),
+			inbound.CrearSucursal(crearSucursal), inbound.EditarSucursal(editarSucursal), inbound.CambiarEstadoSucursal(estadoSucursal)),
+	}
+}

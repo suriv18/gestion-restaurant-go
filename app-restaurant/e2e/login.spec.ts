@@ -70,6 +70,8 @@ test('inicia sesión, entra al resumen y envía el token solo en llamadas autent
   await expect(page).toHaveURL(/\/dashboard$/);
   // En móvil el menú lateral está oculto hasta abrirlo: se comprueba la pantalla de destino.
   await expect(page.locator('main h1')).toBeVisible();
+  // El saludo es de la persona conectada, no de la demo.
+  await expect(page.locator('.dashboard-greeting .eyebrow')).toHaveText('HOLA, ANA');
   expect(api.logins).toEqual([{ username: 'ana', password: 'clave-de-prueba' }]);
   expect(api.sessionAuth).toEqual([`Bearer ${TOKEN}`]);
   // El token vive en sessionStorage; la contraseña no se guarda en ningún almacenamiento.

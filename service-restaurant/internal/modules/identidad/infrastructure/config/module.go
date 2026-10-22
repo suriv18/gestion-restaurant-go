@@ -58,6 +58,7 @@ type Module struct {
 	deps   Deps
 	hasher *security.Argon2Hasher
 	admin  *administracion
+	conf   *configuracion
 
 	iniciar    inbound.IniciarSesion
 	cerrar     inbound.CerrarSesion
@@ -103,6 +104,7 @@ func New(d Deps) (*Module, error) {
 		return command.NewInstalarAdministrador(writeadapter.NewInstalacionWriteAdapter(q), writeadapter.NewUsuarioWriteAdapter(q), hasher)
 	}}
 	m.admin = armarAdministracion(d.DB, d.Logger, hasher, clock)
+	m.conf = armarConfiguracion(d.DB, d.Logger)
 	return m, nil
 }
 
@@ -113,6 +115,7 @@ func (m *Module) Authenticator() platsec.Authenticator { return bearerAuthentica
 func (m *Module) RegisterRoutes(mux *http.ServeMux, protect func(http.Handler) http.Handler) {
 	controller.RegisterAuthRoutes(mux, controller.NewAuthHandler(m.iniciar, m.cerrar, m.sesion), protect, m.deps.Logger)
 	controller.RegisterAdminRoutes(mux, m.admin.roles, m.admin.permisos, m.admin.usuarios, protect, m.deps.Logger)
+	controller.RegisterConfiguracionRoutes(mux, m.conf.negocio, m.conf.sucursales, protect, m.deps.Logger)
 }
 
 // bearerAuthenticator adapta el caso de uso AutenticarToken a platform/security.Authenticator.
