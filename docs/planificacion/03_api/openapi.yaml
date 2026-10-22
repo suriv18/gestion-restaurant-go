@@ -108,7 +108,7 @@ paths:
       - Configuración
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: NEGOCIO_VER | NEGOCIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -123,12 +123,6 @@ paths:
         '409': *id005
         '422': *id006
         '503': *id007
-      parameters:
-      - name: sucursal_id
-        in: query
-        schema:
-          $ref: '#/components/schemas/Id'
-        description: Filtro solicitado, siempre validado contra sedes autorizadas.
     patch:
       operationId: operacion_004
       summary: Editar negocio
@@ -136,7 +130,7 @@ paths:
       - Configuración
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: NEGOCIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -348,7 +342,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -570,7 +564,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -792,7 +786,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -1014,7 +1008,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -1221,7 +1215,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -1260,7 +1254,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1287,21 +1281,15 @@ paths:
           type: integer
           minimum: 1
           maximum: 100
-          default: 30
+          default: 25
       - name: cursor
         in: query
         schema:
           type: string
-      - name: q
-        in: query
-        schema:
-          type: string
-          maxLength: 150
       - name: es_activo
         in: query
         schema:
           type: boolean
-          default: true
     post:
       operationId: operacion_036
       summary: Crear mesas
@@ -1311,7 +1299,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1342,7 +1330,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1370,7 +1358,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1400,48 +1388,16 @@ paths:
   /mesas/{id}/baja:
     post:
       operationId: operacion_039
-      summary: Desactivar mesas
+      summary: Dar de baja mesas
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
-        eliminación; registra actor de actualización y evento.
+        en V4 se requiere diseño y migración adicional. Exige motivo (1–2000 caracteres); cambia es_activo a false y guarda
+        eliminado_en, eliminado_por y motivo_eliminacion; registra el evento de auditoría. Se rechaza con 422 si la mesa tiene
+        un pedido abierto.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
-      responses:
-        '200':
-          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Mesas'
-        '400': *id001
-        '401': *id002
-        '403': *id003
-        '404': *id004
-        '409': *id005
-        '422': *id006
-        '503': *id007
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/Id'
-      - $ref: '#/components/parameters/IdempotencyKey'
-  /mesas/{id}/restauracion:
-    post:
-      operationId: operacion_040
-      summary: Restaurar mesas
-      tags:
-      - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
-        marcadores de baja.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1468,6 +1424,45 @@ paths:
         content:
           application/json:
             schema:
+              $ref: '#/components/schemas/Motivo'
+  /mesas/{id}/restauracion:
+    post:
+      operationId: operacion_040
+      summary: Restaurar mesas
+      tags:
+      - Catálogos
+      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
+        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
+        marcadores de baja.
+      x-implementado: false
+      x-permiso: MESA_ADMINISTRAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mesas'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
               $ref: '#/components/schemas/Confirmacion'
   /zonas:
     get:
@@ -1477,7 +1472,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1504,11 +1499,15 @@ paths:
           type: integer
           minimum: 1
           maximum: 100
-          default: 30
+          default: 25
       - name: cursor
         in: query
         schema:
           type: string
+      - name: es_activo
+        in: query
+        schema:
+          type: boolean
     post:
       operationId: operacion_042
       summary: Crear zonas
@@ -1518,7 +1517,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1549,7 +1548,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1577,7 +1576,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1615,7 +1614,7 @@ paths:
         en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
         eliminación; registra actor de actualización y evento.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1645,10 +1644,10 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1671,7 +1670,7 @@ paths:
           $ref: '#/components/schemas/Id'
       - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
@@ -1852,7 +1851,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -2064,7 +2063,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -2271,7 +2270,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -2483,7 +2482,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -2690,7 +2689,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -2897,7 +2896,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -3071,7 +3070,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: SUCURSAL_VER | SUCURSAL_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3087,22 +3086,21 @@ paths:
         '422': *id006
         '503': *id007
       parameters:
-      - name: sucursal_id
-        in: query
-        schema:
-          $ref: '#/components/schemas/Id'
-        description: Filtro solicitado, siempre validado contra sedes autorizadas.
       - name: limit
         in: query
         schema:
           type: integer
           minimum: 1
           maximum: 100
-          default: 30
+          default: 25
       - name: cursor
         in: query
         schema:
           type: string
+      - name: es_activo
+        in: query
+        schema:
+          type: boolean
     post:
       operationId: operacion_088
       summary: Crear sucursales
@@ -3112,7 +3110,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3143,7 +3141,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: SUCURSAL_VER | SUCURSAL_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3171,7 +3169,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3208,7 +3206,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3244,10 +3242,10 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3270,7 +3268,7 @@ paths:
           $ref: '#/components/schemas/Id'
       - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
@@ -3451,7 +3449,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -3658,7 +3656,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: Permiso fino pendiente de migración en el catálogo
@@ -3803,7 +3801,7 @@ paths:
       - Accesos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los nueve maestros principales limpian
+        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: false
       x-permiso: USUARIO_ADMINISTRAR
@@ -5569,29 +5567,25 @@ components:
       description: Cantidad decimal exacta. Debe ser positiva cuando la operación así lo indique.
     Error:
       type: object
+      description: Problema HTTP (application/problem+json). El campo con error se codifica en code (por ejemplo posicion_x_invalida, motivo_requerido).
       required:
+      - type
+      - title
+      - status
       - code
-      - message
-      - traceId
       properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
         code:
           type: string
-        message:
+        requestId:
           type: string
-        traceId:
-          type: string
-        fieldErrors:
-          type: array
-          items:
-            type: object
-            required:
-            - field
-            - message
-            properties:
-              field:
-                type: string
-              message:
-                type: string
     Operacion:
       type: object
       required:
@@ -7326,6 +7320,24 @@ components:
           readOnly: true
         es_activo:
           type: boolean
+        eliminado_en:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          readOnly: true
+        eliminado_por:
+          anyOf:
+          - type: string
+            pattern: ^[1-9][0-9]*$
+            description: Identificador BIGINT serializado como cadena.
+          - type: 'null'
+          readOnly: true
+        motivo_eliminacion:
+          anyOf:
+          - type: string
+          - type: 'null'
+          readOnly: true
     Reservas:
       type: object
       description: Reserva de una mesa, sin solapamientos activos. Para grupos con varias mesas ampliar asignaciones.
@@ -9260,7 +9272,7 @@ components:
       - zona_id
       - numero_mesa
       - capacidad
-      properties: &id055
+      properties:
         sucursal_id: *id048
         zona_id: *id049
         numero_mesa: *id050
@@ -9272,14 +9284,20 @@ components:
       type: object
       additionalProperties: false
       minProperties: 1
-      properties: *id055
+      properties:
+        zona_id: *id049
+        numero_mesa: *id050
+        capacidad: *id051
+        habilitada: *id052
+        posicion_x: *id053
+        posicion_y: *id054
     ZonasAlta:
       type: object
       additionalProperties: false
       required:
       - sucursal_id
       - nombre
-      properties: &id059
+      properties:
         sucursal_id: *id056
         nombre: *id057
         orden_visualizacion: *id058
@@ -9287,7 +9305,9 @@ components:
       type: object
       additionalProperties: false
       minProperties: 1
-      properties: *id059
+      properties:
+        nombre: *id057
+        orden_visualizacion: *id058
     CategoriasAlta:
       type: object
       additionalProperties: false
@@ -9406,12 +9426,10 @@ components:
       type: object
       additionalProperties: false
       required:
-      - negocio_id
       - codigo
       - nombre
       - direccion
-      properties: &id100
-        negocio_id: *id093
+      properties:
         codigo: *id094
         nombre: *id095
         direccion: *id096
@@ -9422,7 +9440,13 @@ components:
       type: object
       additionalProperties: false
       minProperties: 1
-      properties: *id100
+      properties:
+        codigo: *id094
+        nombre: *id095
+        direccion: *id096
+        ubigeo: *id097
+        codigo_establecimiento_sunat: *id098
+        telefono: *id099
     RolesAlta:
       type: object
       additionalProperties: false
@@ -9460,7 +9484,7 @@ components:
       - razon_social
       - nombre_comercial
       - direccion_fiscal
-      properties: &id117
+      properties:
         ruc: *id108
         razon_social: *id109
         nombre_comercial: *id110
@@ -9474,7 +9498,15 @@ components:
       type: object
       additionalProperties: false
       minProperties: 1
-      properties: *id117
+      properties:
+        razon_social: *id109
+        nombre_comercial: *id110
+        direccion_fiscal: *id111
+        ubigeo: *id112
+        telefono: *id113
+        email: *id114
+        moneda: *id115
+        zona_horaria: *id116
     Login:
       type: object
       additionalProperties: false

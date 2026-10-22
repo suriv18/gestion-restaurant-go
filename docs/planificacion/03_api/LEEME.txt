@@ -8,6 +8,6 @@ Los permisos que no existen en las diez semillas del SQL requieren migración. A
 
 Todos los ejemplos del paquete son ficticios. No contiene tokens, certificados ni credenciales.
 
-V4: los tres marcadores de baja solo existen en nueve maestros principales.
-Los catálogos simples usan es_activo y sus rutas /baja no requieren body.
+V4: los tres marcadores de baja solo existen en diez maestros principales (mesas desde la migración 00008).
+Los catálogos simples usan es_activo y sus rutas /baja no requieren body; sucursales y mesas exigen {motivo}.
 La matriz 02_base_datos/politica_campos_por_tabla.json define el alcance exacto.
