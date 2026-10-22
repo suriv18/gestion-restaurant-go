@@ -103,79 +103,89 @@ func TestZonaCrearConIdempotenciaYValidaciones(t *testing.T) {
 	tk := gestorMesas(t)
 	principal := idDe(t, "sucursales", "codigo", "PRINCIPAL")
 	h := map[string]string{"Idempotency-Key": nuevaClave()}
+	s := sufijo()
+	nueva := "Zona nueva " + s
 
-	r1 := callH(t, "POST", "/api/v1/zonas", altaZona(principal, "Zona nueva 1"), tk, h)
+	r1 := callH(t, "POST", "/api/v1/zonas", altaZona(principal, nueva), tk, h)
 	esperar(t, r1, http.StatusCreated, "")
 	var z zonaResp
 	r1.json(t, &z)
-	if z.Nombre != "Zona nueva 1" || !z.EsActivo || z.SucursalID != principal || z.Orden != 3 ||
+	if z.Nombre != nueva || !z.EsActivo || z.SucursalID != principal || z.Orden != 3 ||
 		z.CreadoPor != idDe(t, "usuarios", "username", "mesa.gestor") {
 		t.Fatalf("zona creada: %+v", z)
 	}
 	// Repetir la misma intención no duplica; otro contenido con la misma clave es conflicto.
-	r2 := callH(t, "POST", "/api/v1/zonas", altaZona(principal, "Zona nueva 1"), tk, h)
+	r2 := callH(t, "POST", "/api/v1/zonas", altaZona(principal, nueva), tk, h)
 	esperar(t, r2, http.StatusCreated, "")
 	var rep zonaResp
 	r2.json(t, &rep)
-	if rep.ID != z.ID || scalar(t, `SELECT count(*) FROM sch_restaurante.zonas WHERE nombre='Zona nueva 1'`) != 1 {
+	if rep.ID != z.ID || scalar(t, `SELECT count(*) FROM sch_restaurante.zonas WHERE sucursal_id=`+principal+` AND nombre=$1`, nueva) != 1 {
 		t.Fatalf("la repetición debe devolver la misma zona: %+v vs %+v", rep, z)
 	}
-	esperar(t, callH(t, "POST", "/api/v1/zonas", altaZona(principal, "Otra"), tk, h), http.StatusConflict, "idempotency_key_reutilizada")
+	esperar(t, callH(t, "POST", "/api/v1/zonas", altaZona(principal, "Otra "+s), tk, h), http.StatusConflict, "idempotency_key_reutilizada")
 
-	esperar(t, post(t, "/api/v1/zonas", altaZona(principal, "Zona nueva 1"), tk), http.StatusConflict, "nombre_duplicado")
-	esperar(t, call(t, "POST", "/api/v1/zonas", altaZona(principal, "Sin clave"), tk), http.StatusBadRequest, "idempotency_key_requerida")
+	zonasAntes := scalar(t, `SELECT count(*) FROM sch_restaurante.zonas`)
+	esperar(t, post(t, "/api/v1/zonas", altaZona(principal, nueva), tk), http.StatusConflict, "nombre_duplicado")
+	esperar(t, call(t, "POST", "/api/v1/zonas", altaZona(principal, "Sin clave "+s), tk), http.StatusBadRequest, "idempotency_key_requerida")
 	esperar(t, post(t, "/api/v1/zonas", `{"sucursal_id":"`+principal+`","nombre":"x","creado_por":"1"}`, tk), http.StatusBadRequest, "json_invalido")
 	esperar(t, post(t, "/api/v1/zonas", `{"sucursal_id":"abc","nombre":"x"}`, tk), http.StatusBadRequest, "sucursal_id_invalido")
 	esperar(t, post(t, "/api/v1/zonas", `{"sucursal_id":"`+principal+`","nombre":"  "}`, tk), http.StatusUnprocessableEntity, "nombre_invalido")
 	esperar(t, post(t, "/api/v1/zonas", `{"sucursal_id":"`+principal+`","nombre":"x","orden_visualizacion":-1}`, tk), http.StatusUnprocessableEntity, "orden_invalido")
-	if scalar(t, `SELECT count(*) FROM sch_restaurante.zonas WHERE nombre IN ('Sin clave','x','  ')`) != 0 {
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.zonas`) != zonasAntes {
 		t.Fatal("los rechazos no deben dejar zonas")
 	}
 
 	// Sede ajena: 404. Solo lectura: 403 sin_permiso.
 	ajena := idDe(t, "sucursales", "codigo", "MESA-AJENA")
-	esperar(t, post(t, "/api/v1/zonas", altaZona(ajena, "Intrusa"), tk), http.StatusNotFound, "no_encontrado")
-	esperar(t, post(t, "/api/v1/zonas", altaZona(principal, "Sin poder"), lectorMesas(t)), http.StatusForbidden, "sin_permiso")
+	esperar(t, post(t, "/api/v1/zonas", altaZona(ajena, "Intrusa "+s), tk), http.StatusNotFound, "no_encontrado")
+	esperar(t, post(t, "/api/v1/zonas", altaZona(principal, "Sin poder "+s), lectorMesas(t)), http.StatusForbidden, "sin_permiso")
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.zonas`) != zonasAntes {
+		t.Fatal("los rechazos de sede y permiso no deben dejar zonas")
+	}
 }
 
 func TestZonaEditar(t *testing.T) {
-	crearZonaSQL(t, "PRINCIPAL", "Editable")
+	s := sufijo()
 	crearSedeSQL(t, "MESA-AJENA")
-	crearZonaSQL(t, "MESA-AJENA", "Ajena editable")
+	id := crearZonaSQL(t, "PRINCIPAL", "Editable "+s)
+	ajenaID := crearZonaSQL(t, "MESA-AJENA", "Ajena editable "+s)
+	otra := "Otra existente " + s
+	crearZonaSQL(t, "PRINCIPAL", otra)
 	tk := gestorMesas(t)
-	id := idDe(t, "zonas", "nombre", "Editable")
+	editada := "Editada " + s
 
-	r := callH(t, "PATCH", "/api/v1/zonas/"+id, `{"nombre":"Editada","orden_visualizacion":7}`, tk, nil)
+	r := callH(t, "PATCH", "/api/v1/zonas/"+id, `{"nombre":"`+editada+`","orden_visualizacion":7}`, tk, nil)
 	esperar(t, r, http.StatusOK, "")
 	var z zonaResp
 	r.json(t, &z)
-	if z.Nombre != "Editada" || z.Orden != 7 {
+	if z.ID != id || z.Nombre != editada || z.Orden != 7 {
 		t.Fatalf("edición: %+v", z)
 	}
 	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+id, `{}`, tk, nil), http.StatusUnprocessableEntity, "sin_cambios")
 	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+id, `{"sucursal_id":"1"}`, tk, nil), http.StatusBadRequest, "json_invalido")
 	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+id, `{"nombre":" "}`, tk, nil), http.StatusUnprocessableEntity, "nombre_invalido")
 	esperar(t, callH(t, "PATCH", "/api/v1/zonas/999999", `{"nombre":"x"}`, tk, nil), http.StatusNotFound, "no_encontrado")
-	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+idDe(t, "zonas", "nombre", "Ajena editable"), `{"nombre":"Hack"}`, tk, nil),
-		http.StatusNotFound, "no_encontrado")
+	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+ajenaID, `{"nombre":"Hack"}`, tk, nil), http.StatusNotFound, "no_encontrado")
 
-	crearZonaSQL(t, "PRINCIPAL", "Otra existente")
-	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+id, `{"nombre":"Otra existente"}`, tk, nil), http.StatusConflict, "nombre_duplicado")
+	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+id, `{"nombre":"`+otra+`"}`, tk, nil), http.StatusConflict, "nombre_duplicado")
 	esperar(t, callH(t, "PATCH", "/api/v1/zonas/"+id, `{"nombre":"Hack"}`, lectorMesas(t), nil), http.StatusForbidden, "sin_permiso")
+	if got := scalarStr(t, `SELECT nombre FROM sch_restaurante.zonas WHERE id=$1`, id); got != editada {
+		t.Fatalf("los rechazos no deben cambiar la zona: %q", got)
+	}
 }
 
 func TestZonaBajaRestauracionYMesasActivas(t *testing.T) {
-	crearZonaSQL(t, "PRINCIPAL", "Ciclo zona")
-	crearMesaSQL(t, "PRINCIPAL", "Ciclo zona", "CZ-1", 4)
+	s := sufijo()
+	id := crearZonaSQL(t, "PRINCIPAL", "Ciclo zona "+s)
+	mesa := crearMesaSQL(t, "PRINCIPAL", "Ciclo zona "+s, "CZ-"+s, 4)
 	tk := gestorMesas(t)
-	id := idDe(t, "zonas", "nombre", "Ciclo zona")
 
 	// Con una mesa activa la zona no se desactiva.
 	esperar(t, post(t, "/api/v1/zonas/"+id+"/baja", "", tk), http.StatusConflict, "zona_con_mesas")
-	if scalar(t, `SELECT count(*) FROM sch_restaurante.zonas WHERE nombre='Ciclo zona' AND es_activo`) != 1 {
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.zonas WHERE id=$1 AND es_activo`, id) != 1 {
 		t.Fatal("la zona debe seguir activa")
 	}
-	asSystem(t, `UPDATE sch_restaurante.mesas SET es_activo=false, motivo_eliminacion='Fuera de servicio' WHERE numero_mesa='CZ-1'`)
+	asSystem(t, `UPDATE sch_restaurante.mesas SET es_activo=false, motivo_eliminacion='Fuera de servicio' WHERE id=`+mesa)
 
 	h := map[string]string{"Idempotency-Key": nuevaClave()}
 	r := callH(t, "POST", "/api/v1/zonas/"+id+"/baja", "", tk, h)

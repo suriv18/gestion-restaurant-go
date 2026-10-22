@@ -51,20 +51,24 @@ func TestListarMesasRechazos(t *testing.T) {
 	f := &mesaReaderFake{}
 	a := actorMesas(appctx.Grant{SucursalID: 1, Permiso: policy.MesaVer})
 	sinPermiso := actorMesas(appctx.Grant{SucursalID: 1, Permiso: "NEGOCIO_VER"})
-	res, _ := NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: sinPermiso})
+	res, err := NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: sinPermiso})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindForbidden || f.llamadas != 0 {
 		t.Fatalf("sin permiso debe ser 403 sin tocar el lector: %+v", res.Err())
 	}
 	ajena := int64(9)
-	res, _ = NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: a, SucursalID: &ajena})
+	res, err = NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: a, SucursalID: &ajena})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindNotFound || f.llamadas != 0 {
 		t.Fatalf("una sede ajena debe ser 404: %+v", res.Err())
 	}
-	res, _ = NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: a, Cursor: "%%%"})
+	res, err = NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: a, Cursor: "%%%"})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindBadRequest {
 		t.Fatalf("cursor inválido debe ser 400: %+v", res.Err())
 	}
-	res, _ = NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: a})
+	res, err = NewListarMesas(f).Execute(context.Background(), qry.ListarMesas{Actor: a})
+	sinFallo(t, err)
 	if !res.IsOk() || res.Value().Items == nil {
 		t.Fatalf("una lista vacía debe ser [] y no nula: %+v", res.Value())
 	}
@@ -73,16 +77,19 @@ func TestListarMesasRechazos(t *testing.T) {
 func TestObtenerMesaOcultaLasAjenas(t *testing.T) {
 	f := &mesaReaderFake{una: dtoresult.Mesa{ID: 9, SucursalID: 3}}
 	a := actorMesas(appctx.Grant{SucursalID: 1, Permiso: policy.MesaVer})
-	res, _ := NewObtenerMesa(f).Execute(context.Background(), qry.ObtenerMesa{Actor: a, ID: 9})
+	res, err := NewObtenerMesa(f).Execute(context.Background(), qry.ObtenerMesa{Actor: a, ID: 9})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindNotFound {
 		t.Fatalf("una mesa de sede ajena debe ser 404: %+v", res.Err())
 	}
 	f.una = dtoresult.Mesa{ID: 5, SucursalID: 1}
-	res, _ = NewObtenerMesa(f).Execute(context.Background(), qry.ObtenerMesa{Actor: a, ID: 5})
+	res, err = NewObtenerMesa(f).Execute(context.Background(), qry.ObtenerMesa{Actor: a, ID: 5})
+	sinFallo(t, err)
 	if !res.IsOk() || res.Value().ID != 5 {
 		t.Fatalf("una mesa propia debe leerse: %+v", res.Err())
 	}
-	res, _ = NewObtenerMesa(f).Execute(context.Background(), qry.ObtenerMesa{Actor: a, ID: 77})
+	res, err = NewObtenerMesa(f).Execute(context.Background(), qry.ObtenerMesa{Actor: a, ID: 77})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindNotFound {
 		t.Fatalf("una mesa inexistente debe ser 404: %+v", res.Err())
 	}

@@ -13,16 +13,17 @@ import (
 )
 
 type mesaStoreFake struct {
-	existente  dtoresult.Mesa
-	zona       outbound.ZonaRef
-	zonaExiste bool
-	errCrear   error
-	errBaja    error
-	creada     outbound.NuevaMesa
-	cambios    outbound.CambiosMesa
-	llamadas   int
-	bajas      int
-	orden      []string
+	existente    dtoresult.Mesa
+	zona         outbound.ZonaRef
+	zonaExiste   bool
+	errCrear     error
+	errBaja      error
+	creada       outbound.NuevaMesa
+	cambios      outbound.CambiosMesa
+	llamadas     int
+	bajas        int
+	errRestaurar error
+	orden        []string
 }
 
 func (f *mesaStoreFake) Crear(_ context.Context, n outbound.NuevaMesa) (dtoresult.Mesa, error) {
@@ -53,7 +54,7 @@ func (f *mesaStoreFake) Restaurar(_ context.Context, _ int64) (dtoresult.Mesa, b
 	f.llamadas++
 	m := f.existente
 	m.EsActivo = true
-	return m, true, nil
+	return m, true, f.errRestaurar
 }
 
 func booleano(b bool) *bool { return &b }
@@ -73,7 +74,8 @@ func TestCrearMesa(t *testing.T) {
 	}
 	deshabilitada := ok
 	deshabilitada.Habilitada = booleano(false)
-	_, _ = NewCrearMesa(f).Execute(context.Background(), deshabilitada)
+	_, err = NewCrearMesa(f).Execute(context.Background(), deshabilitada)
+	sinFallo(t, err)
 	if f.creada.Habilitada {
 		t.Error("habilitada=false debe respetarse")
 	}
@@ -93,6 +95,7 @@ func TestCrearMesa(t *testing.T) {
 		{"capacidad cero", func(c *cmd.CrearMesa) { c.Capacidad = 0 }, zonaOk, true, apperror.KindValidation, "capacidad_invalida"},
 		{"posición x inválida", func(c *cmd.CrearMesa) { c.PosicionX = texto("abc") }, zonaOk, true, apperror.KindValidation, "posicion_x_invalida"},
 		{"posición y inválida", func(c *cmd.CrearMesa) { c.PosicionY = texto("1.234") }, zonaOk, true, apperror.KindValidation, "posicion_y_invalida"},
+		{"posición x solo con espacios", func(c *cmd.CrearMesa) { c.PosicionX = texto("   ") }, zonaOk, true, apperror.KindValidation, "posicion_x_invalida"},
 		{"zona inexistente", func(c *cmd.CrearMesa) {}, zonaOk, false, apperror.KindValidation, "zona_invalida"},
 		{"zona de otra sede", func(c *cmd.CrearMesa) {}, outbound.ZonaRef{SucursalID: 2, EsActiva: true}, true, apperror.KindValidation, "zona_invalida"},
 		{"zona inactiva", func(c *cmd.CrearMesa) {}, outbound.ZonaRef{SucursalID: 1, EsActiva: false}, true, apperror.KindValidation, "zona_invalida"},
@@ -113,7 +116,8 @@ func TestCrearMesa(t *testing.T) {
 		})
 	}
 	t.Run("número duplicado", func(t *testing.T) {
-		res, _ := NewCrearMesa(&mesaStoreFake{zona: zonaOk, zonaExiste: true, errCrear: outbound.ErrNumeroMesaDuplicado}).Execute(context.Background(), ok)
+		res, err := NewCrearMesa(&mesaStoreFake{zona: zonaOk, zonaExiste: true, errCrear: outbound.ErrNumeroMesaDuplicado}).Execute(context.Background(), ok)
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "numero_mesa_duplicado")
 	})
 	t.Run("error técnico", func(t *testing.T) {
@@ -128,15 +132,17 @@ func TestEditarMesa(t *testing.T) {
 	zonaOk := outbound.ZonaRef{SucursalID: 1, EsActiva: true}
 	nueva := int64(9)
 
-	res, _ := NewEditarMesa(&mesaStoreFake{existente: activa}).Execute(context.Background(),
+	res, err := NewEditarMesa(&mesaStoreFake{existente: activa}).Execute(context.Background(),
 		cmd.EditarMesa{Actor: gestorDe(9), ID: 5, Capacidad: entero(2)})
+	sinFallo(t, err)
 	esperarRechazo(t, res.Err(), apperror.KindNotFound, "no_encontrado")
-	res, _ = NewEditarMesa(&mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1}}).Execute(context.Background(),
+	res, err = NewEditarMesa(&mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1}}).Execute(context.Background(),
 		cmd.EditarMesa{Actor: gestorDe(1), ID: 5, Habilitada: booleano(true)})
+	sinFallo(t, err)
 	esperarRechazo(t, res.Err(), apperror.KindConflict, "mesa_inactiva")
 
 	f := &mesaStoreFake{existente: activa, zona: zonaOk, zonaExiste: true}
-	res, err := NewEditarMesa(f).Execute(context.Background(), cmd.EditarMesa{
+	res, err = NewEditarMesa(f).Execute(context.Background(), cmd.EditarMesa{
 		Actor: gestorDe(1), ID: 5, ZonaID: &nueva, NumeroMesa: texto(" B-2 "), Capacidad: entero(6), Habilitada: booleano(false),
 		PosicionX: cmd.Campo[string]{Presente: true}, PosicionY: cmd.Campo[string]{Presente: true, Valor: texto("3.5")}})
 	if err != nil || !res.IsOk() {
@@ -148,16 +154,56 @@ func TestEditarMesa(t *testing.T) {
 		t.Fatalf("cambios: %+v", c)
 	}
 
-	res, _ = NewEditarMesa(f).Execute(context.Background(), cmd.EditarMesa{Actor: gestorDe(1), ID: 5})
-	esperarRechazo(t, res.Err(), apperror.KindValidation, "sin_cambios")
-	res, _ = NewEditarMesa(f).Execute(context.Background(), cmd.EditarMesa{Actor: gestorDe(1), ID: 5, Capacidad: entero(0)})
-	esperarRechazo(t, res.Err(), apperror.KindValidation, "capacidad_invalida")
-	otraSede := &mesaStoreFake{existente: activa, zona: outbound.ZonaRef{SucursalID: 2, EsActiva: true}, zonaExiste: true}
-	res, _ = NewEditarMesa(otraSede).Execute(context.Background(), cmd.EditarMesa{Actor: gestorDe(1), ID: 5, ZonaID: &nueva})
-	esperarRechazo(t, res.Err(), apperror.KindValidation, "zona_invalida")
-	if otraSede.llamadas != 0 {
-		t.Fatal("una zona inválida no debe escribir")
+	casos := []struct {
+		nombre string
+		cmd    cmd.EditarMesa
+		code   string
+	}{
+		{"sin cambios", cmd.EditarMesa{}, "sin_cambios"},
+		{"número en blanco", cmd.EditarMesa{NumeroMesa: texto(" ")}, "numero_mesa_invalido"},
+		{"número demasiado largo", cmd.EditarMesa{NumeroMesa: texto("012345678901234567890")}, "numero_mesa_invalido"},
+		{"capacidad cero", cmd.EditarMesa{Capacidad: entero(0)}, "capacidad_invalida"},
+		{"capacidad sobre el máximo", cmd.EditarMesa{Capacidad: entero(501)}, "capacidad_invalida"},
+		{"posición x inválida", cmd.EditarMesa{PosicionX: cmd.Campo[string]{Presente: true, Valor: texto("abc")}}, "posicion_x_invalida"},
+		{"posición y con demasiados decimales", cmd.EditarMesa{PosicionY: cmd.Campo[string]{Presente: true, Valor: texto("1.234")}}, "posicion_y_invalida"},
+		{"posición x solo con espacios", cmd.EditarMesa{PosicionX: cmd.Campo[string]{Presente: true, Valor: texto("   ")}}, "posicion_x_invalida"},
+		{"posición y con demasiados enteros", cmd.EditarMesa{PosicionY: cmd.Campo[string]{Presente: true, Valor: texto("123456789")}}, "posicion_y_invalida"},
 	}
+	for _, c := range casos {
+		t.Run(c.nombre, func(t *testing.T) {
+			f := &mesaStoreFake{existente: activa, zona: zonaOk, zonaExiste: true}
+			in := c.cmd
+			in.Actor, in.ID = gestorDe(1), 5
+			res, err := NewEditarMesa(f).Execute(context.Background(), in)
+			sinFallo(t, err)
+			esperarRechazo(t, res.Err(), apperror.KindValidation, c.code)
+			if f.llamadas != 0 {
+				t.Fatal("un rechazo no debe escribir")
+			}
+		})
+	}
+	t.Run("zona de otra sede", func(t *testing.T) {
+		otraSede := &mesaStoreFake{existente: activa, zona: outbound.ZonaRef{SucursalID: 2, EsActiva: true}, zonaExiste: true}
+		res, err := NewEditarMesa(otraSede).Execute(context.Background(), cmd.EditarMesa{Actor: gestorDe(1), ID: 5, ZonaID: &nueva})
+		sinFallo(t, err)
+		esperarRechazo(t, res.Err(), apperror.KindValidation, "zona_invalida")
+		if otraSede.llamadas != 0 {
+			t.Fatal("una zona inválida no debe escribir")
+		}
+	})
+	t.Run("posición null o cadena vacía vacía el campo", func(t *testing.T) {
+		for _, v := range []*string{nil, texto("")} {
+			f := &mesaStoreFake{existente: activa}
+			res, err := NewEditarMesa(f).Execute(context.Background(),
+				cmd.EditarMesa{Actor: gestorDe(1), ID: 5, PosicionX: cmd.Campo[string]{Presente: true, Valor: v}})
+			if err != nil || !res.IsOk() {
+				t.Fatalf("debía editarse: %v %+v", err, res.Err())
+			}
+			if !f.cambios.PosicionX.Presente || f.cambios.PosicionX.Valor != nil {
+				t.Fatalf("debía vaciar la posición X: %+v", f.cambios.PosicionX)
+			}
+		}
+	})
 }
 
 func TestCambiarEstadoMesa(t *testing.T) {
@@ -168,14 +214,16 @@ func TestCambiarEstadoMesa(t *testing.T) {
 
 	t.Run("exige motivo", func(t *testing.T) {
 		f := &mesaStoreFake{existente: activa}
-		res, _ := NewCambiarEstadoMesa(f).Execute(context.Background(), baja(gestorDe(1), "  "))
+		res, err := NewCambiarEstadoMesa(f).Execute(context.Background(), baja(gestorDe(1), "  "))
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindValidation, "motivo_requerido")
 		if f.bajas != 0 {
 			t.Fatal("no debe dar de baja sin motivo")
 		}
 	})
 	t.Run("la sede ajena se resuelve antes que el motivo", func(t *testing.T) {
-		res, _ := NewCambiarEstadoMesa(&mesaStoreFake{existente: activa}).Execute(context.Background(), baja(gestorDe(9), ""))
+		res, err := NewCambiarEstadoMesa(&mesaStoreFake{existente: activa}).Execute(context.Background(), baja(gestorDe(9), ""))
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindNotFound, "no_encontrado")
 	})
 	t.Run("baja correcta", func(t *testing.T) {
@@ -195,7 +243,8 @@ func TestCambiarEstadoMesa(t *testing.T) {
 	})
 	t.Run("ya estaba de baja", func(t *testing.T) {
 		f := &mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1}}
-		res, _ := NewCambiarEstadoMesa(f).Execute(context.Background(), baja(gestorDe(1), "Otra vez"))
+		res, err := NewCambiarEstadoMesa(f).Execute(context.Background(), baja(gestorDe(1), "Otra vez"))
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "ya_dada_de_baja")
 	})
 	t.Run("restaurar", func(t *testing.T) {
@@ -204,8 +253,22 @@ func TestCambiarEstadoMesa(t *testing.T) {
 		if err != nil || !res.IsOk() || !res.Value().EsActivo {
 			t.Fatalf("restaurar: %v %+v", err, res.Err())
 		}
-		res, _ = NewCambiarEstadoMesa(&mesaStoreFake{existente: activa}).Execute(context.Background(), cmd.CambiarEstadoMesa{Actor: gestorDe(1), ID: 5, Activo: true})
+		res, err = NewCambiarEstadoMesa(&mesaStoreFake{existente: activa}).Execute(context.Background(), cmd.CambiarEstadoMesa{Actor: gestorDe(1), ID: 5, Activo: true})
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "ya_activa")
+	})
+	t.Run("restaurar con la zona dada de baja es una regla de datos", func(t *testing.T) {
+		f := &mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1, ZonaID: 8},
+			errRestaurar: &outbound.ErrReglaDatos{Mensaje: "Referencia zona_id=8: maestro zonas inexistente o dado de baja"}}
+		res, err := NewCambiarEstadoMesa(f).Execute(context.Background(), cmd.CambiarEstadoMesa{Actor: gestorDe(1), ID: 5, Activo: true})
+		sinFallo(t, err)
+		esperarRechazo(t, res.Err(), apperror.KindBusinessRule, "regla_de_datos")
+	})
+	t.Run("restaurar con un error técnico lo propaga", func(t *testing.T) {
+		f := &mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1}, errRestaurar: errors.New("conexión perdida")}
+		if _, err := NewCambiarEstadoMesa(f).Execute(context.Background(), cmd.CambiarEstadoMesa{Actor: gestorDe(1), ID: 5, Activo: true}); err == nil {
+			t.Fatal("un error técnico debe viajar por el canal error")
+		}
 	})
 	t.Run("restaurar bloquea la zona antes de restaurar", func(t *testing.T) {
 		f := &mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1, ZonaID: 8}}

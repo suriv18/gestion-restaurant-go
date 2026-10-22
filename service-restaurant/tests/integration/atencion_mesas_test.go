@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -94,73 +95,146 @@ func altaMesa(sucursalID, zonaID, numero string, capacidad int) string {
 }
 
 func TestMesaCrearConIdempotenciaYValidaciones(t *testing.T) {
+	s := sufijo()
 	crearSedeSQL(t, "MESA-AJENA")
-	crearZonaSQL(t, "PRINCIPAL", "Zona crear mesa")
-	crearZonaSQL(t, "MESA-AJENA", "Zona crear ajena")
-	crearZonaSQL(t, "PRINCIPAL", "Zona crear inactiva")
-	asSystem(t, `UPDATE sch_restaurante.zonas SET es_activo=false WHERE nombre='Zona crear inactiva'`)
+	zona := crearZonaSQL(t, "PRINCIPAL", "Zona crear mesa "+s)
+	zonaAjena := crearZonaSQL(t, "MESA-AJENA", "Zona crear ajena "+s)
+	zonaInactiva := crearZonaSQL(t, "PRINCIPAL", "Zona crear inactiva "+s)
+	asSystem(t, `UPDATE sch_restaurante.zonas SET es_activo=false WHERE id=`+zonaInactiva)
 	tk := gestorMesas(t)
 	principal := idDe(t, "sucursales", "codigo", "PRINCIPAL")
-	zona := idDe(t, "zonas", "nombre", "Zona crear mesa")
 	h := map[string]string{"Idempotency-Key": nuevaClave()}
+	num := func(base string) string { return base + "-" + s }
 
-	r1 := callH(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, "NM-1", 4), tk, h)
+	r1 := callH(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, num("NM-1"), 4), tk, h)
 	esperar(t, r1, http.StatusCreated, "")
 	var m mesaResp
 	r1.json(t, &m)
-	if m.NumeroMesa != "NM-1" || m.Capacidad != 4 || !m.Habilitada || !m.EsActivo || m.ZonaID != zona || m.SucursalID != principal ||
+	if m.NumeroMesa != num("NM-1") || m.Capacidad != 4 || !m.Habilitada || !m.EsActivo || m.ZonaID != zona || m.SucursalID != principal ||
 		m.PosicionX == nil || *m.PosicionX != "12.50" || m.PosicionY != nil || m.CreadoPor != idDe(t, "usuarios", "username", "mesa.gestor") {
 		t.Fatalf("mesa creada: %+v", m)
 	}
-	r2 := callH(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, "NM-1", 4), tk, h)
+	r2 := callH(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, num("NM-1"), 4), tk, h)
 	esperar(t, r2, http.StatusCreated, "")
 	var rep mesaResp
 	r2.json(t, &rep)
-	if rep.ID != m.ID || scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE numero_mesa='NM-1'`) != 1 {
+	if rep.ID != m.ID || scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE zona_id=$1`, zona) != 1 {
 		t.Fatalf("la repetición debe devolver la misma mesa: %+v vs %+v", rep, m)
 	}
-	esperar(t, callH(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, "NM-9", 2), tk, h), http.StatusConflict, "idempotency_key_reutilizada")
+	esperar(t, callH(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, num("NM-9"), 2), tk, h), http.StatusConflict, "idempotency_key_reutilizada")
 
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, "NM-1", 2), tk), http.StatusConflict, "numero_mesa_duplicado")
-	esperar(t, call(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, "NM-2", 2), tk), http.StatusBadRequest, "idempotency_key_requerida")
-	esperar(t, post(t, "/api/v1/mesas", `{"sucursal_id":"`+principal+`","zona_id":"`+zona+`","numero_mesa":"NM-3","capacidad":2,"creado_por":"1"}`, tk),
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, num("NM-1"), 2), tk), http.StatusConflict, "numero_mesa_duplicado")
+	esperar(t, call(t, "POST", "/api/v1/mesas", altaMesa(principal, zona, num("NM-2"), 2), tk), http.StatusBadRequest, "idempotency_key_requerida")
+	esperar(t, post(t, "/api/v1/mesas", `{"sucursal_id":"`+principal+`","zona_id":"`+zona+`","numero_mesa":"`+num("NM-3")+`","capacidad":2,"creado_por":"1"}`, tk),
 		http.StatusBadRequest, "json_invalido")
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, "abc", "NM-4", 2), tk), http.StatusBadRequest, "zona_id_invalido")
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, "abc", num("NM-4"), 2), tk), http.StatusBadRequest, "zona_id_invalido")
 	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, " ", 2), tk), http.StatusUnprocessableEntity, "numero_mesa_invalido")
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, "NM-5", 0), tk), http.StatusUnprocessableEntity, "capacidad_invalida")
-	esperar(t, post(t, "/api/v1/mesas", `{"sucursal_id":"`+principal+`","zona_id":"`+zona+`","numero_mesa":"NM-6","capacidad":2,"posicion_x":"1.234"}`, tk),
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, num("NM-5"), 0), tk), http.StatusUnprocessableEntity, "capacidad_invalida")
+	esperar(t, post(t, "/api/v1/mesas", `{"sucursal_id":"`+principal+`","zona_id":"`+zona+`","numero_mesa":"`+num("NM-6")+`","capacidad":2,"posicion_x":"1.234"}`, tk),
 		http.StatusUnprocessableEntity, "posicion_x_invalida")
 	// La zona debe existir, estar activa y ser de la misma sede.
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, idDe(t, "zonas", "nombre", "Zona crear ajena"), "NM-7", 2), tk), http.StatusUnprocessableEntity, "zona_invalida")
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, idDe(t, "zonas", "nombre", "Zona crear inactiva"), "NM-8", 2), tk), http.StatusUnprocessableEntity, "zona_invalida")
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, "999999", "NM-10", 2), tk), http.StatusUnprocessableEntity, "zona_invalida")
-	if scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE numero_mesa IN ('NM-2','NM-3','NM-4','NM-5','NM-6','NM-7','NM-8','NM-10')`) != 0 {
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zonaAjena, num("NM-7"), 2), tk), http.StatusUnprocessableEntity, "zona_invalida")
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zonaInactiva, num("NM-8"), 2), tk), http.StatusUnprocessableEntity, "zona_invalida")
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, "999999", num("NM-10"), 2), tk), http.StatusUnprocessableEntity, "zona_invalida")
+
+	ajena := idDe(t, "sucursales", "codigo", "MESA-AJENA")
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(ajena, zonaAjena, num("NM-11"), 2), tk), http.StatusNotFound, "no_encontrado")
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, num("NM-12"), 2), lectorMesas(t)), http.StatusForbidden, "sin_permiso")
+	// Ningún rechazo dejó mesas: solo existe la creada con éxito (cada zona de la prueba es nueva).
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE zona_id IN ($1,$2,$3)`, zona, zonaAjena, zonaInactiva) != 1 {
 		t.Fatal("los rechazos no deben dejar mesas")
 	}
 
-	ajena := idDe(t, "sucursales", "codigo", "MESA-AJENA")
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(ajena, idDe(t, "zonas", "nombre", "Zona crear ajena"), "NM-11", 2), tk), http.StatusNotFound, "no_encontrado")
-	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, "NM-12", 2), lectorMesas(t)), http.StatusForbidden, "sin_permiso")
+	// La posición viaja como cadena y vuelve igual al leer la mesa creada.
+	r := call(t, "GET", "/api/v1/mesas/"+m.ID, "", tk)
+	esperar(t, r, http.StatusOK, "")
+	var leida mesaResp
+	r.json(t, &leida)
+	if leida.PosicionX == nil || *leida.PosicionX != "12.50" || leida.PosicionY != nil {
+		t.Fatalf("la posición debe volver como \"12.50\": %+v", leida)
+	}
+}
+
+func TestMesaLimitesDeValidacion(t *testing.T) {
+	s := sufijo()
+	zona := crearZonaSQL(t, "PRINCIPAL", "Zona limites "+s)
+	tk := gestorMesas(t)
+	principal := idDe(t, "sucursales", "codigo", "PRINCIPAL")
+	cuerpo := func(numero string, capacidad int, extra string) string {
+		return fmt.Sprintf(`{"sucursal_id":"%s","zona_id":"%s","numero_mesa":"%s","capacidad":%d%s}`, principal, zona, numero+"-"+s, capacidad, extra)
+	}
+	mesasEnZona := func() int { return scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE zona_id=$1`, zona) }
+
+	// Capacidad: 1..500.
+	esperar(t, post(t, "/api/v1/mesas", cuerpo("L-501", 501, ""), tk), http.StatusUnprocessableEntity, "capacidad_invalida")
+	esperar(t, post(t, "/api/v1/mesas", cuerpo("L-NEG", -1, ""), tk), http.StatusUnprocessableEntity, "capacidad_invalida")
+	if mesasEnZona() != 0 {
+		t.Fatal("capacidades fuera de rango no deben crear mesas")
+	}
+	r := post(t, "/api/v1/mesas", cuerpo("L-500", 500, ""), tk)
+	esperar(t, r, http.StatusCreated, "")
+	var tope mesaResp
+	r.json(t, &tope)
+	if tope.Capacidad != 500 {
+		t.Fatalf("500 es válida: %+v", tope)
+	}
+
+	// Posición numeric(10,2): hasta 8 enteros y 2 decimales, con signo opcional.
+	invalidas := []string{`"123456789"`, `"-123456789"`, `"123456789.5"`, `"1.234"`, `"-"`, `"--1"`, `"+5"`, `"-.5"`, `"1."`, `"1,5"`, `"abc"`, `"1e3"`}
+	for _, v := range invalidas {
+		esperar(t, post(t, "/api/v1/mesas", cuerpo("L-PX", 2, `,"posicion_x":`+v), tk), http.StatusUnprocessableEntity, "posicion_x_invalida")
+		esperar(t, post(t, "/api/v1/mesas", cuerpo("L-PY", 2, `,"posicion_y":`+v), tk), http.StatusUnprocessableEntity, "posicion_y_invalida")
+	}
+	if mesasEnZona() != 1 {
+		t.Fatal("las posiciones inválidas no deben crear mesas")
+	}
+	r = post(t, "/api/v1/mesas", cuerpo("L-POS", 2, `,"posicion_x":"-99999999.99","posicion_y":"99999999.99"`), tk)
+	esperar(t, r, http.StatusCreated, "")
+	var pos mesaResp
+	r.json(t, &pos)
+	if pos.PosicionX == nil || *pos.PosicionX != "-99999999.99" || pos.PosicionY == nil || *pos.PosicionY != "99999999.99" {
+		t.Fatalf("los extremos del rango deben conservarse: %+v", pos)
+	}
+	r = post(t, "/api/v1/mesas", cuerpo("L-NEG05", 2, `,"posicion_x":"-0.5","posicion_y":"7"`), tk)
+	esperar(t, r, http.StatusCreated, "")
+	var neg mesaResp
+	r.json(t, &neg)
+	if neg.PosicionX == nil || *neg.PosicionX != "-0.50" || neg.PosicionY == nil || *neg.PosicionY != "7.00" {
+		t.Fatalf("negativo y entero deben normalizarse a 2 decimales: %+v", neg)
+	}
+
+	// Motivo de baja: máximo 2000 caracteres.
+	id := neg.ID
+	esperar(t, post(t, "/api/v1/mesas/"+id+"/baja", `{"motivo":"`+strings.Repeat("a", 2001)+`"}`, tk), http.StatusUnprocessableEntity, "motivo_requerido")
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE id=$1 AND es_activo`, id) != 1 {
+		t.Fatal("un motivo excedido no debe dar de baja la mesa")
+	}
+	r = post(t, "/api/v1/mesas/"+id+"/baja", `{"motivo":"`+strings.Repeat("a", 2000)+`"}`, tk)
+	esperar(t, r, http.StatusOK, "")
+	var baja mesaResp
+	r.json(t, &baja)
+	if baja.EsActivo || baja.Motivo == nil || len([]rune(*baja.Motivo)) != 2000 {
+		t.Fatalf("2000 caracteres son válidos: %+v", baja)
+	}
 }
 
 func TestMesaEditarYHabilitar(t *testing.T) {
+	s := sufijo()
 	crearSedeSQL(t, "MESA-AJENA")
-	crearZonaSQL(t, "PRINCIPAL", "Zona editar A")
-	crearZonaSQL(t, "PRINCIPAL", "Zona editar B")
-	crearZonaSQL(t, "MESA-AJENA", "Zona editar ajena")
-	crearMesaSQL(t, "PRINCIPAL", "Zona editar A", "ED-1", 4)
-	crearMesaSQL(t, "PRINCIPAL", "Zona editar A", "ED-2", 2)
-	crearMesaSQL(t, "MESA-AJENA", "Zona editar ajena", "ED-AJ", 2)
+	crearZonaSQL(t, "PRINCIPAL", "Zona editar A "+s)
+	zonaB := crearZonaSQL(t, "PRINCIPAL", "Zona editar B "+s)
+	zonaAjena := crearZonaSQL(t, "MESA-AJENA", "Zona editar ajena "+s)
+	id := crearMesaSQL(t, "PRINCIPAL", "Zona editar A "+s, "ED-1-"+s, 4)
+	crearMesaSQL(t, "PRINCIPAL", "Zona editar A "+s, "ED-2-"+s, 2)
+	ajenaID := crearMesaSQL(t, "MESA-AJENA", "Zona editar ajena "+s, "ED-AJ-"+s, 2)
 	tk := gestorMesas(t)
-	id := idDe(t, "mesas", "numero_mesa", "ED-1")
-	zonaB := idDe(t, "zonas", "nombre", "Zona editar B")
 
 	// Habilitar o deshabilitar no pide motivo.
 	r := callH(t, "PATCH", "/api/v1/mesas/"+id, `{"habilitada":false}`, tk, nil)
 	esperar(t, r, http.StatusOK, "")
 	var m mesaResp
 	r.json(t, &m)
-	if m.Habilitada || m.NumeroMesa != "ED-1" || m.Capacidad != 4 {
+	if m.Habilitada || m.NumeroMesa != "ED-1-"+s || m.Capacidad != 4 {
 		t.Fatalf("deshabilitar: %+v", m)
 	}
 	r = callH(t, "PATCH", "/api/v1/mesas/"+id,
@@ -180,19 +254,22 @@ func TestMesaEditarYHabilitar(t *testing.T) {
 	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{}`, tk, nil), http.StatusUnprocessableEntity, "sin_cambios")
 	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"sucursal_id":"1"}`, tk, nil), http.StatusBadRequest, "json_invalido")
 	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"capacidad":0}`, tk, nil), http.StatusUnprocessableEntity, "capacidad_invalida")
-	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"numero_mesa":"ED-2"}`, tk, nil), http.StatusConflict, "numero_mesa_duplicado")
-	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, fmt.Sprintf(`{"zona_id":"%s"}`, idDe(t, "zonas", "nombre", "Zona editar ajena")), tk, nil),
+	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"capacidad":501}`, tk, nil), http.StatusUnprocessableEntity, "capacidad_invalida")
+	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"numero_mesa":" "}`, tk, nil), http.StatusUnprocessableEntity, "numero_mesa_invalido")
+	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"posicion_y":"123456789"}`, tk, nil), http.StatusUnprocessableEntity, "posicion_y_invalida")
+	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"numero_mesa":"ED-2-`+s+`"}`, tk, nil), http.StatusConflict, "numero_mesa_duplicado")
+	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, fmt.Sprintf(`{"zona_id":"%s"}`, zonaAjena), tk, nil),
 		http.StatusUnprocessableEntity, "zona_invalida")
 	esperar(t, callH(t, "PATCH", "/api/v1/mesas/999999", `{"capacidad":2}`, tk, nil), http.StatusNotFound, "no_encontrado")
-	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+idDe(t, "mesas", "numero_mesa", "ED-AJ"), `{"capacidad":2}`, tk, nil), http.StatusNotFound, "no_encontrado")
+	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+ajenaID, `{"capacidad":2}`, tk, nil), http.StatusNotFound, "no_encontrado")
 	esperar(t, callH(t, "PATCH", "/api/v1/mesas/"+id, `{"capacidad":2}`, lectorMesas(t), nil), http.StatusForbidden, "sin_permiso")
 }
 
 func TestMesaBajaConMotivoYRestauracion(t *testing.T) {
-	crearZonaSQL(t, "PRINCIPAL", "Zona ciclo mesa")
-	crearMesaSQL(t, "PRINCIPAL", "Zona ciclo mesa", "CM-1", 4)
+	s := sufijo()
+	crearZonaSQL(t, "PRINCIPAL", "Zona ciclo mesa "+s)
+	id := crearMesaSQL(t, "PRINCIPAL", "Zona ciclo mesa "+s, "CM-1-"+s, 4)
 	tk := gestorMesas(t)
-	id := idDe(t, "mesas", "numero_mesa", "CM-1")
 	gestor := idDe(t, "usuarios", "username", "mesa.gestor")
 
 	esperar(t, post(t, "/api/v1/mesas/"+id+"/baja", `{}`, tk), http.StatusUnprocessableEntity, "motivo_requerido")
@@ -232,21 +309,19 @@ func TestMesaBajaConMotivoYRestauracion(t *testing.T) {
 	esperar(t, post(t, "/api/v1/mesas/"+id+"/baja", `{"motivo":"x"}`, lectorMesas(t)), http.StatusForbidden, "sin_permiso")
 }
 
-// La base impide restaurar una mesa cuya zona está dada de baja: llega como regla_de_datos con
-// el mensaje curado del esquema.
+// La base impide restaurar una mesa cuya zona está dada de baja: llega como regla_de_datos.
 func TestMesaNoSeRestauraConLaZonaDadaDeBaja(t *testing.T) {
-	crearZonaSQL(t, "PRINCIPAL", "Zona restaurar mesa")
-	crearMesaSQL(t, "PRINCIPAL", "Zona restaurar mesa", "RM-1", 2)
+	s := sufijo()
+	zona := crearZonaSQL(t, "PRINCIPAL", "Zona restaurar mesa "+s)
+	mesa := crearMesaSQL(t, "PRINCIPAL", "Zona restaurar mesa "+s, "RM-1-"+s, 2)
 	tk := gestorMesas(t)
-	mesa := idDe(t, "mesas", "numero_mesa", "RM-1")
-	zona := idDe(t, "zonas", "nombre", "Zona restaurar mesa")
 
 	esperar(t, post(t, "/api/v1/mesas/"+mesa+"/baja", `{"motivo":"Cierre de zona"}`, tk), http.StatusOK, "")
 	esperar(t, post(t, "/api/v1/zonas/"+zona+"/baja", "", tk), http.StatusOK, "")
 
 	r := post(t, "/api/v1/mesas/"+mesa+"/restauracion", "", tk)
 	esperar(t, r, http.StatusUnprocessableEntity, "regla_de_datos")
-	if scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE numero_mesa='RM-1' AND NOT es_activo`) != 1 {
+	if scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE id=$1 AND NOT es_activo`, mesa) != 1 {
 		t.Fatal("la mesa debe seguir dada de baja")
 	}
 

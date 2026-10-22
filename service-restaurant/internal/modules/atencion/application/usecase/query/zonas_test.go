@@ -56,23 +56,27 @@ func TestListarZonasAcotaPorLasSedesDelActor(t *testing.T) {
 func TestListarZonasRechazos(t *testing.T) {
 	f := &zonaReaderFake{filas: []dtoresult.Zona{{ID: 1}, {ID: 2}, {ID: 3}}}
 	a := actorMesas(appctx.Grant{SucursalID: 1, Permiso: policy.MesaVer})
-	res, _ := NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: a, Limite: 2})
+	res, err := NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: a, Limite: 2})
+	sinFallo(t, err)
 	if p := res.Value(); len(p.Items) != 2 || p.NextCursor == "" {
 		t.Fatalf("debía recortar a 2 y dar cursor: %+v", p)
 	}
 
 	f.llamadas = 0
 	sinPermiso := actorMesas(appctx.Grant{SucursalID: 1, Permiso: "NEGOCIO_VER"})
-	res, _ = NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: sinPermiso})
+	res, err = NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: sinPermiso})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindForbidden || f.llamadas != 0 {
 		t.Fatalf("sin permiso debe ser 403 sin tocar el lector: %+v", res.Err())
 	}
 	ajena := int64(9)
-	res, _ = NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: a, SucursalID: &ajena})
+	res, err = NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: a, SucursalID: &ajena})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindNotFound || f.llamadas != 0 {
 		t.Fatalf("una sede ajena debe ser 404 sin tocar el lector: %+v", res.Err())
 	}
-	res, _ = NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: a, Cursor: "%%%"})
+	res, err = NewListarZonas(f).Execute(context.Background(), qry.ListarZonas{Actor: a, Cursor: "%%%"})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindBadRequest {
 		t.Fatalf("cursor inválido debe ser 400: %+v", res.Err())
 	}
@@ -81,17 +85,28 @@ func TestListarZonasRechazos(t *testing.T) {
 func TestObtenerZonaOcultaLasAjenas(t *testing.T) {
 	f := &zonaReaderFake{una: dtoresult.Zona{ID: 9, SucursalID: 3}}
 	a := actorMesas(appctx.Grant{SucursalID: 1, Permiso: policy.MesaVer})
-	res, _ := NewObtenerZona(f).Execute(context.Background(), qry.ObtenerZona{Actor: a, ID: 9})
+	res, err := NewObtenerZona(f).Execute(context.Background(), qry.ObtenerZona{Actor: a, ID: 9})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindNotFound {
 		t.Fatalf("una zona de sede ajena debe ser 404: %+v", res.Err())
 	}
 	f.una = dtoresult.Zona{ID: 5, SucursalID: 1}
-	res, _ = NewObtenerZona(f).Execute(context.Background(), qry.ObtenerZona{Actor: a, ID: 5})
+	res, err = NewObtenerZona(f).Execute(context.Background(), qry.ObtenerZona{Actor: a, ID: 5})
+	sinFallo(t, err)
 	if !res.IsOk() || res.Value().ID != 5 {
 		t.Fatalf("una zona propia debe leerse: %+v", res.Err())
 	}
-	res, _ = NewObtenerZona(f).Execute(context.Background(), qry.ObtenerZona{Actor: a, ID: 77})
+	res, err = NewObtenerZona(f).Execute(context.Background(), qry.ObtenerZona{Actor: a, ID: 77})
+	sinFallo(t, err)
 	if res.Err() == nil || res.Err().Kind != apperror.KindNotFound {
 		t.Fatalf("una zona inexistente debe ser 404: %+v", res.Err())
+	}
+}
+
+// sinFallo exige que un rechazo esperado no haya viajado por el canal de error técnico.
+func sinFallo(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("un rechazo esperado no debe ser un error técnico: %v", err)
 	}
 }

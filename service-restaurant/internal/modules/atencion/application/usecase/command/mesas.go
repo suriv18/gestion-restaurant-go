@@ -50,8 +50,8 @@ func normPosicion(s string) (string, bool) {
 	return p.String(), err == nil
 }
 
-// posicionOpcional valida una posición anulable de un PATCH: ausente → no se toca; null o en
-// blanco → se vacía; con valor → se valida.
+// posicionOpcional valida una posición anulable: ausente → no se toca; null o cadena vacía
+// → se vacía; con valor → se valida (un texto solo de espacios no es un decimal: se rechaza).
 func posicionOpcional(c cmd.Campo[string]) (outbound.CampoOpcional, bool) {
 	if !c.Presente {
 		return outbound.CampoOpcional{}, true

@@ -73,7 +73,8 @@ func TestCrearZona(t *testing.T) {
 	if f.creada.Nombre != "Terraza" || f.creada.Orden != 2 || f.creada.SucursalID != 1 {
 		t.Fatalf("no normalizó: %+v", f.creada)
 	}
-	_, _ = NewCrearZona(f).Execute(context.Background(), cmd.CrearZona{Actor: gestorDe(1), SucursalID: 1, Nombre: "Sin orden"})
+	_, err = NewCrearZona(f).Execute(context.Background(), cmd.CrearZona{Actor: gestorDe(1), SucursalID: 1, Nombre: "Sin orden"})
+	sinFallo(t, err)
 	if f.creada.Orden != 0 {
 		t.Errorf("orden por defecto = %d, quería 0", f.creada.Orden)
 	}
@@ -102,7 +103,8 @@ func TestCrearZona(t *testing.T) {
 		})
 	}
 	t.Run("nombre duplicado", func(t *testing.T) {
-		res, _ := NewCrearZona(&zonaStoreFake{errCrear: outbound.ErrNombreZonaDuplicado}).Execute(context.Background(), ok)
+		res, err := NewCrearZona(&zonaStoreFake{errCrear: outbound.ErrNombreZonaDuplicado}).Execute(context.Background(), ok)
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "nombre_duplicado")
 	})
 	t.Run("error técnico", func(t *testing.T) {
@@ -118,26 +120,31 @@ func TestEditarZona(t *testing.T) {
 		return cmd.EditarZona{Actor: a, ID: 5, Nombre: texto("  Nueva  ")}
 	}
 
-	res, _ := NewEditarZona(&zonaStoreFake{existente: activa}).Execute(context.Background(), edit(gestorDe(9)))
+	res, err := NewEditarZona(&zonaStoreFake{existente: activa}).Execute(context.Background(), edit(gestorDe(9)))
+	sinFallo(t, err)
 	esperarRechazo(t, res.Err(), apperror.KindNotFound, "no_encontrado") // sede 1 no es del actor
-	res, _ = NewEditarZona(&zonaStoreFake{existente: activa}).Execute(context.Background(),
+	res, err = NewEditarZona(&zonaStoreFake{existente: activa}).Execute(context.Background(),
 		cmd.EditarZona{Actor: appctx.NewActor(7, "a", 1, []appctx.Grant{
 			{SucursalID: 1, Permiso: policy.MesaVer}, {SucursalID: 9, Permiso: policy.MesaAdministrar}}), ID: 5, Nombre: texto("x")})
+	sinFallo(t, err)
 	esperarRechazo(t, res.Err(), apperror.KindForbidden, "sede_no_autorizada")
-	res, _ = NewEditarZona(&zonaStoreFake{existente: dtoresult.Zona{ID: 5, SucursalID: 1}}).Execute(context.Background(), edit(gestorDe(1)))
+	res, err = NewEditarZona(&zonaStoreFake{existente: dtoresult.Zona{ID: 5, SucursalID: 1}}).Execute(context.Background(), edit(gestorDe(1)))
+	sinFallo(t, err)
 	esperarRechazo(t, res.Err(), apperror.KindConflict, "zona_inactiva")
 
 	f := &zonaStoreFake{existente: activa}
-	res, err := NewEditarZona(f).Execute(context.Background(), cmd.EditarZona{Actor: gestorDe(1), ID: 5, Nombre: texto("  Nueva  "), OrdenVisualizacion: entero(4)})
+	res, err = NewEditarZona(f).Execute(context.Background(), cmd.EditarZona{Actor: gestorDe(1), ID: 5, Nombre: texto("  Nueva  "), OrdenVisualizacion: entero(4)})
 	if err != nil || !res.IsOk() {
 		t.Fatalf("debía editarse: %v %+v", err, res.Err())
 	}
 	if *f.cambios.Nombre != "Nueva" || *f.cambios.Orden != 4 {
 		t.Fatalf("cambios: %+v", f.cambios)
 	}
-	res, _ = NewEditarZona(f).Execute(context.Background(), cmd.EditarZona{Actor: gestorDe(1), ID: 5})
+	res, err = NewEditarZona(f).Execute(context.Background(), cmd.EditarZona{Actor: gestorDe(1), ID: 5})
+	sinFallo(t, err)
 	esperarRechazo(t, res.Err(), apperror.KindValidation, "sin_cambios")
-	res, _ = NewEditarZona(f).Execute(context.Background(), cmd.EditarZona{Actor: gestorDe(1), ID: 5, Nombre: texto(" ")})
+	res, err = NewEditarZona(f).Execute(context.Background(), cmd.EditarZona{Actor: gestorDe(1), ID: 5, Nombre: texto(" ")})
+	sinFallo(t, err)
 	esperarRechazo(t, res.Err(), apperror.KindValidation, "nombre_invalido")
 }
 
@@ -149,7 +156,8 @@ func TestCambiarEstadoZona(t *testing.T) {
 
 	t.Run("con mesas activas no se da de baja", func(t *testing.T) {
 		f := &zonaStoreFake{existente: activa, mesas: 2}
-		res, _ := NewCambiarEstadoZona(f).Execute(context.Background(), baja(gestorDe(1)))
+		res, err := NewCambiarEstadoZona(f).Execute(context.Background(), baja(gestorDe(1)))
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "zona_con_mesas")
 		if f.cambiosHechos != 0 {
 			t.Fatal("no debe cambiar el estado")
@@ -164,7 +172,8 @@ func TestCambiarEstadoZona(t *testing.T) {
 	})
 	t.Run("ya estaba de baja", func(t *testing.T) {
 		f := &zonaStoreFake{existente: dtoresult.Zona{ID: 5, SucursalID: 1}}
-		res, _ := NewCambiarEstadoZona(f).Execute(context.Background(), baja(gestorDe(1)))
+		res, err := NewCambiarEstadoZona(f).Execute(context.Background(), baja(gestorDe(1)))
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "ya_dada_de_baja")
 	})
 	t.Run("restaurar", func(t *testing.T) {
@@ -174,11 +183,21 @@ func TestCambiarEstadoZona(t *testing.T) {
 			t.Fatalf("restaurar: %v %+v", err, res.Err())
 		}
 		f = &zonaStoreFake{existente: activa}
-		res, _ = NewCambiarEstadoZona(f).Execute(context.Background(), cmd.CambiarEstadoZona{Actor: gestorDe(1), ID: 5, Activo: true})
+		res, err = NewCambiarEstadoZona(f).Execute(context.Background(), cmd.CambiarEstadoZona{Actor: gestorDe(1), ID: 5, Activo: true})
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "ya_activa")
 	})
 	t.Run("sede ajena", func(t *testing.T) {
-		res, _ := NewCambiarEstadoZona(&zonaStoreFake{existente: activa}).Execute(context.Background(), baja(gestorDe(9)))
+		res, err := NewCambiarEstadoZona(&zonaStoreFake{existente: activa}).Execute(context.Background(), baja(gestorDe(9)))
+		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindNotFound, "no_encontrado")
 	})
+}
+
+// sinFallo exige que un rechazo esperado no haya viajado por el canal de error técnico.
+func sinFallo(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("un rechazo esperado no debe ser un error técnico: %v", err)
+	}
 }
