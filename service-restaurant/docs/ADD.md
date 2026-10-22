@@ -1,6 +1,6 @@
 # ADD — service-restaurant (backend)
 
-Documento de diseño de arquitectura del backend. Estado: esqueleto implementado (núcleo, migraciones, pruebas, CI); sin módulos de negocio todavía. Base: expediente en `../../docs/planificacion` (ADR-01, ADR-02, ADR-06, ADR-07) y `../../docs/estructura/PLANTILLA_BACKEND_GO.md`.
+Documento de diseño de arquitectura del backend. Estado: esqueleto implementado (núcleo, migraciones, pruebas, CI); módulos `identidad` (I1, más negocio y sucursales en I2) y `atencion` (I2: zonas y mesas). Base: expediente en `../../docs/planificacion` (ADR-01, ADR-02, ADR-06, ADR-07) y `../../docs/estructura/PLANTILLA_BACKEND_GO.md`.
 
 ## 1. Contexto y alcance
 
@@ -10,7 +10,7 @@ Fuera de alcance de este esqueleto: autenticación y permisos (I1), módulos de 
 
 ## 2. Estilo
 
-Monolito modular (ADR-001): un binario `api`, un binario `migrate`, un esquema PostgreSQL (`sch_restaurante`). Clean Architecture con puertos y adaptadores, CQRS lógico y `Result` para rechazos esperados (ADR-002).
+Índice de ADR (`docs/adr/`): 001 monolito modular, 002 CQRS/Result/transacciones, 003 persistencia y versiones, 004 acceso JWT/sesión y tablas técnicas, 005 baja de mesa con motivo. Monolito modular (ADR-001): un binario `api`, un binario `migrate`, un esquema PostgreSQL (`sch_restaurante`). Clean Architecture con puertos y adaptadores, CQRS lógico y `Result` para rechazos esperados (ADR-002).
 
 ## 3. Estructura
 
@@ -68,8 +68,8 @@ Reglas de seguridad de la administración, verificadas con pruebas (y por mutaci
 - La autoría (`creado_por`/`actualizado_por`) sale del actor autenticado (`transaction.WithActor`), nunca del cuerpo.
 
 ### Desviaciones y huecos del contrato OpenAPI 0.2.0
-- `POST /auth/logout` no existe en el contrato; se agregó y debe incorporarse al OpenAPI.
-- `GET /usuarios` y `GET /sucursales-asignables` **no existen en el contrato** y se agregaron porque la pantalla «Equipo y accesos» no puede funcionar sin ellos: el primero lista al equipo con sus roles y sedes vigentes (excluye siempre al actor técnico, devuelve las bajas con su motivo y nunca el hash); el segundo ofrece solo las sedes donde el administrador tiene `USUARIO_ADMINISTRAR`, que es exactamente el conjunto que la regla de asignación le permite tocar. Ambos exigen `USUARIO_ADMINISTRAR` y deben incorporarse al OpenAPI.
+- `POST /auth/logout` no existe en el contrato; se agregó y se incorporó al OpenAPI en el paso 3 de I2.
+- `GET /usuarios` y `GET /sucursales-asignables` **no existen en el contrato** y se agregaron porque la pantalla «Equipo y accesos» no puede funcionar sin ellos: el primero lista al equipo con sus roles y sedes vigentes (excluye siempre al actor técnico, devuelve las bajas con su motivo y nunca el hash); el segundo ofrece solo las sedes donde el administrador tiene `USUARIO_ADMINISTRAR`, que es exactamente el conjunto que la regla de asignación le permite tocar. Ambos exigen `USUARIO_ADMINISTRAR` y se incorporaron al OpenAPI en el paso 3 de I2.
 - No hay endpoints para asignar permisos a un rol ni para consultar un usuario por id; hoy la asignación rol-permiso solo se hace por SQL.
 - `UsuarioAlta.nombre` se acepta pero no se persiste (la tabla `usuarios` no tiene nombre; pertenece a empleados).
 - `GET /roles` y `GET /permisos` declaran el parámetro `sucursal_id`: se ignora (son catálogos globales).
@@ -78,4 +78,4 @@ Reglas de seguridad de la administración, verificadas con pruebas (y por mutaci
 
 ## 9. Pendiente
 
-Recuperación de contraseña, MFA, rate limiting por IP, rotación de claves JWT (`kid`), refresh de sesión; token de edición concurrente (ETag) en PATCH; rol de BD de operación separado del propietario del esquema (ADR-07); limpieza de registros de idempotencia y sesiones expiradas; módulos de negocio de I2 en adelante; contrato HTTP contra `api/openapi.yaml`; despliegue y respaldo (DEC-03, DEC-08).
+Recuperación de contraseña, MFA, rate limiting por IP, rotación de claves JWT (`kid`), refresh de sesión; token de edición concurrente (ETag) en PATCH; rol de BD de operación separado del propietario del esquema (ADR-07); limpieza de registros de idempotencia y sesiones expiradas; rebanada 2 de I2 (carta, clientes, proveedores, tasas) y frontend; módulos de negocio de I3 en adelante; contrato HTTP en `../docs/planificacion/03_api/openapi.yaml`; despliegue y respaldo (DEC-03, DEC-08).

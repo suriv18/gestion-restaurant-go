@@ -2,7 +2,7 @@
 
 Backend Go (monolito modular) del sistema de restaurante. Estructura y arquitectura según `../docs/estructura/PLANTILLA_BACKEND_GO.md`; diseño en `docs/ADD.md`, `docs/module-map.md` y `docs/adr/`.
 
-Estado: núcleo + migraciones por dominio + módulo `identidad` (I1: acceso, autorización y administración de accesos). El módulo `catalogo` es el esqueleto de ejemplo de la plantilla.
+Estado: núcleo + migraciones por dominio + módulos `identidad` (I1: acceso, autorización y administración de accesos; I2: negocio y sucursales) y `atencion` (I2: zonas y mesas). El módulo `catalogo` es el esqueleto de ejemplo de la plantilla.
 
 ## Levantar con Docker
 
@@ -49,4 +49,4 @@ go test ./tests/integration/...         # integración: PostgreSQL 18 con testco
 
 ## API
 
-Base `/api/v1`: `POST /auth/login`, `POST /auth/logout`, `GET /sesion`, y la administración de `roles`, `permisos` y `usuarios` — incluidos `GET /usuarios` (el equipo con sus roles y sedes) y `GET /sucursales-asignables` — (requiere `USUARIO_ADMINISTRAR`; las altas, bajas y restauraciones exigen `Idempotency-Key` UUID). Contrato propuesto en `../docs/planificacion/03_api/openapi.yaml`; desviaciones en `docs/ADD.md` §8. Sondas: `GET /healthz`, `GET /readyz`.
+Base `/api/v1`: `POST /auth/login`, `POST /auth/logout`, `GET /sesion`, y la administración de `roles`, `permisos` y `usuarios` — incluidos `GET /usuarios` (el equipo con sus roles y sedes) y `GET /sucursales-asignables` — (requiere `USUARIO_ADMINISTRAR`; las altas, bajas y restauraciones exigen `Idempotency-Key` UUID). Configuración y salón (I2): `GET/PATCH /negocio`, `GET/POST /sucursales`, `GET/PATCH /sucursales/{id}`, `/zonas…` y `/mesas…` (con sus `…/baja` y `…/restauracion`). Permisos nuevos: `NEGOCIO_VER`, `NEGOCIO_ADMINISTRAR`, `SUCURSAL_VER`, `SUCURSAL_ADMINISTRAR`, `MESA_VER`, `MESA_ADMINISTRAR`. La baja de mesa exige motivo: `docs/adr/005-baja-de-mesa-con-motivo.md`. Contrato propuesto en `../docs/planificacion/03_api/openapi.yaml`; desviaciones en `docs/ADD.md` §8. Sondas: `GET /healthz`, `GET /readyz`.
