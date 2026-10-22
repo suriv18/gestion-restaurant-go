@@ -22,4 +22,8 @@ func RegisterRoutes(mux *http.ServeMux, zonas *ZonasHandler, mesas *MesasHandler
 
 	ruta("GET /mesas", mesas.Listar)
 	ruta("GET /mesas/{id}", mesas.Obtener)
+	ruta("POST /mesas", mesas.Crear)
+	ruta("PATCH /mesas/{id}", mesas.Editar)
+	ruta("POST /mesas/{id}/baja", mesas.Baja)
+	ruta("POST /mesas/{id}/restauracion", mesas.Restauracion)
 }
