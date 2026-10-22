@@ -44,28 +44,6 @@ func zonaValida(ctx context.Context, store outbound.MesaStore, zonaID, sedeID in
 	return found && z.EsActiva && z.SucursalID == sedeID, nil
 }
 
-// normPosicion valida un decimal de numeric(10,2) y lo devuelve normalizado.
-func normPosicion(s string) (string, bool) {
-	p, err := vo.NewPosicion(s)
-	return p.String(), err == nil
-}
-
-// posicionOpcional valida una posición anulable: ausente → no se toca; null o cadena vacía
-// → se vacía; con valor → se valida (un texto solo de espacios no es un decimal: se rechaza).
-func posicionOpcional(c cmd.Campo[string]) (outbound.CampoOpcional, bool) {
-	if !c.Presente {
-		return outbound.CampoOpcional{}, true
-	}
-	if c.Valor == nil || *c.Valor == "" {
-		return outbound.CampoOpcional{Presente: true}, true
-	}
-	v, ok := normPosicion(*c.Valor)
-	if !ok {
-		return outbound.CampoOpcional{}, false
-	}
-	return outbound.CampoOpcional{Presente: true, Valor: &v}, true
-}
-
 // CrearMesa da de alta una mesa en una sede donde el actor administra mesas (RES-RF-008).
 type CrearMesa struct{ mesas outbound.MesaStore }
 
@@ -78,21 +56,21 @@ func (uc *CrearMesa) Execute(ctx context.Context, c cmd.CrearMesa) (appresult.Re
 	if ae := mapper.AutorizarSede(c.Actor, c.SucursalID); ae != nil {
 		return rechazar[dtoresult.Mesa](ae)
 	}
-	numero, err := vo.NewNumeroMesa(c.NumeroMesa)
-	if err != nil {
-		return rechazar[dtoresult.Mesa](mapper.Validacion("numero_mesa_invalido", "el número de mesa es obligatorio (máximo 20 caracteres)"))
+	numero, ae := validarNumeroMesa(c.NumeroMesa)
+	if ae != nil {
+		return rechazar[dtoresult.Mesa](ae)
 	}
-	capacidad, err := vo.NewCapacidad(c.Capacidad)
-	if err != nil {
-		return rechazar[dtoresult.Mesa](mapper.Validacion("capacidad_invalida", "la capacidad debe estar entre 1 y 500"))
+	capacidad, ae := validarCapacidad(c.Capacidad)
+	if ae != nil {
+		return rechazar[dtoresult.Mesa](ae)
 	}
-	px, ok := posicionOpcional(cmd.Campo[string]{Presente: c.PosicionX != nil, Valor: c.PosicionX})
-	if !ok {
-		return rechazar[dtoresult.Mesa](mapper.Validacion("posicion_x_invalida", "la posición X debe ser un decimal con hasta 8 enteros y 2 decimales"))
+	px, ae := validarPosicion("x", cmd.Campo[string]{Presente: c.PosicionX != nil, Valor: c.PosicionX})
+	if ae != nil {
+		return rechazar[dtoresult.Mesa](ae)
 	}
-	py, ok := posicionOpcional(cmd.Campo[string]{Presente: c.PosicionY != nil, Valor: c.PosicionY})
-	if !ok {
-		return rechazar[dtoresult.Mesa](mapper.Validacion("posicion_y_invalida", "la posición Y debe ser un decimal con hasta 8 enteros y 2 decimales"))
+	py, ae := validarPosicion("y", cmd.Campo[string]{Presente: c.PosicionY != nil, Valor: c.PosicionY})
+	if ae != nil {
+		return rechazar[dtoresult.Mesa](ae)
 	}
 	valida, err := zonaValida(ctx, uc.mesas, c.ZonaID, c.SucursalID)
 	if err != nil {
@@ -106,7 +84,7 @@ func (uc *CrearMesa) Execute(ctx context.Context, c cmd.CrearMesa) (appresult.Re
 		habilitada = *c.Habilitada
 	}
 	m, err := uc.mesas.Crear(ctx, outbound.NuevaMesa{
-		SucursalID: c.SucursalID, ZonaID: c.ZonaID, NumeroMesa: numero.String(), Capacidad: capacidad.Int(),
+		SucursalID: c.SucursalID, ZonaID: c.ZonaID, NumeroMesa: numero, Capacidad: capacidad,
 		Habilitada: habilitada, PosicionX: px.Valor, PosicionY: py.Valor,
 	})
 	if err != nil {
@@ -157,27 +135,24 @@ func (uc *EditarMesa) Execute(ctx context.Context, c cmd.EditarMesa) (appresult.
 	}
 	cambios := outbound.CambiosMesa{ZonaID: c.ZonaID, Habilitada: c.Habilitada}
 	if c.NumeroMesa != nil {
-		n, err := vo.NewNumeroMesa(*c.NumeroMesa)
-		if err != nil {
-			return rechazar[dtoresult.Mesa](mapper.Validacion("numero_mesa_invalido", "el número de mesa es obligatorio (máximo 20 caracteres)"))
+		n, ae := validarNumeroMesa(*c.NumeroMesa)
+		if ae != nil {
+			return rechazar[dtoresult.Mesa](ae)
 		}
-		v := n.String()
-		cambios.NumeroMesa = &v
+		cambios.NumeroMesa = &n
 	}
 	if c.Capacidad != nil {
-		capac, err := vo.NewCapacidad(*c.Capacidad)
-		if err != nil {
-			return rechazar[dtoresult.Mesa](mapper.Validacion("capacidad_invalida", "la capacidad debe estar entre 1 y 500"))
+		capac, ae := validarCapacidad(*c.Capacidad)
+		if ae != nil {
+			return rechazar[dtoresult.Mesa](ae)
 		}
-		v := capac.Int()
-		cambios.Capacidad = &v
+		cambios.Capacidad = &capac
 	}
-	var ok bool
-	if cambios.PosicionX, ok = posicionOpcional(c.PosicionX); !ok {
-		return rechazar[dtoresult.Mesa](mapper.Validacion("posicion_x_invalida", "la posición X debe ser un decimal con hasta 8 enteros y 2 decimales"))
+	if cambios.PosicionX, ae = validarPosicion("x", c.PosicionX); ae != nil {
+		return rechazar[dtoresult.Mesa](ae)
 	}
-	if cambios.PosicionY, ok = posicionOpcional(c.PosicionY); !ok {
-		return rechazar[dtoresult.Mesa](mapper.Validacion("posicion_y_invalida", "la posición Y debe ser un decimal con hasta 8 enteros y 2 decimales"))
+	if cambios.PosicionY, ae = validarPosicion("y", c.PosicionY); ae != nil {
+		return rechazar[dtoresult.Mesa](ae)
 	}
 	if c.ZonaID != nil {
 		valida, err := zonaValida(ctx, uc.mesas, *c.ZonaID, actual.SucursalID)
@@ -220,9 +195,11 @@ func (uc *CambiarEstadoMesa) Execute(ctx context.Context, c cmd.CambiarEstadoMes
 		if actual.EsActivo {
 			return rechazar[dtoresult.Mesa](apperror.New(apperror.KindConflict, CodigoYaActiva, "la mesa ya está activa"))
 		}
-		// Bloquea la zona en modo compartido antes de restaurar: así la baja de la zona (FOR UPDATE)
-		// se serializa con esta restauración y no queda una mesa activa en una zona dada de baja.
-		// El veredicto sobre una zona inactiva lo da la regla de la base al restaurar (422).
+		// Defensa en profundidad: bloquea la zona en modo compartido antes de restaurar. El trigger
+		// fn_referencias_activas de la base ya toma FOR SHARE sobre el maestro al reactivar la
+		// mesa, así que esta lectura no es la única garantía; deja explícito en el caso de uso que
+		// la baja de la zona (FOR UPDATE) se serializa con la restauración. El veredicto sobre una
+		// zona inactiva lo da la regla de la base al restaurar (422).
 		if _, _, err := uc.mesas.ZonaDeMesa(ctx, actual.ZonaID); err != nil {
 			return tecnico[dtoresult.Mesa]("bloquear la zona de la mesa", err)
 		}

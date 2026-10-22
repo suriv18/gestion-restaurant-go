@@ -12,6 +12,8 @@ import (
 	"service-restaurant/internal/modules/atencion/application/port/outbound"
 )
 
+const codigoUniqueViolation = "23505"
+
 // Translate convierte los errores de PostgreSQL conocidos en los errores de puerto que los
 // casos de uso entienden como rechazos esperados. Cualquier otro error pasa sin cambios.
 func Translate(err error) error {
@@ -20,7 +22,7 @@ func Translate(err error) error {
 		return err
 	}
 	switch pg.Code {
-	case "23505": // unique_violation
+	case codigoUniqueViolation:
 		return fmt.Errorf("%w (%s)", outbound.ErrDuplicado, pg.ConstraintName)
 	case "23503": // foreign_key_violation
 		return fmt.Errorf("%w (%s)", outbound.ErrReferenciaInvalida, pg.ConstraintName)
@@ -32,11 +34,19 @@ func Translate(err error) error {
 	return err
 }
 
-type scanner interface{ Scan(...any) error }
-
 func notFound(err error) (bool, error) {
 	if errors.Is(err, sql.ErrNoRows) {
 		return true, nil
 	}
 	return false, err
+}
+
+// restriccionUnica devuelve el nombre de la restricción violada si err es un unique_violation
+// de PostgreSQL; si no, una cadena vacía.
+func restriccionUnica(err error) string {
+	var pg *pgconn.PgError
+	if errors.As(err, &pg) && pg.Code == codigoUniqueViolation {
+		return pg.ConstraintName
+	}
+	return ""
 }

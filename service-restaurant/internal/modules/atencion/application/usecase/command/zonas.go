@@ -9,7 +9,6 @@ import (
 	"service-restaurant/internal/modules/atencion/application/mapper"
 	"service-restaurant/internal/modules/atencion/application/port/outbound"
 	"service-restaurant/internal/modules/atencion/domain/policy"
-	"service-restaurant/internal/modules/atencion/domain/vo"
 	appctx "service-restaurant/internal/shared/application/context"
 	"service-restaurant/internal/shared/kernel/apperror"
 	appresult "service-restaurant/internal/shared/kernel/result"
@@ -38,17 +37,15 @@ func (uc *CrearZona) Execute(ctx context.Context, c cmd.CrearZona) (appresult.Re
 	if ae := mapper.AutorizarSede(c.Actor, c.SucursalID); ae != nil {
 		return rechazar[dtoresult.Zona](ae)
 	}
-	nombre, err := vo.TextoUnaLinea(c.Nombre, maxNombreZona)
-	if err != nil {
-		return rechazar[dtoresult.Zona](mapper.Validacion("nombre_invalido", "el nombre es obligatorio (máximo 80 caracteres)"))
+	nombre, ae := validarNombreZona(c.Nombre)
+	if ae != nil {
+		return rechazar[dtoresult.Zona](ae)
 	}
 	orden := 0
 	if c.OrdenVisualizacion != nil {
-		o, err := vo.NewOrden(*c.OrdenVisualizacion)
-		if err != nil {
-			return rechazar[dtoresult.Zona](mapper.Validacion("orden_invalido", "el orden de visualización debe estar entre 0 y 9999"))
+		if orden, ae = validarOrden(*c.OrdenVisualizacion); ae != nil {
+			return rechazar[dtoresult.Zona](ae)
 		}
-		orden = o.Int()
 	}
 	z, err := uc.zonas.Crear(ctx, outbound.NuevaZona{SucursalID: c.SucursalID, Nombre: nombre, Orden: orden})
 	if err != nil {
@@ -105,19 +102,18 @@ func (uc *EditarZona) Execute(ctx context.Context, c cmd.EditarZona) (appresult.
 	}
 	var cambios outbound.CambiosZona
 	if c.Nombre != nil {
-		n, err := vo.TextoUnaLinea(*c.Nombre, maxNombreZona)
-		if err != nil {
-			return rechazar[dtoresult.Zona](mapper.Validacion("nombre_invalido", "el nombre es obligatorio (máximo 80 caracteres)"))
+		n, ae := validarNombreZona(*c.Nombre)
+		if ae != nil {
+			return rechazar[dtoresult.Zona](ae)
 		}
 		cambios.Nombre = &n
 	}
 	if c.OrdenVisualizacion != nil {
-		o, err := vo.NewOrden(*c.OrdenVisualizacion)
-		if err != nil {
-			return rechazar[dtoresult.Zona](mapper.Validacion("orden_invalido", "el orden de visualización debe estar entre 0 y 9999"))
+		o, ae := validarOrden(*c.OrdenVisualizacion)
+		if ae != nil {
+			return rechazar[dtoresult.Zona](ae)
 		}
-		v := o.Int()
-		cambios.Orden = &v
+		cambios.Orden = &o
 	}
 	z, found, err := uc.zonas.Actualizar(ctx, c.ID, cambios)
 	if err != nil {
