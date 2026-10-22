@@ -220,6 +220,12 @@ func (uc *CambiarEstadoMesa) Execute(ctx context.Context, c cmd.CambiarEstadoMes
 		if actual.EsActivo {
 			return rechazar[dtoresult.Mesa](apperror.New(apperror.KindConflict, CodigoYaActiva, "la mesa ya está activa"))
 		}
+		// Bloquea la zona en modo compartido antes de restaurar: así la baja de la zona (FOR UPDATE)
+		// se serializa con esta restauración y no queda una mesa activa en una zona dada de baja.
+		// El veredicto sobre una zona inactiva lo da la regla de la base al restaurar (422).
+		if _, _, err := uc.mesas.ZonaDeMesa(ctx, actual.ZonaID); err != nil {
+			return tecnico[dtoresult.Mesa]("bloquear la zona de la mesa", err)
+		}
 		m, found, err := uc.mesas.Restaurar(ctx, c.ID)
 		if err != nil {
 			return deMesa(err, "restaurar mesa")

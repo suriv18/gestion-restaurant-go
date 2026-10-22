@@ -22,6 +22,7 @@ type mesaStoreFake struct {
 	cambios    outbound.CambiosMesa
 	llamadas   int
 	bajas      int
+	orden      []string
 }
 
 func (f *mesaStoreFake) Crear(_ context.Context, n outbound.NuevaMesa) (dtoresult.Mesa, error) {
@@ -33,6 +34,7 @@ func (f *mesaStoreFake) Obtener(_ context.Context, id int64) (dtoresult.Mesa, bo
 	return f.existente, f.existente.ID == id, nil
 }
 func (f *mesaStoreFake) ZonaDeMesa(context.Context, int64) (outbound.ZonaRef, bool, error) {
+	f.orden = append(f.orden, "zona")
 	return f.zona, f.zonaExiste, nil
 }
 func (f *mesaStoreFake) Actualizar(_ context.Context, _ int64, c outbound.CambiosMesa) (dtoresult.Mesa, bool, error) {
@@ -47,6 +49,7 @@ func (f *mesaStoreFake) DarBaja(_ context.Context, _ int64, _ string) (dtoresult
 	return m, true, f.errBaja
 }
 func (f *mesaStoreFake) Restaurar(_ context.Context, _ int64) (dtoresult.Mesa, bool, error) {
+	f.orden = append(f.orden, "restaurar")
 	f.llamadas++
 	m := f.existente
 	m.EsActivo = true
@@ -203,5 +206,15 @@ func TestCambiarEstadoMesa(t *testing.T) {
 		}
 		res, _ = NewCambiarEstadoMesa(&mesaStoreFake{existente: activa}).Execute(context.Background(), cmd.CambiarEstadoMesa{Actor: gestorDe(1), ID: 5, Activo: true})
 		esperarRechazo(t, res.Err(), apperror.KindConflict, "ya_activa")
+	})
+	t.Run("restaurar bloquea la zona antes de restaurar", func(t *testing.T) {
+		f := &mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1, ZonaID: 8}}
+		res, err := NewCambiarEstadoMesa(f).Execute(context.Background(), cmd.CambiarEstadoMesa{Actor: gestorDe(1), ID: 5, Activo: true})
+		if err != nil || !res.IsOk() {
+			t.Fatalf("restaurar: %v %+v", err, res.Err())
+		}
+		if len(f.orden) != 2 || f.orden[0] != "zona" || f.orden[1] != "restaurar" {
+			t.Fatalf("debía bloquear la zona y luego restaurar: %v", f.orden)
+		}
 	})
 }
