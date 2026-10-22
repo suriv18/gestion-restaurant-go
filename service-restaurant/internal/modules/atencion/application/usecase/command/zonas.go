@@ -38,7 +38,7 @@ func (uc *CrearZona) Execute(ctx context.Context, c cmd.CrearZona) (appresult.Re
 	if ae := mapper.AutorizarSede(c.Actor, c.SucursalID); ae != nil {
 		return rechazar[dtoresult.Zona](ae)
 	}
-	nombre, err := vo.TextoObligatorio(c.Nombre, maxNombreZona)
+	nombre, err := vo.TextoUnaLinea(c.Nombre, maxNombreZona)
 	if err != nil {
 		return rechazar[dtoresult.Zona](mapper.Validacion("nombre_invalido", "el nombre es obligatorio (máximo 80 caracteres)"))
 	}
@@ -105,7 +105,7 @@ func (uc *EditarZona) Execute(ctx context.Context, c cmd.EditarZona) (appresult.
 	}
 	var cambios outbound.CambiosZona
 	if c.Nombre != nil {
-		n, err := vo.TextoObligatorio(*c.Nombre, maxNombreZona)
+		n, err := vo.TextoUnaLinea(*c.Nombre, maxNombreZona)
 		if err != nil {
 			return rechazar[dtoresult.Zona](mapper.Validacion("nombre_invalido", "el nombre es obligatorio (máximo 80 caracteres)"))
 		}

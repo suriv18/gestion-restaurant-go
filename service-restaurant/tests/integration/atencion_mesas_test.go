@@ -75,9 +75,15 @@ func TestMesasFiltroYPaginacion(t *testing.T) {
 		t.Fatalf("primera página: %+v", p1)
 	}
 	p2 := listarMesas(t, "?limit=1&cursor="+*p1.NextCursor, tk)
-	id1, _ := strconv.Atoi(p1.Items[0].ID)
-	id2, _ := strconv.Atoi(p2.Items[0].ID)
-	if len(p2.Items) != 1 || id1 >= id2 {
+	if len(p2.Items) != 1 {
+		t.Fatalf("la segunda página debe traer 1 mesa: %+v", p2)
+	}
+	id1, err1 := strconv.Atoi(p1.Items[0].ID)
+	id2, err2 := strconv.Atoi(p2.Items[0].ID)
+	if err1 != nil || err2 != nil {
+		t.Fatalf("ids no numéricos: %q (%v) / %q (%v)", p1.Items[0].ID, err1, p2.Items[0].ID, err2)
+	}
+	if id1 >= id2 {
 		t.Fatalf("la segunda página debe continuar en orden ascendente: %+v / %+v", p1, p2)
 	}
 }

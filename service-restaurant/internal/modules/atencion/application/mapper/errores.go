@@ -26,8 +26,9 @@ func NoAutenticado() *apperror.AppError {
 	return apperror.New(apperror.KindUnauthorized, CodigoNoAutenticado, "autenticación requerida")
 }
 
+// NoEncontrado: "zona", "mesa" y "sucursal" son femeninos, por eso "no encontrada".
 func NoEncontrado(que string) *apperror.AppError {
-	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrado")
+	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrada")
 }
 
 func Validacion(code, msg string) *apperror.AppError {

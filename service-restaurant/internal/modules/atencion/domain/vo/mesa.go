@@ -17,8 +17,8 @@ var posicionRe = regexp.MustCompile(`^-?[0-9]{1,8}(\.[0-9]{1,2})?$`)
 type NumeroMesa struct{ value string }
 
 func NewNumeroMesa(raw string) (NumeroMesa, error) {
-	v, err := TextoObligatorio(raw, maxNumeroMesa)
-	if err != nil || strings.ContainsAny(v, "\n\t") {
+	v, err := TextoUnaLinea(raw, maxNumeroMesa)
+	if err != nil {
 		return NumeroMesa{}, ErrValorInvalido
 	}
 	return NumeroMesa{v}, nil
