@@ -12,35 +12,28 @@ func TestZonasLecturaRespetaLasSedesDelActor(t *testing.T) {
 	crearZonaSQL(t, "MESA-AJENA", "Salon ajeno")
 	tk := lectorMesas(t) // solo PRINCIPAL
 
-	nombres := listarZonas(t, "", tk).nombres()
-	if !slices.Contains(nombres, "Salon L1") || slices.Contains(nombres, "Salon ajeno") {
-		t.Fatalf("zonas visibles = %v: debe incluir la de PRINCIPAL y no la de MESA-AJENA", nombres)
+	propiaZona := scalarStr(t, `SELECT z.id FROM sch_restaurante.zonas z JOIN sch_restaurante.sucursales s ON s.id=z.sucursal_id WHERE s.codigo='PRINCIPAL' AND z.nombre='Salon L1'`)
+	ajenaZona := scalarStr(t, `SELECT z.id FROM sch_restaurante.zonas z JOIN sch_restaurante.sucursales s ON s.id=z.sucursal_id WHERE s.codigo='MESA-AJENA' AND z.nombre='Salon ajeno'`)
+	ids := listarZonas(t, "", tk).ids()
+	if !slices.Contains(ids, propiaZona) || slices.Contains(ids, ajenaZona) {
+		t.Fatalf("zonas visibles = %v: debe incluir %s (PRINCIPAL) y no %s (MESA-AJENA)", ids, propiaZona, ajenaZona)
 	}
 	ajena := idDe(t, "sucursales", "codigo", "MESA-AJENA")
 	esperar(t, call(t, "GET", "/api/v1/zonas?sucursal_id="+ajena, "", tk), http.StatusNotFound, "no_encontrado")
 
 	propia := idDe(t, "sucursales", "codigo", "PRINCIPAL")
-	if got := listarZonas(t, "?sucursal_id="+propia, tk).nombres(); !slices.Contains(got, "Salon L1") {
+	if got := listarZonas(t, "?sucursal_id="+propia, tk).ids(); !slices.Contains(got, propiaZona) || slices.Contains(got, ajenaZona) {
 		t.Fatalf("sucursal_id propio: %v", got)
 	}
 
-	r := call(t, "GET", "/api/v1/zonas", "", tk)
-	var p zonasPagina
-	r.json(t, &p)
-	var z zonaResp
-	for _, x := range p.Items {
-		if x.Nombre == "Salon L1" {
-			z = x
-		}
-	}
-	r = call(t, "GET", "/api/v1/zonas/"+z.ID, "", tk)
+	z := zonaResp{ID: propiaZona}
+	r := call(t, "GET", "/api/v1/zonas/"+z.ID, "", tk)
 	esperar(t, r, http.StatusOK, "")
 	var leida zonaResp
 	r.json(t, &leida)
 	if leida.ID != z.ID || leida.SucursalID != propia || !leida.EsActivo || leida.CreadoPor == "" {
 		t.Fatalf("zona: %+v", leida)
 	}
-	ajenaZona := scalarStr(t, `SELECT z.id FROM sch_restaurante.zonas z WHERE z.nombre='Salon ajeno'`)
 	esperar(t, call(t, "GET", "/api/v1/zonas/"+ajenaZona, "", tk), http.StatusNotFound, "no_encontrado")
 	esperar(t, call(t, "GET", "/api/v1/zonas/999999", "", tk), http.StatusNotFound, "no_encontrado")
 	esperar(t, call(t, "GET", "/api/v1/zonas/abc", "", tk), http.StatusBadRequest, "id_invalido")
@@ -65,13 +58,25 @@ func TestZonasFiltroYPaginacion(t *testing.T) {
 	asSystem(t, `UPDATE sch_restaurante.zonas SET es_activo=false WHERE nombre='Pag Inactiva'`)
 	tk := lectorMesas(t)
 
-	activas := listarZonas(t, "?es_activo=true", tk).nombres()
-	if slices.Contains(activas, "Pag Inactiva") || !slices.Contains(activas, "Pag A") {
-		t.Fatalf("es_activo=true: %v", activas)
+	idA := scalarStr(t, `SELECT id FROM sch_restaurante.zonas WHERE nombre='Pag A'`)
+	idI := scalarStr(t, `SELECT id FROM sch_restaurante.zonas WHERE nombre='Pag Inactiva'`)
+	activas := listarZonas(t, "?es_activo=true", tk)
+	for _, x := range activas.Items {
+		if !x.EsActivo {
+			t.Fatalf("es_activo=true devolvió una inactiva: %+v", x)
+		}
 	}
-	inactivas := listarZonas(t, "?es_activo=false", tk).nombres()
-	if !slices.Contains(inactivas, "Pag Inactiva") || slices.Contains(inactivas, "Pag A") {
-		t.Fatalf("es_activo=false: %v", inactivas)
+	if ids := activas.ids(); slices.Contains(ids, idI) || !slices.Contains(ids, idA) {
+		t.Fatalf("es_activo=true: %v", ids)
+	}
+	inactivas := listarZonas(t, "?es_activo=false", tk)
+	for _, x := range inactivas.Items {
+		if x.EsActivo {
+			t.Fatalf("es_activo=false devolvió una activa: %+v", x)
+		}
+	}
+	if ids := inactivas.ids(); !slices.Contains(ids, idI) || slices.Contains(ids, idA) {
+		t.Fatalf("es_activo=false: %v", ids)
 	}
 	esperar(t, call(t, "GET", "/api/v1/zonas?es_activo=quizas", "", tk), http.StatusBadRequest, "es_activo_invalido")
 	esperar(t, call(t, "GET", "/api/v1/zonas?limit=0", "", tk), http.StatusBadRequest, "limit_invalido")

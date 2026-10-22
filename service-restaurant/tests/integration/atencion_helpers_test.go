@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -98,9 +99,33 @@ func lectorMesas(t *testing.T, sedes ...string) string {
 	return token(t, "mesa.lector", "MesaLector2026Clave")
 }
 
+// conLimite añade limit=100 si la consulta no trae uno: la base se comparte entre pruebas y el
+// tamaño de página por defecto (25) dejaría fuera los datos de prueba según el orden de ejecución.
+func conLimite(query string) string {
+	if strings.Contains(query, "limit=") {
+		return query
+	}
+	switch {
+	case query == "":
+		return "?limit=100"
+	case strings.HasPrefix(query, "?"):
+		return query + "&limit=100"
+	default:
+		return "?" + query + "&limit=100"
+	}
+}
+
+func (p zonasPagina) ids() []string {
+	out := make([]string, 0, len(p.Items))
+	for _, z := range p.Items {
+		out = append(out, z.ID)
+	}
+	return out
+}
+
 func listarZonas(t *testing.T, query, tk string) zonasPagina {
 	t.Helper()
-	r := call(t, "GET", "/api/v1/zonas"+query, "", tk)
+	r := call(t, "GET", "/api/v1/zonas"+conLimite(query), "", tk)
 	esperar(t, r, http.StatusOK, "")
 	var p zonasPagina
 	r.json(t, &p)
@@ -109,7 +134,7 @@ func listarZonas(t *testing.T, query, tk string) zonasPagina {
 
 func listarMesas(t *testing.T, query, tk string) mesasPagina {
 	t.Helper()
-	r := call(t, "GET", "/api/v1/mesas"+query, "", tk)
+	r := call(t, "GET", "/api/v1/mesas"+conLimite(query), "", tk)
 	esperar(t, r, http.StatusOK, "")
 	var p mesasPagina
 	r.json(t, &p)
