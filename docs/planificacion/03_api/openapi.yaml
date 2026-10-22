@@ -3281,7 +3281,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3322,7 +3322,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3353,7 +3353,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3381,7 +3381,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3419,7 +3419,7 @@ paths:
         en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
         eliminación; registra actor de actualización y evento.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3452,7 +3452,7 @@ paths:
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3488,7 +3488,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3529,7 +3529,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3560,7 +3560,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3588,7 +3588,7 @@ paths:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3626,7 +3626,7 @@ paths:
         en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
         eliminación; registra actor de actualización y evento.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3659,7 +3659,7 @@ paths:
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
       x-implementado: true
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -5711,6 +5711,7 @@ components:
           maxLength: 150
         direccion_fiscal: &id111
           type: string
+          maxLength: 500
         ubigeo: &id112
           anyOf:
           - type: string
@@ -5766,6 +5767,12 @@ components:
       - creado_por
       - actualizado_en
       - actualizado_por
+      - ubigeo
+      - codigo_establecimiento_sunat
+      - telefono
+      - eliminado_en
+      - eliminado_por
+      - motivo_eliminacion
       properties:
         id:
           type: string
@@ -5784,6 +5791,7 @@ components:
           maxLength: 120
         direccion: &id096
           type: string
+          maxLength: 500
         ubigeo: &id097
           anyOf:
           - type: string
@@ -7327,6 +7335,11 @@ components:
       - actualizado_en
       - actualizado_por
       - es_activo
+      - posicion_x
+      - posicion_y
+      - eliminado_en
+      - eliminado_por
+      - motivo_eliminacion
       properties:
         id:
           type: string
@@ -10458,6 +10471,7 @@ components:
         required:
         - roles
         - sucursales
+        - motivo_baja
         properties:
           motivo_baja:
             anyOf:
