@@ -42,7 +42,7 @@
     "max_h": 56,
     "dependencias": "I1",
     "criterio": "Carta, personas, mesas, tasas y baja lógica",
-    "estado": "PROPUESTO",
+    "estado": "EN_CURSO",
     "requisitos_cierre": [
       "RES-RF-003",
       "RES-RF-004",
@@ -58,7 +58,8 @@
       "ADR-05",
       "ADR-06",
       "ADR-07"
-    ]
+    ],
+    "avance": "Rebanada 1 hecha en backend (negocio, sucursales, zonas y mesas; contrato, ADR 005 y expediente); falta el frontend (paso 4) y las rebanadas con RF-004, RF-005 y RF-027."
   },
   {
     "id": "I3",

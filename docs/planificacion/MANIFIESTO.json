@@ -1,6 +1,6 @@
 {
   "paquete": "Sistema de Restaurante MYPE / PYME",
-  "version_documental": "1.2",
+  "version_documental": "1.3",
   "modelo_sql": "V4 PostgreSQL 18",
   "prototipo": "Mesa 1.1",
   "sql_sha256": "fbfc25a1db5223eda2c36c30ccf951658682337b467e0962bc65d02ab839cc7c",
@@ -14,8 +14,8 @@
     "casos_backend_previstos": 44,
     "documentos_word": 4,
     "paginas_word": 33,
-    "rutas_api_propuestas": 112,
-    "operaciones_api_propuestas": 153,
+    "rutas_api_propuestas": 113,
+    "operaciones_api_propuestas": 155,
     "registros_adr": 7,
     "secciones_add": 13,
     "incrementos": 10,
@@ -23,7 +23,7 @@
     "tablas_con_creado_por": 49,
     "tablas_con_actualizado_por": 46,
     "tablas_con_es_activo": 26,
-    "tablas_con_marcadores_eliminacion": 9,
+    "tablas_con_marcadores_eliminacion": 10,
     "tablas_con_estado": 13
   },
   "alcance": "Planificación y diseño para implementación; prototipo con datos ficticios; no incluye backend productivo ni integraciones fiscales.",

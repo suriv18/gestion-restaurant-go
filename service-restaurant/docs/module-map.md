@@ -2,13 +2,13 @@
 
 ## Módulos
 
-Módulos hoy: **`identidad`** (implementado en I1: acceso, autorización y administración de accesos) y `catalogo`, **esqueleto de ejemplo sustituible** de la plantilla (archivos con solo `package`). Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
+Módulos hoy: **`identidad`** (implementado en I1: acceso, autorización y administración de accesos; en I2, negocio y sucursales), **`atencion`** (zonas y mesas, implementado en I2) y `catalogo`, **esqueleto de ejemplo sustituible** de la plantilla (archivos con solo `package`). Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
 
 | Módulo (ADR-01) | Tablas (migración) | Incremento |
 |---|---|---|
-| Identidad | negocio, sucursales, roles, permisos, usuarios, empleados… (`00001`) | I1 |
+| Identidad | negocio y sucursales (administración en I2), roles, permisos, usuarios, empleados… (`00001`) | I1 / I2 |
 | Catálogos | unidades, categorías, impuestos, productos, recetas, inventario maestro (`00002`) | I2 |
-| Atención | zonas, mesas, reservas, pedidos, cuentas, detalles (`00003`) | I3 (reservas: I6) |
+| Atención | zonas y mesas (`00003`, I2) · reservas, pedidos, cuentas, detalles (I3; reservas: I6) | I2 / I3 (reservas: I6) |
 | Producción | comandas, comanda_detalles, delivery (`00003`) | I3 / I6 |
 | Caja | métodos de pago, cajas, sesiones, movimientos, pagos, devoluciones (`00004`) | I4 |
 | Abastecimiento | compras, movimientos de inventario, kardex (`00005`) | I5 |
@@ -42,4 +42,4 @@ internal/modules/<m>/
 | `bootstrap` | `platform`, y de un módulo solo `infrastructure/config` | reglas de negocio |
 | `cmd` | `bootstrap`, `platform` | módulos |
 
-Ningún módulo importa internos de otro; la coordinación entre módulos ocurre en la composición (mismo `*sql.Tx`), no por importación.
+`tests/architecture` cubre también `atencion`, que no importa `identidad`. Ningún módulo importa internos de otro; la coordinación entre módulos ocurre en la composición (mismo `*sql.Tx`), no por importación.

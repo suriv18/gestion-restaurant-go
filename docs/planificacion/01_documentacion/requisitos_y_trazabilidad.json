@@ -79,7 +79,7 @@
     "incremento": "I2",
     "aceptacion": "No se puede crear una segunda empresa; desactivar una sede no borra sus operaciones.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -88,7 +88,8 @@
     "add": [
       "ADD-01",
       "ADD-05"
-    ]
+    ],
+    "situacion_backend": "Implementado en I2 (rebanada 1: negocio y sucursales); la prueba de aceptación RES-CP-003 sigue NO_EJECUTADA hasta ejecutarse contra la API real."
   },
   {
     "id": "RES-RF-004",
@@ -224,7 +225,7 @@
     "incremento": "I2",
     "aceptacion": "Una mesa deshabilitada no permite nuevas atenciones. Una mesa ocupada no admite otro pedido abierto.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -233,7 +234,8 @@
     ],
     "add": [
       "ADD-04"
-    ]
+    ],
+    "situacion_backend": "Implementado en I2 (rebanada 1: zonas y mesas); la prueba de aceptación RES-CP-008 sigue NO_EJECUTADA hasta ejecutarse contra la API real."
   },
   {
     "id": "RES-RF-009",
@@ -855,7 +857,7 @@
     "prueba": "RES-CP-030",
     "modulo": "Gobierno",
     "titulo": "Aplicar bajas y restauraciones",
-    "regla_detallada": "Distinguir 9 maestros con baja y motivo de 17 catálogos o relaciones con desactivación simple. Conservar es_activo, claves e historial; el actor procede de la sesión.",
+    "regla_detallada": "Distinguir 10 maestros con baja y motivo de 16 catálogos o relaciones con desactivación simple. Conservar es_activo, claves e historial; el actor procede de la sesión.",
     "tablas": [
       "productos",
       "clientes",
@@ -868,7 +870,7 @@
     "api": "POST /productos/{id}/baja",
     "prioridad": "P0",
     "incremento": "I2",
-    "aceptacion": "Los 9 maestros registran motivo, usuario y fecha de baja. Las otras 17 tablas se desactivan sin esos campos; auditoría conserva actor y cambios. Reactivar conserva ID; DELETE no está permitido.",
+    "aceptacion": "Los 10 maestros registran motivo, usuario y fecha de baja. Las otras 16 tablas se desactivan sin esos campos; auditoría conserva actor y cambios. Reactivar conserva ID; DELETE no está permitido.",
     "cobertura_prototipo": "Parcial",
     "estado_backend": "PENDIENTE",
     "fuente": "SQL V4 y diseño funcional propuesto",
@@ -1063,6 +1065,7 @@
     ],
     "add": [
       "ADD-08"
-    ]
+    ],
+    "situacion_backend": "Parcial en I2: errores por campo en negocio, sucursales, zonas y mesas; pendiente la interfaz."
   }
 ]
