@@ -22,7 +22,7 @@ type Module struct {
 
 // New ensambla el módulo.
 func New(d Deps) (*Module, error) {
-	return &Module{deps: d, zonas: armarZonas(d.DB)}, nil
+	return &Module{deps: d, zonas: armarZonas(d.DB, d.Logger)}, nil
 }
 
 // RegisterRoutes monta las rutas del módulo sobre mux (relativas a /api/v1). protect exige un
