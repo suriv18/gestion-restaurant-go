@@ -40,7 +40,7 @@
   ],
   "pendiente": [
     "Cierre y aceptación de las decisiones DEC 01 a 08, incluyendo stack de aplicación",
-    "Backend: solo I1 está implementado (I2 a I9 pendientes); recuperación de contraseña, MFA y limitación de intentos por IP",
+    "Backend: I1 e I2 (rebanada 1: negocio, sucursales, zonas y mesas) están implementados (el resto pendiente); recuperación de contraseña, MFA y limitación de intentos por IP",
     "Concurrencia multiproceso en PostgreSQL 18 nativo",
     "Pruebas de carga y restauración en el entorno objetivo",
     "Inspección visual en navegador real y dispositivos",

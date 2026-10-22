@@ -51,8 +51,8 @@ Usar READ COMMITTED, search_path controlado y permisos mínimos.
 El contexto local a transacción evita reutilizar la identidad al volver al pool.
 Creación y última modificación no sustituyen el historial auditoria_eventos.
 
-La baja de los 9 maestros principales cambia es_activo y motivo_eliminacion;
-el SQL registra eliminado_por y eliminado_en. Los otros 17 catálogos y relaciones
+La baja de los 10 maestros principales cambia es_activo y motivo_eliminacion;
+el SQL registra eliminado_por y eliminado_en. Los otros 16 catálogos y relaciones
 solo cambian es_activo, con creado_por/actualizado_por y auditoria_eventos.
 Restaurar conserva la identidad. estado representa el ciclo de negocio en 13 tablas. Pagos, documentos, kardex y
 operaciones se cancelan o compensan según su estado, sin esconderlos por baja.

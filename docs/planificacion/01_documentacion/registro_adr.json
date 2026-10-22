@@ -175,10 +175,10 @@
       "Borrar físicamente: rompe historia y referencias.",
       "Agregar es_activo a toda tabla y ocultar filas: puede esconder saldos, documentos o movimientos confirmados."
     ],
-    "decision": "Conservar creado_en/por en 49 tablas y actualizado_en/por en 46. Usar es_activo en 26: nueve maestros principales con tres marcadores de eliminación y 17 catálogos o relaciones sin ellos. El backend fija app.usuario_id; los 13 estados operativos permanecen independientes de la baja.",
+    "decision": "Conservar creado_en/por en 49 tablas y actualizado_en/por en 46. Usar es_activo en 26: diez maestros principales con tres marcadores de eliminación y 16 catálogos o relaciones sin ellos. El backend fija app.usuario_id; los 13 estados operativos permanecen independientes de la baja.",
     "justificacion": "La baja impide nuevas selecciones sin destruir la identidad histórica. Separar última edición del historial auditoria_eventos permite seguir tanto el estado actual como los cambios relevantes.",
     "consecuencias": "Restaurar reutiliza el mismo ID; los códigos únicos no se liberan por la baja. Las consultas nuevas deben verificar toda la cadena activa. Los históricos y saldos no se filtran según la actividad actual del maestro. Retención y purga requieren una política aparte.",
-    "verificacion": "Dar de baja y restaurar un producto o cliente, verificar actor, fecha y motivo, y confirmar que el historial y la unicidad se conservan. Rechazar intento de suplantar creado_por y excluir secretos del evento.",
+    "verificacion": "Dar de baja y restaurar un producto o cliente, verificar actor, fecha y motivo, y confirmar que el historial y la unicidad se conservan. Rechazar intento de suplantar creado_por y excluir secretos del evento. Baja de mesa con motivo: ver ADR-005 del repositorio (service-restaurant/docs/adr).",
     "revision": "Revisar retención de datos y futuras entidades mediante migración. La matriz de auditoría conserva el inventario exacto y es preferible a generalizar por nombre de módulo.",
     "nfr": [
       "NFR-01",

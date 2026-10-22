@@ -265,11 +265,11 @@
   },
   {
     "tabla": "mesas",
-    "tipo": "ACTIVIDAD_SIMPLE",
+    "tipo": "MAESTRO_PRINCIPAL",
     "creado_por": true,
     "actualizado_por": true,
     "es_activo": true,
-    "marcadores_eliminacion": false,
+    "marcadores_eliminacion": true,
     "estado": false,
     "valores_estado": []
   },

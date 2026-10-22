@@ -1,5 +1,5 @@
 SISTEMA DE RESTAURANTE MYPE / PYME — EXPEDIENTE DE DESARROLLO
-Versión documental 1.2 · Modelo SQL V4 · Prototipo Mesa 1.1
+Versión documental 1.3 · Modelo SQL V4 · Prototipo Mesa 1.1
 
 EMPEZAR AQUÍ
 1. Extrae TODO el archivo RAR en una carpeta de tu equipo.
@@ -37,9 +37,9 @@ CONTENIDO
 02_base_datos: SQL completo PostgreSQL 18, diccionario de 49 tablas y 664
                columnas, restricciones, índices, vistas, funciones y triggers;
                matriz de auditoría y baja lógica por tabla; estados de negocio con valores.
-               9 maestros con datos de eliminación, 17 catálogos/relaciones sin ellos.
+               10 maestros con datos de eliminación, 16 catálogos/relaciones sin ellos.
                13 tablas operativas conservan estado; es_activo no lo sustituye.
-03_api: contrato OpenAPI 3.1.1 propuesto: 112 rutas y 153 operaciones.
+03_api: contrato OpenAPI 3.1.1 propuesto: 113 rutas y 155 operaciones.
 04_prototipo: código HTML/CSS/JavaScript, datos ficticios, servidor y pruebas.
 05_diagramas: arquitectura y atención en SVG, modelo físico editable PlantUML.
 06_calidad: 44 casos previstos para el sistema implementado, pruebas ejecutables

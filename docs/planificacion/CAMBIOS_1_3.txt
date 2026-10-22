@@ -1,0 +1,17 @@
+Cambios de la versión 1.3 (I2, rebanada 1)
+Fecha: 2026-10-21
+
+- mesas pasa a ser el décimo maestro con baja y motivo. RF-030 queda en 10
+  maestros y 16 catálogos o relaciones simples (antes 9 y 17). Se actualizan la
+  política de campos por tabla, la matriz de auditoría y el diccionario de datos,
+  que añade eliminado_en, eliminado_por y motivo_eliminacion a mesas con la nota
+  de la migración 00008.
+- El contrato OpenAPI queda alineado con la implementación: permisos finos,
+  baja de mesa con {motivo}, esquemas de edición, errores problem+json,
+  GET /usuarios y GET /sucursales-asignables. Total: 113 rutas y 155 operaciones.
+- RES-RF-003 y RES-RF-008 pasan a IMPLEMENTADO en backend; sus casos de prueba
+  siguen NO_EJECUTADA. RES-RF-036 queda parcial en backend.
+- El incremento I2 pasa a EN_CURSO (rebanada 1 hecha; falta el frontend).
+- ADR-03 actualizado a 10 y 16; se enlaza el ADR-005 del repositorio
+  (baja de mesa con motivo, service-restaurant/docs/adr).
+- El SQL V4 y sus totales (49 tablas; 664 columnas) no cambian.
