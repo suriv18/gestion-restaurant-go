@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"encoding/base64"
 	"strings"
 	"testing"
 
@@ -49,5 +50,20 @@ func TestReglaDeReferenciaSeTraduceAUnMensajeParaElUsuario(t *testing.T) {
 				t.Fatalf("el mensaje no debe exponer nombres internos: %q", ae.Message)
 			}
 		})
+	}
+}
+
+func TestCursorSoloAceptaDecimalCanonico(t *testing.T) {
+	codificar := func(s string) string { return base64.RawURLEncoding.EncodeToString([]byte(s)) }
+	for entrada, quiere := range map[string]int64{"0": 0, "5": 5, "42": 42} {
+		if id, ae := DecodeCursor(codificar(entrada)); ae != nil || id != quiere {
+			t.Errorf("%q: obtuvo %d, %v; quería %d", entrada, id, ae, quiere)
+		}
+	}
+	for _, entrada := range []string{"+5", "007", "05", "-0", "-1", "1.0", " 5", "5 ", "abc", "9223372036854775808"} {
+		c := codificar(entrada)
+		if _, ae := DecodeCursor(c); ae == nil || ae.Code != CodigoCursorInvalido {
+			t.Errorf("%q debía rechazarse como cursor inválido: %v", entrada, ae)
+		}
 	}
 }

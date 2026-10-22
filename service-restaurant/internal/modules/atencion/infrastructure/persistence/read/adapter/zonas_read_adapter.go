@@ -20,8 +20,8 @@ func NewZonaReadAdapter(db database.DBTX) *ZonaReadAdapter {
 var _ outbound.ZonaReader = (*ZonaReadAdapter)(nil)
 
 func (a *ZonaReadAdapter) ListarZonas(ctx context.Context, f outbound.FiltroZonas) ([]dtoresult.Zona, error) {
-	return a.repo.ListZonas(ctx, f)
+	return a.repo.ListarZonas(ctx, f)
 }
 func (a *ZonaReadAdapter) ObtenerZona(ctx context.Context, id int64) (dtoresult.Zona, bool, error) {
-	return a.repo.GetZona(ctx, id)
+	return a.repo.ObtenerZona(ctx, id)
 }

@@ -16,8 +16,8 @@ type MesaSQLReader struct{ db database.DBTX }
 
 func NewMesaSQLReader(db database.DBTX) *MesaSQLReader { return &MesaSQLReader{db} }
 
-// ListMesas devuelve las mesas de f.SedeIDs ordenadas por id (cursor estable).
-func (r *MesaSQLReader) ListMesas(ctx context.Context, f outbound.FiltroMesas) ([]dtoresult.Mesa, error) {
+// ListarMesas devuelve las mesas de f.SedeIDs ordenadas por id (cursor estable).
+func (r *MesaSQLReader) ListarMesas(ctx context.Context, f outbound.FiltroMesas) ([]dtoresult.Mesa, error) {
 	var activo sql.NullBool
 	if f.Activo != nil {
 		activo = sql.NullBool{Bool: *f.Activo, Valid: true}
@@ -41,7 +41,7 @@ func (r *MesaSQLReader) ListMesas(ctx context.Context, f outbound.FiltroMesas) (
 	return out, rows.Err()
 }
 
-func (r *MesaSQLReader) GetMesa(ctx context.Context, id int64) (dtoresult.Mesa, bool, error) {
+func (r *MesaSQLReader) ObtenerMesa(ctx context.Context, id int64) (dtoresult.Mesa, bool, error) {
 	m, err := columnas.ScanMesa(r.db.QueryRowContext(ctx, `SELECT `+columnas.Mesa+` FROM sch_restaurante.mesas WHERE id = $1`, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return dtoresult.Mesa{}, false, nil

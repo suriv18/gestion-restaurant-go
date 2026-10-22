@@ -16,7 +16,7 @@ import (
 
 const mensajeSinPermisoLectura = "no tiene permiso para consultar zonas y mesas"
 
-// tamanio normaliza el límite pedido (por defecto 25, máximo 100).
+// tamanio normaliza el límite pedido (por defecto 25, máximo 100; nunca menos de 1).
 func tamanio(limite int) int {
 	return pagination.PageRequest{Size: limite}.Normalize().Size
 }
@@ -45,7 +45,7 @@ func (uc *ListarZonas) Execute(ctx context.Context, q qry.ListarZonas) (appresul
 		return appresult.Result[dtoresult.PaginaZonas]{}, fmt.Errorf("listar zonas: %w", err)
 	}
 	pagina := dtoresult.PaginaZonas{Items: items}
-	if len(items) > n && n > 0 {
+	if len(items) > n {
 		pagina.Items = items[:n]
 		pagina.NextCursor = mapper.EncodeCursor(items[n-1].ID)
 	}

@@ -92,18 +92,20 @@ func mensajeRegla(msg string, ante func(maestro string) string) string {
 	return "una referencia no existe o está dada de baja"
 }
 
-// EncodeCursor / DecodeCursor: el cursor es el último id entregado, opaco para el cliente.
+// EncodeCursor: el cursor es el último id entregado, opaco para el cliente.
 func EncodeCursor(id int64) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(strconv.FormatInt(id, 10)))
 }
 
+// DecodeCursor acepta solo el id en decimal canónico (sin "+" ni ceros a la izquierda): así cada
+// página tiene un único cursor válido.
 func DecodeCursor(c string) (int64, *apperror.AppError) {
 	if c == "" {
 		return 0, nil
 	}
 	raw, err := base64.RawURLEncoding.DecodeString(c)
 	if err == nil {
-		if id, perr := strconv.ParseInt(string(raw), 10, 64); perr == nil && id >= 0 {
+		if id, perr := strconv.ParseInt(string(raw), 10, 64); perr == nil && id >= 0 && strconv.FormatInt(id, 10) == string(raw) {
 			return id, nil
 		}
 	}

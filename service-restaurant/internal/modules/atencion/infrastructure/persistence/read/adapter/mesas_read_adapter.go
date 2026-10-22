@@ -19,8 +19,8 @@ func NewMesaReadAdapter(db database.DBTX) *MesaReadAdapter {
 var _ outbound.MesaReader = (*MesaReadAdapter)(nil)
 
 func (a *MesaReadAdapter) ListarMesas(ctx context.Context, f outbound.FiltroMesas) ([]dtoresult.Mesa, error) {
-	return a.repo.ListMesas(ctx, f)
+	return a.repo.ListarMesas(ctx, f)
 }
 func (a *MesaReadAdapter) ObtenerMesa(ctx context.Context, id int64) (dtoresult.Mesa, bool, error) {
-	return a.repo.GetMesa(ctx, id)
+	return a.repo.ObtenerMesa(ctx, id)
 }

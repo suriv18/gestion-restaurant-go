@@ -78,3 +78,22 @@ func TestCursor(t *testing.T) {
 		t.Fatalf("cursor inválido: %v", ae)
 	}
 }
+
+func TestPuedeVer(t *testing.T) {
+	a := actorCon(
+		appctx.Grant{SucursalID: 1, Permiso: policy.MesaVer},
+		appctx.Grant{SucursalID: 2, Permiso: policy.MesaAdministrar},
+		appctx.Grant{SucursalID: 3, Permiso: "NEGOCIO_VER"},
+	)
+	for sede, quiere := range map[int64]bool{1: true, 2: true, 3: false, 4: false} {
+		if got := PuedeVer(a, sede); got != quiere {
+			t.Errorf("sede %d: PuedeVer = %v, quería %v", sede, got, quiere)
+		}
+		if got := PuedeVer(a, sede); got != slices.Contains(SedesVisibles(a), sede) {
+			t.Errorf("sede %d: PuedeVer debe coincidir con SedesVisibles", sede)
+		}
+	}
+	if PuedeVer(appctx.Actor{}, 1) {
+		t.Error("un actor vacío no ve ninguna sede")
+	}
+}

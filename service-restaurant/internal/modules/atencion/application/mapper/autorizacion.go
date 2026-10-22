@@ -33,8 +33,10 @@ func SedesVisibles(a appctx.Actor) []int64 {
 	return ids
 }
 
-// PuedeVer indica si el actor tiene algún permiso de mesa en la sede.
-func PuedeVer(a appctx.Actor, sedeID int64) bool { return slices.Contains(SedesVisibles(a), sedeID) }
+// PuedeVer indica si el actor tiene algún permiso de mesa en la sede (sin armar la lista de sedes).
+func PuedeVer(a appctx.Actor, sedeID int64) bool {
+	return a.Can(policy.MesaVer, sedeID) || a.Can(policy.MesaAdministrar, sedeID)
+}
 
 // AutorizarSede decide si el actor puede escribir en la sede: sede que no ve → 404 (no se
 // revela su existencia); la ve pero no la administra → 403.

@@ -2,8 +2,10 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -54,10 +56,11 @@ func pathID(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-// idCadena convierte un id en cadena (contrato) a int64 positivo.
+// idCadena convierte un id en cadena (contrato) a int64 positivo. Solo acepta el decimal canónico:
+// sin "+" ni ceros a la izquierda.
 func idCadena(valor, campo string) (int64, error) {
 	n, err := strconv.ParseInt(valor, 10, 64)
-	if err != nil || n <= 0 {
+	if err != nil || n <= 0 || strconv.FormatInt(n, 10) != valor {
 		return 0, apperror.New(apperror.KindBadRequest, campo+"_invalido", campo+" debe ser un entero positivo en cadena")
 	}
 	return n, nil
@@ -79,10 +82,23 @@ func intencion(r *http.Request, operacion string, cuerpo any) (cmd.Intencion, er
 	return cmd.Intencion{Clave: clave, Operacion: operacion, Huella: idempotency.Fingerprint(operacion, raw)}, nil
 }
 
-// leerCuerpoOpcionalVacio acepta ausencia de cuerpo o "{}" (restauraciones y bajas simples).
+// leerCuerpoOpcionalVacio acepta ausencia de cuerpo o "{}" (restauraciones y bajas simples). Un
+// cuerpo con transferencia fragmentada (ContentLength == -1) que no trae ningún byte también
+// cuenta como ausente: se lee un byte para saberlo y, si lo hay, se devuelve al flujo.
 func leerCuerpoOpcionalVacio(r *http.Request, dst any) error {
 	if r.Body == nil || r.Body == http.NoBody || r.ContentLength == 0 {
 		return nil
+	}
+	if r.ContentLength < 0 {
+		var primero [1]byte
+		n, err := io.ReadFull(r.Body, primero[:])
+		if n == 0 && errors.Is(err, io.EOF) {
+			return nil
+		}
+		r.Body = struct {
+			io.Reader
+			io.Closer
+		}{io.MultiReader(bytes.NewReader(primero[:n]), r.Body), r.Body}
 	}
 	return webrequest.DecodeJSON(r, dst)
 }

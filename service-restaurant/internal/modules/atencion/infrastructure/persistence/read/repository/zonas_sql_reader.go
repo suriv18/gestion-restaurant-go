@@ -17,8 +17,8 @@ type ZonaSQLReader struct{ db database.DBTX }
 
 func NewZonaSQLReader(db database.DBTX) *ZonaSQLReader { return &ZonaSQLReader{db} }
 
-// ListZonas devuelve las zonas de f.SedeIDs ordenadas por id (cursor estable).
-func (r *ZonaSQLReader) ListZonas(ctx context.Context, f outbound.FiltroZonas) ([]dtoresult.Zona, error) {
+// ListarZonas devuelve las zonas de f.SedeIDs ordenadas por id (cursor estable).
+func (r *ZonaSQLReader) ListarZonas(ctx context.Context, f outbound.FiltroZonas) ([]dtoresult.Zona, error) {
 	var activo sql.NullBool
 	if f.Activo != nil {
 		activo = sql.NullBool{Bool: *f.Activo, Valid: true}
@@ -42,7 +42,7 @@ func (r *ZonaSQLReader) ListZonas(ctx context.Context, f outbound.FiltroZonas) (
 	return out, rows.Err()
 }
 
-func (r *ZonaSQLReader) GetZona(ctx context.Context, id int64) (dtoresult.Zona, bool, error) {
+func (r *ZonaSQLReader) ObtenerZona(ctx context.Context, id int64) (dtoresult.Zona, bool, error) {
 	z, err := columnas.ScanZona(r.db.QueryRowContext(ctx, `SELECT `+columnas.Zona+` FROM sch_restaurante.zonas WHERE id = $1`, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return dtoresult.Zona{}, false, nil

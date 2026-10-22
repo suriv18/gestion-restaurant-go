@@ -36,7 +36,7 @@ func (uc *ListarMesas) Execute(ctx context.Context, q qry.ListarMesas) (appresul
 		return appresult.Result[dtoresult.PaginaMesas]{}, fmt.Errorf("listar mesas: %w", err)
 	}
 	pagina := dtoresult.PaginaMesas{Items: items}
-	if len(items) > n && n > 0 {
+	if len(items) > n {
 		pagina.Items = items[:n]
 		pagina.NextCursor = mapper.EncodeCursor(items[n-1].ID)
 	}

@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"slices"
@@ -217,4 +218,24 @@ func TestZonaBajaRestauracionYMesasActivas(t *testing.T) {
 	esperar(t, post(t, "/api/v1/zonas/"+id+"/restauracion", "", tk), http.StatusConflict, "ya_activa")
 	esperar(t, post(t, "/api/v1/zonas/999999/baja", "", tk), http.StatusNotFound, "no_encontrado")
 	esperar(t, post(t, "/api/v1/zonas/"+id+"/baja", "", lectorMesas(t)), http.StatusForbidden, "sin_permiso")
+}
+
+// Los ids en cadena y los cursores solo aceptan el decimal canónico: "+5" y "007" no son el 5.
+func TestIdsYCursoresSoloAceptanDecimalCanonico(t *testing.T) {
+	tk := gestorMesas(t)
+	principal := idDe(t, "sucursales", "codigo", "PRINCIPAL")
+	zona := crearZonaSQL(t, "PRINCIPAL", "Zona canonica "+sufijo())
+	for _, malo := range []string{"+" + principal, "00" + principal, "-" + principal} {
+		esperar(t, post(t, "/api/v1/zonas", altaZona(malo, "No creada"), tk), http.StatusBadRequest, "sucursal_id_invalido")
+		esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, malo, "NC-1", 2), tk), http.StatusBadRequest, "zona_id_invalido")
+		esperar(t, call(t, "GET", "/api/v1/zonas?sucursal_id="+malo, "", tk), http.StatusBadRequest, "sucursal_id_invalido")
+	}
+	for _, malo := range []string{"+5", "007"} {
+		cursor := base64.RawURLEncoding.EncodeToString([]byte(malo))
+		esperar(t, call(t, "GET", "/api/v1/zonas?cursor="+cursor, "", tk), http.StatusBadRequest, "cursor_invalido")
+		esperar(t, call(t, "GET", "/api/v1/mesas?cursor="+cursor, "", tk), http.StatusBadRequest, "cursor_invalido")
+	}
+	// La forma canónica sigue funcionando.
+	esperar(t, post(t, "/api/v1/mesas", altaMesa(principal, zona, "NC-"+sufijo(), 2), tk), http.StatusCreated, "")
+	esperar(t, call(t, "GET", "/api/v1/zonas?sucursal_id="+principal, "", tk), http.StatusOK, "")
 }
