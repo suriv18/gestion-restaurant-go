@@ -19,7 +19,7 @@ paths:
       tags:
       - Accesos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -84,7 +84,7 @@ paths:
       tags:
       - Accesos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -107,7 +107,7 @@ paths:
       tags:
       - Configuración
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: NEGOCIO_VER | NEGOCIO_ADMINISTRAR
       responses:
         '200':
@@ -129,7 +129,7 @@ paths:
       tags:
       - Configuración
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: NEGOCIO_ADMINISTRAR
       responses:
         '200':
@@ -1253,7 +1253,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
@@ -1298,7 +1298,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '201':
@@ -1329,7 +1329,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
@@ -1357,7 +1357,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
@@ -1396,7 +1396,7 @@ paths:
         en V4 se requiere diseño y migración adicional. Exige motivo (1–2000 caracteres); cambia es_activo a false y guarda
         eliminado_en, eliminado_por y motivo_eliminacion; registra el evento de auditoría. Se rechaza con 422 si la mesa tiene
         un pedido abierto.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
@@ -1435,7 +1435,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
@@ -1471,7 +1471,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
@@ -1516,7 +1516,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '201':
@@ -1547,7 +1547,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_VER | MESA_ADMINISTRAR
       responses:
         '200':
@@ -1575,7 +1575,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
@@ -1613,7 +1613,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
         eliminación; registra actor de actualización y evento.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
@@ -1646,7 +1646,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: MESA_ADMINISTRAR
       responses:
         '200':
@@ -3069,7 +3069,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: SUCURSAL_VER | SUCURSAL_ADMINISTRAR
       responses:
         '200':
@@ -3109,7 +3109,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '201':
@@ -3140,7 +3140,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: SUCURSAL_VER | SUCURSAL_ADMINISTRAR
       responses:
         '200':
@@ -3168,7 +3168,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '200':
@@ -3205,7 +3205,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '200':
@@ -3244,7 +3244,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: SUCURSAL_ADMINISTRAR
       responses:
         '200':
@@ -3280,7 +3280,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3321,7 +3321,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '201':
@@ -3352,7 +3352,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3380,7 +3380,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3418,7 +3418,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
         eliminación; registra actor de actualización y evento.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3451,7 +3451,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3487,7 +3487,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3528,7 +3528,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '201':
@@ -3559,7 +3559,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3587,7 +3587,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3625,7 +3625,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
         eliminación; registra actor de actualización y evento.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3658,7 +3658,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -3688,6 +3688,42 @@ paths:
             schema:
               $ref: '#/components/schemas/Confirmacion'
   /usuarios:
+    get:
+      operationId: operacion_154
+      summary: Listar equipo
+      tags:
+      - Accesos
+      description: Lista paginada por cursor del equipo (usuarios humanos) con sus roles y sedes vigentes. El actor técnico
+        del sistema nunca aparece. Requiere USUARIO_ADMINISTRAR; `limit` por defecto 25 (máximo 100) y `cursor` opaco
+        devuelto en `nextCursor`. No admite filtros adicionales.
+      x-implementado: true
+      x-permiso: USUARIO_ADMINISTRAR
+      responses:
+        '200':
+          description: Página del equipo; nextCursor es null en la última página.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuariosLista'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+      - name: cursor
+        in: query
+        schema:
+          type: string
     post:
       operationId: operacion_105
       summary: Crear usuario humano
@@ -3696,7 +3732,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: USUARIO_ADMINISTRAR
       responses:
         '201':
@@ -3727,7 +3763,7 @@ paths:
       tags:
       - Accesos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
@@ -3764,7 +3800,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
@@ -3803,7 +3839,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: USUARIO_ADMINISTRAR
       responses:
         '200':
@@ -3832,6 +3868,30 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Confirmacion'
+  /sucursales-asignables:
+    get:
+      operationId: operacion_155
+      summary: Listar sucursales asignables
+      tags:
+      - Accesos
+      description: Sedes activas donde el actor tiene USUARIO_ADMINISTRAR, es decir, las que puede agregar o quitar al asignar
+        accesos. Sin paginación.
+      x-implementado: true
+      x-permiso: USUARIO_ADMINISTRAR
+      responses:
+        '200':
+          description: Sedes asignables al actor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SucursalesAsignablesLista'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
   /productos/{id}/disponibilidad:
     put:
       operationId: operacion_109
@@ -10390,6 +10450,76 @@ components:
           type:
           - string
           - 'null'
+    UsuarioEquipo:
+      description: Persona del equipo con sus roles y sedes vigentes; nunca incluye el hash de la contraseña.
+      allOf:
+      - $ref: '#/components/schemas/Usuarios'
+      - type: object
+        required:
+        - roles
+        - sucursales
+        properties:
+          motivo_baja:
+            anyOf:
+            - type: string
+            - type: 'null'
+          roles:
+            type: array
+            items:
+              type: object
+              required:
+              - id
+              - codigo
+              - nombre
+              - es_activo
+              properties:
+                id:
+                  $ref: '#/components/schemas/Id'
+                codigo:
+                  type: string
+                nombre:
+                  type: string
+                es_activo:
+                  type: boolean
+          sucursales:
+            type: array
+            items:
+              $ref: '#/components/schemas/SucursalResumen'
+    SucursalResumen:
+      type: object
+      required:
+      - id
+      - codigo
+      - nombre
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        codigo:
+          type: string
+        nombre:
+          type: string
+    UsuariosLista:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsuarioEquipo'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+    SucursalesAsignablesLista:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SucursalResumen'
     RolesLista:
       type: object
       required:
