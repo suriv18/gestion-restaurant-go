@@ -321,6 +321,11 @@ func TestMesaNoSeRestauraConLaZonaDadaDeBaja(t *testing.T) {
 
 	r := post(t, "/api/v1/mesas/"+mesa+"/restauracion", "", tk)
 	esperar(t, r, http.StatusUnprocessableEntity, "regla_de_datos")
+	var p problema
+	r.json(t, &p)
+	if p.Detail != "no se puede restaurar la mesa porque su zona está dada de baja" {
+		t.Fatalf("el mensaje debe ser el curado, sin nombres internos: %q", p.Detail)
+	}
 	if scalar(t, `SELECT count(*) FROM sch_restaurante.mesas WHERE id=$1 AND NOT es_activo`, mesa) != 1 {
 		t.Fatal("la mesa debe seguir dada de baja")
 	}

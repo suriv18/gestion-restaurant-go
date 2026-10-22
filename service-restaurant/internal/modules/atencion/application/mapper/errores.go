@@ -5,7 +5,9 @@ package mapper
 import (
 	"encoding/base64"
 	"errors"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"service-restaurant/internal/modules/atencion/application/port/outbound"
 	"service-restaurant/internal/shared/kernel/apperror"
@@ -38,6 +40,21 @@ func Validacion(code, msg string) *apperror.AppError {
 // DeAlmacen traduce los errores de almacenamiento conocidos a rechazos esperados.
 // Devuelve nil si err no es uno de ellos (error técnico: debe seguir por el canal error).
 func DeAlmacen(err error) *apperror.AppError {
+	return traducirAlmacen(err, func(maestro string) string {
+		return "la " + maestro + " indicada no existe o está dada de baja"
+	})
+}
+
+// DeRestauracion es como DeAlmacen para la reactivación de un registro (que: "la mesa", "la
+// zona"): si la base rechaza porque su padre está dado de baja, el mensaje lo dice con esas
+// palabras.
+func DeRestauracion(err error, que string) *apperror.AppError {
+	return traducirAlmacen(err, func(maestro string) string {
+		return "no se puede restaurar " + que + " porque su " + maestro + " está dada de baja"
+	})
+}
+
+func traducirAlmacen(err error, ante func(maestro string) string) *apperror.AppError {
 	var regla *outbound.ErrReglaDatos
 	switch {
 	case err == nil:
@@ -47,9 +64,32 @@ func DeAlmacen(err error) *apperror.AppError {
 	case errors.Is(err, outbound.ErrReferenciaInvalida):
 		return apperror.New(apperror.KindValidation, CodigoReferenciaInvalida, "una referencia no existe")
 	case errors.As(err, &regla):
-		return apperror.New(apperror.KindBusinessRule, CodigoReglaDatos, regla.Mensaje)
+		return apperror.New(apperror.KindBusinessRule, CodigoReglaDatos, mensajeRegla(regla.Mensaje, ante))
 	}
 	return nil
+}
+
+const prefijoReferencia = "Referencia "
+
+// referenciaRe reconoce el rechazo del trigger fn_referencias_activas:
+// "Referencia zona_id=12: maestro zonas inexistente o dado de baja".
+var referenciaRe = regexp.MustCompile(`^Referencia \w+=\d+: maestro (\w+) inexistente o dado de baja$`)
+
+// maestros nombra, en singular, las tablas padre que el módulo referencia.
+var maestros = map[string]string{"zonas": "zona", "sucursales": "sucursal"}
+
+// mensajeRegla deja pasar los mensajes curados del esquema y reemplaza por un texto para el
+// usuario los que exponen nombres internos (columnas, ids y tablas) del trigger de referencias.
+func mensajeRegla(msg string, ante func(maestro string) string) string {
+	if !strings.HasPrefix(msg, prefijoReferencia) {
+		return msg
+	}
+	if m := referenciaRe.FindStringSubmatch(msg); m != nil {
+		if nombre, ok := maestros[m[1]]; ok {
+			return ante(nombre)
+		}
+	}
+	return "una referencia no existe o está dada de baja"
 }
 
 // EncodeCursor / DecodeCursor: el cursor es el último id entregado, opaco para el cliente.

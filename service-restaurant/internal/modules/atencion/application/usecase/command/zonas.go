@@ -56,10 +56,20 @@ func (uc *CrearZona) Execute(ctx context.Context, c cmd.CrearZona) (appresult.Re
 
 // deZona traduce el nombre duplicado a un rechazo específico y delega lo demás.
 func deZona(err error, contexto string) (appresult.Result[dtoresult.Zona], error) {
+	return deZonaCon(err, contexto, mapper.DeAlmacen)
+}
+
+// deZonaRestaurada es como deZona para la restauración: si la sucursal de la zona está dada de
+// baja, el rechazo de la base se explica en esos términos.
+func deZonaRestaurada(err error) (appresult.Result[dtoresult.Zona], error) {
+	return deZonaCon(err, "restaurar zona", func(e error) *apperror.AppError { return mapper.DeRestauracion(e, "la zona") })
+}
+
+func deZonaCon(err error, contexto string, traducir func(error) *apperror.AppError) (appresult.Result[dtoresult.Zona], error) {
 	if errors.Is(err, outbound.ErrNombreZonaDuplicado) {
 		return rechazar[dtoresult.Zona](apperror.New(apperror.KindConflict, CodigoNombreDuplicado, "ya existe una zona con ese nombre en la sucursal"))
 	}
-	return deAlmacen[dtoresult.Zona](contexto, err)
+	return deAlmacenCon[dtoresult.Zona](contexto, err, traducir)
 }
 
 // zonaGestionable carga la zona (bloqueándola) y verifica que el actor ve su sede (si no, 404) y
@@ -160,6 +170,9 @@ func (uc *CambiarEstadoZona) Execute(ctx context.Context, c cmd.CambiarEstadoZon
 	}
 	z, found, err := uc.zonas.CambiarActivo(ctx, c.ID, c.Activo)
 	if err != nil {
+		if c.Activo {
+			return deZonaRestaurada(err)
+		}
 		return deZona(err, "cambiar estado de la zona")
 	}
 	if !found {

@@ -20,6 +20,7 @@ type zonaStoreFake struct {
 	creada        outbound.NuevaZona
 	cambios       outbound.CambiosZona
 	cambiosHechos int
+	errCambiar    error
 }
 
 func (f *zonaStoreFake) Crear(_ context.Context, n outbound.NuevaZona) (dtoresult.Zona, error) {
@@ -38,7 +39,7 @@ func (f *zonaStoreFake) CambiarActivo(_ context.Context, _ int64, activo bool) (
 	f.cambiosHechos++
 	z := f.existente
 	z.EsActivo = activo
-	return z, true, nil
+	return z, true, f.errCambiar
 }
 
 func gestorDe(sedes ...int64) appctx.Actor {
@@ -200,4 +201,20 @@ func sinFallo(t *testing.T, err error) {
 	if err != nil {
 		t.Fatalf("un rechazo esperado no debe ser un error técnico: %v", err)
 	}
+}
+
+func esperarMensaje(t *testing.T, ae *apperror.AppError, quiere string) {
+	t.Helper()
+	if ae == nil || ae.Message != quiere {
+		t.Fatalf("mensaje %v, quería %q", ae, quiere)
+	}
+}
+
+func TestRestaurarZonaConLaSucursalDadaDeBaja(t *testing.T) {
+	f := &zonaStoreFake{existente: dtoresult.Zona{ID: 5, SucursalID: 1},
+		errCambiar: &outbound.ErrReglaDatos{Mensaje: "Referencia sucursal_id=1: maestro sucursales inexistente o dado de baja"}}
+	res, err := NewCambiarEstadoZona(f).Execute(context.Background(), cmd.CambiarEstadoZona{Actor: gestorDe(1), ID: 5, Activo: true})
+	sinFallo(t, err)
+	esperarRechazo(t, res.Err(), apperror.KindBusinessRule, "regla_de_datos")
+	esperarMensaje(t, res.Err(), "no se puede restaurar la zona porque su sucursal está dada de baja")
 }

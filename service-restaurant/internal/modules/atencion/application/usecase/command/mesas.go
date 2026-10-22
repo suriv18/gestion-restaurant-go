@@ -25,10 +25,20 @@ const (
 
 // deMesa traduce el número duplicado a un rechazo específico y delega lo demás.
 func deMesa(err error, contexto string) (appresult.Result[dtoresult.Mesa], error) {
+	return deMesaCon(err, contexto, mapper.DeAlmacen)
+}
+
+// deMesaRestaurada es como deMesa para la restauración: si la zona o la sucursal de la mesa
+// están dadas de baja, el rechazo de la base se explica en esos términos.
+func deMesaRestaurada(err error) (appresult.Result[dtoresult.Mesa], error) {
+	return deMesaCon(err, "restaurar mesa", func(e error) *apperror.AppError { return mapper.DeRestauracion(e, "la mesa") })
+}
+
+func deMesaCon(err error, contexto string, traducir func(error) *apperror.AppError) (appresult.Result[dtoresult.Mesa], error) {
 	if errors.Is(err, outbound.ErrNumeroMesaDuplicado) {
 		return rechazar[dtoresult.Mesa](apperror.New(apperror.KindConflict, CodigoNumeroMesaDuplicado, "ya existe una mesa con ese número en la sucursal"))
 	}
-	return deAlmacen[dtoresult.Mesa](contexto, err)
+	return deAlmacenCon[dtoresult.Mesa](contexto, err, traducir)
 }
 
 func zonaInvalida() *apperror.AppError {
@@ -175,7 +185,8 @@ func (uc *EditarMesa) Execute(ctx context.Context, c cmd.EditarMesa) (appresult.
 
 // CambiarEstadoMesa da de baja (con motivo) o restaura una mesa. La base impide dar de baja una
 // mesa con pedido abierto y restaurar una mesa cuya zona está dada de baja; ambos casos llegan
-// como regla_de_datos con el mensaje de la base.
+// como regla_de_datos (422): el del pedido abierto con el mensaje curado de la base y el de la
+// zona con un texto propio (mapper.DeRestauracion).
 type CambiarEstadoMesa struct{ mesas outbound.MesaStore }
 
 func NewCambiarEstadoMesa(m outbound.MesaStore) *CambiarEstadoMesa { return &CambiarEstadoMesa{m} }
@@ -205,7 +216,7 @@ func (uc *CambiarEstadoMesa) Execute(ctx context.Context, c cmd.CambiarEstadoMes
 		}
 		m, found, err := uc.mesas.Restaurar(ctx, c.ID)
 		if err != nil {
-			return deMesa(err, "restaurar mesa")
+			return deMesaRestaurada(err)
 		}
 		if !found {
 			return rechazar[dtoresult.Mesa](mapper.NoEncontrado("mesa"))

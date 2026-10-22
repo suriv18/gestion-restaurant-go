@@ -21,7 +21,12 @@ func tecnico[T any](contexto string, err error) (appresult.Result[T], error) {
 
 // deAlmacen separa un error de almacenamiento conocido (rechazo) de uno técnico.
 func deAlmacen[T any](contexto string, err error) (appresult.Result[T], error) {
-	if ae := mapper.DeAlmacen(err); ae != nil {
+	return deAlmacenCon[T](contexto, err, mapper.DeAlmacen)
+}
+
+// deAlmacenCon es como deAlmacen con un traductor propio (p. ej. mapper.DeRestauracion).
+func deAlmacenCon[T any](contexto string, err error, traducir func(error) *apperror.AppError) (appresult.Result[T], error) {
+	if ae := traducir(err); ae != nil {
 		return rechazar[T](ae)
 	}
 	return tecnico[T](contexto, err)

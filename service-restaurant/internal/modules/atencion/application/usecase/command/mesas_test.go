@@ -115,6 +115,14 @@ func TestCrearMesa(t *testing.T) {
 			}
 		})
 	}
+	t.Run("zona dada de baja entre la lectura y la escritura", func(t *testing.T) {
+		f := &mesaStoreFake{zona: zonaOk, zonaExiste: true,
+			errCrear: &outbound.ErrReglaDatos{Mensaje: "Referencia zona_id=8: maestro zonas inexistente o dado de baja"}}
+		res, err := NewCrearMesa(f).Execute(context.Background(), ok)
+		sinFallo(t, err)
+		esperarRechazo(t, res.Err(), apperror.KindBusinessRule, "regla_de_datos")
+		esperarMensaje(t, res.Err(), "la zona indicada no existe o está dada de baja")
+	})
 	t.Run("número duplicado", func(t *testing.T) {
 		res, err := NewCrearMesa(&mesaStoreFake{zona: zonaOk, zonaExiste: true, errCrear: outbound.ErrNumeroMesaDuplicado}).Execute(context.Background(), ok)
 		sinFallo(t, err)
@@ -263,6 +271,7 @@ func TestCambiarEstadoMesa(t *testing.T) {
 		res, err := NewCambiarEstadoMesa(f).Execute(context.Background(), cmd.CambiarEstadoMesa{Actor: gestorDe(1), ID: 5, Activo: true})
 		sinFallo(t, err)
 		esperarRechazo(t, res.Err(), apperror.KindBusinessRule, "regla_de_datos")
+		esperarMensaje(t, res.Err(), "no se puede restaurar la mesa porque su zona está dada de baja")
 	})
 	t.Run("restaurar con un error técnico lo propaga", func(t *testing.T) {
 		f := &mesaStoreFake{existente: dtoresult.Mesa{ID: 5, SucursalID: 1}, errRestaurar: errors.New("conexión perdida")}
