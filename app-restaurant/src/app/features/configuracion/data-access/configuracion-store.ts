@@ -7,6 +7,8 @@ import type { FieldProblem } from '../../../shared/ui/form-dialog';
 import { cambiosDe } from '../configuracion.forms';
 import type {
   Mesa,
+  MesaCambios,
+  MesaNueva,
   Negocio,
   NegocioCambios,
   SedeRef,
@@ -14,6 +16,8 @@ import type {
   SucursalCambios,
   SucursalNueva,
   Zona,
+  ZonaCambios,
+  ZonaNueva,
 } from '../configuracion.models';
 import { ConfiguracionApi } from './configuracion-api';
 
@@ -200,6 +204,94 @@ export class ConfiguracionStore {
     });
   }
 
+  // --- Zonas -----------------------------------------------------------------------------
+
+  async crearZona(body: ZonaNueva, key: string): Promise<ActionError | undefined> {
+    return this.mutarSalon(
+      () => firstValueFrom(this.api.crearZona(body, key)),
+      `Se creó la zona ${body.nombre}.`,
+    );
+  }
+
+  async editarZona(
+    zona: Zona,
+    nuevo: Record<string, string | number>,
+  ): Promise<ActionError | undefined> {
+    const cambios = cambiosDe({ ...zona }, nuevo) as ZonaCambios;
+    if (Object.keys(cambios).length === 0) return undefined;
+    return this.mutarSalon(
+      () => firstValueFrom(this.api.editarZona(zona.id, cambios)),
+      `Guardamos los cambios de la zona ${zona.nombre}.`,
+    );
+  }
+
+  async bajaZona(zona: Zona, key: string): Promise<ActionError | undefined> {
+    return this.mutarSalon(
+      () => firstValueFrom(this.api.bajaZona(zona.id, key)),
+      `La zona ${zona.nombre} quedó de baja.`,
+    );
+  }
+
+  async restaurarZona(zona: Zona, key: string): Promise<void> {
+    await this.conBloqueo(zona.id, async () => {
+      await firstValueFrom(this.api.restaurarZona(zona.id, key));
+      this.avisarTrasRefresco(
+        await this.refrescarSalon(),
+        `La zona ${zona.nombre} volvió a estar activa.`,
+        'zonas y mesas',
+      );
+    });
+  }
+
+  // --- Mesas -----------------------------------------------------------------------------
+
+  async crearMesa(body: MesaNueva, key: string): Promise<ActionError | undefined> {
+    return this.mutarSalon(
+      () => firstValueFrom(this.api.crearMesa(body, key)),
+      `Se creó la mesa ${body.numero_mesa}.`,
+    );
+  }
+
+  async editarMesa(
+    mesa: Mesa,
+    nuevo: Record<string, string | number | null>,
+  ): Promise<ActionError | undefined> {
+    const cambios = cambiosDe({ ...mesa }, nuevo) as MesaCambios;
+    if (Object.keys(cambios).length === 0) return undefined;
+    return this.mutarSalon(
+      () => firstValueFrom(this.api.editarMesa(mesa.id, cambios)),
+      `Guardamos los cambios de la mesa ${mesa.numero_mesa}.`,
+    );
+  }
+
+  /** Interruptor «habilitada»: sin diálogo ni motivo; actualiza solo esa fila. */
+  async habilitarMesa(mesa: Mesa): Promise<void> {
+    await this.conBloqueo(mesa.id, async () => {
+      const actualizada = await firstValueFrom(
+        this.api.editarMesa(mesa.id, { habilitada: !mesa.habilitada }),
+      );
+      this.mesas.update((lista) => lista.map((m) => (m.id === actualizada.id ? actualizada : m)));
+    });
+  }
+
+  async bajaMesa(mesa: Mesa, motivo: string, key: string): Promise<ActionError | undefined> {
+    return this.mutarSalon(
+      () => firstValueFrom(this.api.bajaMesa(mesa.id, motivo, key)),
+      `La mesa ${mesa.numero_mesa} quedó de baja.`,
+    );
+  }
+
+  async restaurarMesa(mesa: Mesa, key: string): Promise<void> {
+    await this.conBloqueo(mesa.id, async () => {
+      await firstValueFrom(this.api.restaurarMesa(mesa.id, key));
+      this.avisarTrasRefresco(
+        await this.refrescarSalon(),
+        `La mesa ${mesa.numero_mesa} volvió a estar activa.`,
+        'zonas y mesas',
+      );
+    });
+  }
+
   // --- Internos --------------------------------------------------------------------------
 
   protected tiene(permiso: string): boolean {
@@ -248,6 +340,19 @@ export class ConfiguracionStore {
     return undefined;
   }
 
+  private async mutarSalon(
+    accion: () => Promise<unknown>,
+    ok: string,
+  ): Promise<ActionError | undefined> {
+    try {
+      await accion();
+    } catch (error) {
+      return this.comoError(error);
+    }
+    this.avisarTrasRefresco(await this.refrescarSalon(), ok, 'zonas y mesas');
+    return undefined;
+  }
+
   private async cargarNegocio(): Promise<void> {
     if (!this.puedeVerNegocio()) return;
     try {
@@ -290,14 +395,29 @@ export class ConfiguracionStore {
     }
   }
 
+  /** Vuelve a pedir zonas y mesas; devuelve si lo logró (si no, las listas quedan desactualizadas). */
+  private async refrescarSalon(): Promise<boolean> {
+    try {
+      const [zonas, mesas] = await Promise.all([
+        collect((c) => firstValueFrom(this.api.zonas(c))),
+        collect((c) => firstValueFrom(this.api.mesas(c))),
+      ]);
+      this.zonas.set(zonas);
+      this.mesas.set(mesas);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   /** Aviso tras una acción ya hecha: éxito, o éxito con advertencia si la lista no se pudo actualizar. */
-  private avisarTrasRefresco(refrescada: boolean, ok: string): void {
+  private avisarTrasRefresco(refrescada: boolean, ok: string, lista = 'sedes'): void {
     if (refrescada) {
       this.say('ok', ok);
     } else {
       this.say(
         'error',
-        `${ok} Pero no pudimos actualizar la lista de sedes: recarga la página para verla al día.`,
+        `${ok} Pero no pudimos actualizar la lista de ${lista}: recarga la página para verla al día.`,
       );
     }
   }

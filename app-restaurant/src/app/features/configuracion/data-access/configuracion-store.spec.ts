@@ -297,6 +297,128 @@ describe('Estado de Configuración', () => {
     );
   });
 
+  it('crearZona refresca zonas y mesas y avisa', async () => {
+    api.crearZona.mockReturnValue(of(zona('11', '1', { nombre: 'Terraza' })));
+    const store = setup();
+    await store.load();
+    api.zonas.mockReturnValue(lista([zona('10', '1'), zona('11', '1', { nombre: 'Terraza' })]));
+    const result = await store.crearZona({ sucursal_id: '1', nombre: 'Terraza' }, 'k1');
+    expect(result).toBeUndefined();
+    expect(store.zonas()).toHaveLength(2);
+    expect(store.notice()?.text).toContain('Terraza');
+  });
+
+  it('nombre duplicado de zona vuelve como error del campo nombre', async () => {
+    api.crearZona.mockReturnValue(
+      problem(409, 'nombre_duplicado', 'Ya existe una zona con ese nombre.'),
+    );
+    const store = setup();
+    await store.load();
+    expect(await store.crearZona({ sucursal_id: '1', nombre: 'Zona 10' }, 'k1')).toEqual({
+      field: 'nombre',
+      message: 'Ya existe una zona con ese nombre.',
+    });
+  });
+
+  it('bajaZona con mesas activas devuelve el mensaje del servidor como aviso general', async () => {
+    api.bajaZona.mockReturnValue(problem(409, 'zona_con_mesas', 'La zona tiene mesas activas.'));
+    const store = setup();
+    await store.load();
+    expect(await store.bajaZona(store.zonas()[0], 'k1')).toBe('La zona tiene mesas activas.');
+  });
+
+  it('editarZona sin cambios no llama a la API', async () => {
+    const store = setup();
+    await store.load();
+    const z = store.zonas()[0];
+    expect(await store.editarZona(z, { nombre: z.nombre, orden_visualizacion: 0 })).toBeUndefined();
+    expect(api.editarZona).not.toHaveBeenCalled();
+  });
+
+  it('crearMesa con número repetido vuelve como error del campo numero_mesa', async () => {
+    api.crearMesa.mockReturnValue(problem(409, 'numero_mesa_duplicado', 'Ya existe esa mesa.'));
+    const store = setup();
+    await store.load();
+    expect(
+      await store.crearMesa(
+        { sucursal_id: '1', zona_id: '10', numero_mesa: '100', capacidad: 4 },
+        'k1',
+      ),
+    ).toEqual({ field: 'numero_mesa', message: 'Ya existe esa mesa.' });
+  });
+
+  it('editarMesa envía solo lo cambiado, incluido vaciar la posición con null', async () => {
+    api.editarMesa.mockReturnValue(of(mesa('100', '10', '1', { capacidad: 6 })));
+    const store = setup();
+    await store.load();
+    const m = store.mesas()[0];
+    await store.editarMesa(m, {
+      zona_id: '10',
+      numero_mesa: '100',
+      capacidad: 6,
+      posicion_x: null,
+      posicion_y: null,
+    });
+    expect(api.editarMesa).toHaveBeenCalledWith('100', { capacidad: 6 });
+  });
+
+  it('habilitarMesa alterna el estado en la fila y no deja avisos de error', async () => {
+    api.editarMesa.mockReturnValue(of(mesa('100', '10', '1', { habilitada: false })));
+    const store = setup();
+    await store.load();
+    await store.habilitarMesa(store.mesas()[0]);
+    expect(api.editarMesa).toHaveBeenCalledWith('100', { habilitada: false });
+    expect(store.mesas()[0].habilitada).toBe(false);
+    expect(store.busyId()).toBeNull();
+  });
+
+  it('habilitarMesa con error muestra el aviso y libera el bloqueo', async () => {
+    api.editarMesa.mockReturnValue(problem(409, 'mesa_inactiva', 'La mesa está dada de baja.'));
+    const store = setup();
+    await store.load();
+    await store.habilitarMesa(store.mesas()[0]);
+    expect(store.notice()).toEqual({ kind: 'error', text: 'La mesa está dada de baja.' });
+    expect(store.busyId()).toBeNull();
+  });
+
+  it('bajaMesa sin motivo del servidor vuelve como error del campo motivo', async () => {
+    api.bajaMesa.mockReturnValue(problem(422, 'motivo_requerido', 'Indica el motivo.'));
+    const store = setup();
+    await store.load();
+    expect(await store.bajaMesa(store.mesas()[0], 'x', 'k1')).toEqual({
+      field: 'motivo',
+      message: 'Indica el motivo.',
+    });
+  });
+
+  it('restaurarMesa con la zona dada de baja avisa con el mensaje del servidor', async () => {
+    api.restaurarMesa.mockReturnValue(
+      problem(
+        422,
+        'regla_de_datos',
+        'No se puede restaurar la mesa porque su zona está dada de baja.',
+      ),
+    );
+    const store = setup();
+    await store.load();
+    await store.restaurarMesa(store.mesas()[0], 'k1');
+    expect(store.notice()?.kind).toBe('error');
+    expect(store.notice()?.text).toContain('su zona está dada de baja');
+  });
+
+  it('si zonas y mesas no se pudieron refrescar tras guardar, el aviso no es de éxito simple', async () => {
+    api.crearZona.mockReturnValue(of(zona('11', '1', { nombre: 'Terraza' })));
+    const store = setup();
+    await store.load();
+    api.zonas.mockReturnValue(problem(500, 'error_interno', 'Falló.'));
+    const result = await store.crearZona({ sucursal_id: '1', nombre: 'Terraza' }, 'k1');
+    expect(result).toBeUndefined();
+    expect(store.notice()?.kind).toBe('error');
+    expect(store.notice()?.text).toContain('Se creó la zona Terraza');
+    expect(store.notice()?.text).toContain('no pudimos actualizar la lista de zonas y mesas');
+    expect(store.zonas()).toHaveLength(1);
+  });
+
   it('restaurarSede avisa y no permite dos acciones a la vez', async () => {
     let liberar: (v: Sucursal) => void = () => undefined;
     api.restaurarSucursal.mockReturnValue({
