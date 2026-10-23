@@ -35,7 +35,7 @@ export interface FormDialogData {
   submit?: string;
   danger?: boolean;
   /**
-   * Ejecuta la acción. Si devuelve una promesa (idealmente Promise<string | undefined>), el
+   * Ejecuta la acción. Si devuelve una promesa (idealmente Promise<string | FieldProblem | undefined>), el
    * diálogo espera: un texto resuelto (o un error lanzado) se muestra dentro del diálogo, que
    * se mantiene abierto con los datos escritos. Un `FieldProblem` resuelto se muestra bajo su
    * campo (o en el aviso general si el campo no existe). Un resultado vacío lo cierra. Cualquier otro

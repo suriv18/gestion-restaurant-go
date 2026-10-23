@@ -72,11 +72,14 @@ describe('Formulario de operación', () => {
     const fixture = TestBed.createComponent(FormDialog);
     fixture.componentInstance.form.controls['name'].setValue('Terraza');
     await fixture.componentInstance.submit();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Ese nombre ya existe.');
+    expect(el.querySelector('#field-name')?.getAttribute('aria-invalid')).toBe('true');
     fixture.componentInstance.form.controls['name'].setValue('Terraza 2');
     fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
-      'Ese nombre ya existe.',
-    );
+    expect(el.textContent).not.toContain('Ese nombre ya existe.');
+    expect(el.querySelector('#field-name')?.getAttribute('aria-invalid')).toBe('false');
   });
 
   it('un error de un campo que no existe cae al aviso general', async () => {
