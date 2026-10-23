@@ -25,7 +25,8 @@ const unico = String(Date.now()).slice(-8);
 const codigo = `E2E${unico}`;
 const sede = `Sede E2E ${unico}`;
 const zona = `Zona E2E ${unico}`;
-const numero = `E${unico.slice(-4)}`;
+// numero_mesa es VARCHAR(20) y único por sede: 'E2E-' + 8 dígitos + 2 al azar = 14 caracteres.
+const numero = `E2E-${unico}${Math.floor(Math.random() * 90 + 10)}`;
 
 async function entrar(page: Page) {
   await page.goto('/login');
@@ -44,18 +45,15 @@ test('crea una sede, una zona y una mesa, da de baja la mesa con motivo y la res
   await entrar(page);
   await expect(page.getByRole('heading', { name: 'Tu restaurante' })).toBeVisible();
 
-  // Sede: el administrador crea la sede pero no la ve en «Zonas y mesas» hasta que se la asignen.
+  // Sede: el backend no le asigna la sede nueva a quien la crea, así que ni el listado ni
+  // «Zonas y mesas» la devuelven hasta que se asigne; solo se verifica el aviso de éxito.
   await page.getByRole('button', { name: 'Nueva sede' }).click();
   await dialogo(page).getByLabel('Código', { exact: true }).fill(codigo);
   await dialogo(page).getByLabel('Nombre').fill(sede);
   await dialogo(page).getByLabel('Dirección').fill('Av. de la Prueba 1');
   await dialogo(page).getByRole('button', { name: 'Crear sede' }).click();
+  await expect(page.getByText(new RegExp(`Se creó la sede ${sede}`))).toBeVisible();
   await expect(page.getByText(/Asígnala a tu equipo en Equipo y accesos/)).toBeVisible();
-  await expect(
-    page
-      .locator('section[aria-labelledby="sedes-title"]')
-      .getByRole('heading', { name: sede, level: 3 }),
-  ).toBeVisible();
 
   // El mismo código otra vez: error en el campo, el diálogo sigue abierto.
   await page.getByRole('button', { name: 'Nueva sede' }).click();
@@ -88,7 +86,10 @@ test('crea una sede, una zona y una mesa, da de baja la mesa con motivo y la res
   await page.getByRole('button', { name: `Dar de baja mesa ${numero}` }).click();
   await dialogo(page).getByLabel('Motivo').fill('Prueba E2E');
   await dialogo(page).getByRole('button', { name: 'Confirmar baja' }).click();
-  await expect(page.getByText('Motivo de la baja: Prueba E2E')).toBeVisible();
+  const filaMesa = page
+    .locator('div.setting-block')
+    .filter({ has: page.getByRole('heading', { name: `Mesa ${numero} ·` }) });
+  await expect(filaMesa.getByText('Motivo de la baja: Prueba E2E')).toBeVisible();
   await page.getByRole('button', { name: `Restaurar mesa ${numero}` }).click();
   await expect(page.getByText(`La mesa ${numero} volvió a estar activa.`)).toBeVisible();
 });

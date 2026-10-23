@@ -91,6 +91,23 @@ describe('Formulario de operación', () => {
     expect(fixture.componentInstance.error()).toBe('Dato inválido.');
     expect(close).not.toHaveBeenCalled();
   });
+
+  it('un campo heredado como «toString» no cuenta como campo del formulario', async () => {
+    commit.mockResolvedValue({ field: 'toString', message: 'Dato inválido.' });
+    const fixture = TestBed.createComponent(FormDialog);
+    fixture.componentInstance.form.controls['name'].setValue('Terraza');
+    await fixture.componentInstance.submit();
+    expect(fixture.componentInstance.error()).toBe('Dato inválido.');
+  });
+
+  it('un objeto con field o message que no son texto no se toma como error de campo', async () => {
+    commit.mockResolvedValue({ field: 1, message: 2 });
+    const fixture = TestBed.createComponent(FormDialog);
+    fixture.componentInstance.form.controls['name'].setValue('Terraza');
+    await fixture.componentInstance.submit();
+    expect(fixture.componentInstance.error()).toBe('');
+    expect(close).toHaveBeenCalledWith(true);
+  });
 });
 
 describe('Formulario con acción asíncrona', () => {

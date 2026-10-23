@@ -78,4 +78,16 @@ describe('Sección Tu restaurante', () => {
     expect(el.textContent).toContain('La moneda no es válida.');
     expect((el.querySelector('#negocio-moneda') as HTMLInputElement).value).toBe('xx');
   });
+
+  it('un error de un campo desconocido cae al aviso general', async () => {
+    const editar = vi.fn().mockResolvedValue({ field: 'otro', message: 'Dato inválido.' });
+    const { fixture, el } = setup(true, editar);
+    const moneda = el.querySelector('#negocio-moneda') as HTMLInputElement;
+    moneda.value = 'xx';
+    moneda.dispatchEvent(new Event('input'));
+    (el.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el.querySelector('[role="alert"]')?.textContent).toContain('Dato inválido.');
+  });
 });

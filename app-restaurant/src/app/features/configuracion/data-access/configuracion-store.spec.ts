@@ -182,6 +182,16 @@ describe('Estado de Configuración', () => {
     expect(store.status()).toBe('ready');
   });
 
+  it('si las sedes no cargan, el salón sigue operable con las sedes que salen de los datos', async () => {
+    api.sucursales.mockReturnValue(problem(403, 'prohibido', 'No tienes permiso.'));
+    const store = setup();
+    await store.load();
+    expect(store.errors().sedes).toBeTruthy();
+    expect(store.sedesSalon()).toEqual([{ id: '1', nombre: 'Sede 1' }]);
+    expect(store.sedeActual()).toBe('1');
+    expect(store.zonasSede()).toHaveLength(1);
+  });
+
   it('las sedes del salón son solo las activas con nombre real cuando se pueden ver', async () => {
     const store = setup();
     await store.load();

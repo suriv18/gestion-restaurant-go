@@ -61,6 +61,13 @@ describe('Sección Sedes', () => {
     );
   });
 
+  it('los botones de cada fila llevan el nombre de su sede en el aria-label', () => {
+    const { el } = setup(true);
+    const etiquetas = [...el.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
+    expect(etiquetas).toContain('Editar sede Sede 1');
+    expect(etiquetas).toContain('Dar de baja sede Sede 1');
+  });
+
   it('sin permiso de escritura no hay botones de acción', () => {
     const { el } = setup(false);
     expect(el.querySelectorAll('button')).toHaveLength(0);

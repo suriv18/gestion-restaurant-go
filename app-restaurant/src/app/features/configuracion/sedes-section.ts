@@ -41,8 +41,20 @@ import { ConfiguracionStore } from './data-access/configuracion-store';
                 </span>
                 @if (store.puedeEditarSedes()) {
                   @if (sede.es_activo) {
-                    <button type="button" class="btn" (click)="editar(sede)">Editar</button>
-                    <button type="button" class="btn danger" (click)="baja(sede)">
+                    <button
+                      type="button"
+                      class="btn"
+                      [attr.aria-label]="'Editar sede ' + sede.nombre"
+                      (click)="editar(sede)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      class="btn danger"
+                      [attr.aria-label]="'Dar de baja sede ' + sede.nombre"
+                      (click)="baja(sede)"
+                    >
                       Dar de baja
                     </button>
                   } @else {

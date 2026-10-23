@@ -99,7 +99,8 @@ export class ConfiguracionStore {
 
   /** Sedes elegibles: con permiso de sedes, las activas con su nombre; si no, las que aparecen en los datos. */
   readonly sedesSalon = computed<SedeRef[]>(() => {
-    if (this.puedeVerSedes()) {
+    // Si la lista de sedes falló, el salón sigue operando con las sedes que salen de zonas y mesas.
+    if (this.puedeVerSedes() && !this.errors().sedes) {
       return this.sedes()
         .filter((s) => s.es_activo)
         .map((s) => ({ id: s.id, nombre: s.nombre }));

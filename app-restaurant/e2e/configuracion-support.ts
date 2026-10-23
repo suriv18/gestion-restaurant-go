@@ -117,8 +117,9 @@ export async function mockConfiguracionApi(page: Page): Promise<ConfiguracionMoc
     if (path === '/negocio' && method === 'PATCH') return json(Object.assign(negocio, body));
     if (path === '/sucursales' && method === 'GET') return lista(sedes);
     if (path === '/sucursales' && method === 'POST') {
+      // Como el backend: quien crea la sede no queda asignado a ella, así que GET /sucursales
+      // (solo sedes visibles para el actor) no la devuelve después.
       const nueva = { ...sedes[0], id: String(++seq), es_activo: true, ...body };
-      sedes.push(nueva);
       return json(nueva, 201);
     }
     if (path.startsWith('/sucursales/') && path.endsWith('/baja')) {

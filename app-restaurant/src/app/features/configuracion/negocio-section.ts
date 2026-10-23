@@ -121,7 +121,13 @@ export class NegocioSection {
     try {
       const resultado = await this.store.editarNegocio(cambios);
       if (typeof resultado === 'string') this.aviso.set(resultado);
-      else if (resultado) this.errores.set({ [resultado.field]: resultado.message });
+      else if (resultado) {
+        if (CAMPOS.some((c) => c.key === resultado.field)) {
+          this.errores.set({ [resultado.field]: resultado.message });
+        } else {
+          this.aviso.set(resultado.message);
+        }
+      }
     } finally {
       this.guardando.set(false);
     }

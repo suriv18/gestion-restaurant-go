@@ -25,7 +25,9 @@ export interface FieldProblem {
 }
 
 function isFieldProblem(value: unknown): value is FieldProblem {
-  return typeof value === 'object' && value !== null && 'field' in value && 'message' in value;
+  if (typeof value !== 'object' || value === null) return false;
+  const { field, message } = value as Record<string, unknown>;
+  return typeof field === 'string' && typeof message === 'string';
 }
 
 export interface FormDialogData {
@@ -195,7 +197,7 @@ export class FormDialog {
         return;
       }
       if (isFieldProblem(outcome)) {
-        if (outcome.field in this.form.controls) {
+        if (Object.hasOwn(this.form.controls, outcome.field)) {
           this.fieldErrors.set({ [outcome.field]: outcome.message });
           this.form.controls[outcome.field].markAsTouched();
         } else {

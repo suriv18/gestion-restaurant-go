@@ -95,6 +95,7 @@ test.describe('Configuración con la API simulada', () => {
     await dialogo(page).getByLabel('Nombre').fill('Sede Norte');
     await dialogo(page).getByLabel('Dirección').fill('Calle Norte 1');
     await dialogo(page).getByRole('button', { name: 'Crear sede' }).click();
+    await expect(page.getByText(/Se creó la sede/)).toBeVisible();
     await expect(page.getByText(/Asígnala a tu equipo en Equipo y accesos/)).toBeVisible();
     const alta = mock.llamadas.find((c) => c.method === 'POST' && c.path === '/sucursales');
     expect(alta?.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
@@ -125,7 +126,9 @@ test.describe('Configuración con la API simulada', () => {
 
   test('baja de sede pide motivo y la sede puede restaurarse', async ({ page }) => {
     const mock = await abrir(page, TODOS);
-    await seccionSedes(page).getByRole('button', { name: 'Dar de baja', exact: true }).click();
+    await seccionSedes(page)
+      .getByRole('button', { name: 'Dar de baja sede Sede Principal', exact: true })
+      .click();
     await dialogo(page).getByLabel('Motivo').fill('Cierre temporal');
     await dialogo(page).getByRole('button', { name: 'Confirmar baja' }).click();
     await expect(page.getByText('Motivo de la baja: Cierre temporal')).toBeVisible();
@@ -221,6 +224,10 @@ test.describe('Configuración con la API simulada', () => {
     const sedes = seccionSedes(page);
     await expect(sedes.getByText('No pudimos cargar las sedes')).toBeVisible();
     await expect(sedes.getByRole('alert')).toContainText('No tienes permiso para ver las sedes.');
+    // Las demás secciones siguen funcionando: el salón conserva sus zonas y sus acciones.
+    await expect(page.getByRole('heading', { name: 'Salón' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Nueva zona' })).toBeVisible();
+    await expect(page.getByText('Esta sede todavía no tiene zonas.')).toHaveCount(0);
     await sedes.getByRole('button', { name: 'Reintentar', exact: true }).click();
     await expect(sedes.getByText('Sede Principal')).toBeVisible();
     await expect(sedes.getByText('No pudimos cargar las sedes')).toHaveCount(0);

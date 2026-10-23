@@ -98,7 +98,7 @@ En Linux CI: `npx playwright install --with-deps chromium`.
 
 Pipeline: `.github/workflows/app-restaurant-ci.yml`. La revisión y las decisiones de migración están en `docs/estructura/REVISION_FRONTEND_IMPLEMENTACION.md`.
 
-Resultado local: **189 pruebas unitarias/de componentes (24 archivos) y 141 E2E aprobados** (15 omitidas: las del API real, opt-in), además de lint, formato y build. Ver [VERIFICACION.md](VERIFICACION.md) para alcance y evidencia.
+Resultado local: **194 pruebas unitarias/de componentes (24 archivos) y 141 E2E aprobados** (15 omitidas: las del API real, opt-in), además de lint, formato y build. Ver [VERIFICACION.md](VERIFICACION.md) para alcance y evidencia.
 
 ## Versiones
 
