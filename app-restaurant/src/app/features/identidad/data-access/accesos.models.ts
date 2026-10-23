@@ -1,3 +1,5 @@
+import type { Pagina } from '../../../core/http/collect';
+
 /** Contratos del API de administración de accesos. Los ids viajan como cadenas. */
 
 export interface RolRef {
@@ -34,10 +36,7 @@ export interface Rol {
   es_activo: boolean;
 }
 
-export interface Pagina<T> {
-  items: T[];
-  nextCursor: string | null;
-}
+export type { Pagina };
 
 export interface UsuarioCreado {
   id: string;

@@ -33,3 +33,9 @@ export function describeProblem(error: unknown): string {
   if (error.status >= 400 && error.status < 500 && problem.detail) return problem.detail;
   return GENERIC_SERVER;
 }
+
+/** Código estable del rechazo (`code` del problem+json), si el servidor lo envió. */
+export function problemCode(error: unknown): string | undefined {
+  if (!(error instanceof HttpErrorResponse)) return undefined;
+  return ((error.error ?? {}) as Problem).code;
+}

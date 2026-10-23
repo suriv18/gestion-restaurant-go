@@ -1,13 +1,12 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthSession } from '../../../core/auth/auth-session';
+import { collect } from '../../../core/http/collect';
 import { describeProblem } from '../../../core/http/problem';
 import { AccesosApi } from './accesos-api';
-import { Pagina, Rol, SucursalRef, UsuarioEquipo } from './accesos.models';
+import { Rol, SucursalRef, UsuarioEquipo } from './accesos.models';
 
 export const ADMIN_PERMISSION = 'USUARIO_ADMINISTRAR';
-// Tope defensivo al recorrer páginas: un equipo de restaurante cabe de sobra.
-const MAX_PAGES = 20;
 
 export interface Notice {
   kind: 'ok' | 'error';
@@ -147,16 +146,4 @@ export class EquipoStore {
   private say(kind: Notice['kind'], text: string): void {
     this.notice.set({ kind, text });
   }
-}
-
-async function collect<T>(fetchPage: (cursor?: string) => Promise<Pagina<T>>): Promise<T[]> {
-  const all: T[] = [];
-  let cursor: string | undefined;
-  for (let i = 0; i < MAX_PAGES; i++) {
-    const page = await fetchPage(cursor);
-    all.push(...page.items);
-    if (!page.nextCursor) return all;
-    cursor = page.nextCursor;
-  }
-  return all;
 }
