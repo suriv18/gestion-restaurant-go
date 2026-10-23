@@ -53,6 +53,41 @@ describe('Formulario de operación', () => {
     expect(commit).toHaveBeenCalledWith({ name: 'Ana', email: 'ana@example.com' });
     expect(close).toHaveBeenCalledWith(true);
   });
+
+  it('muestra el error de campo bajo el campo y conserva lo escrito', async () => {
+    commit.mockResolvedValue({ field: 'name', message: 'Ese nombre ya existe.' });
+    const fixture = TestBed.createComponent(FormDialog);
+    fixture.componentInstance.form.controls['name'].setValue('Terraza');
+    await fixture.componentInstance.submit();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Ese nombre ya existe.');
+    expect(el.querySelector('#field-name')?.getAttribute('aria-invalid')).toBe('true');
+    expect(fixture.componentInstance.form.controls['name'].value).toBe('Terraza');
+    expect(close).not.toHaveBeenCalled();
+  });
+
+  it('borra el error del campo al editarlo', async () => {
+    commit.mockResolvedValue({ field: 'name', message: 'Ese nombre ya existe.' });
+    const fixture = TestBed.createComponent(FormDialog);
+    fixture.componentInstance.form.controls['name'].setValue('Terraza');
+    await fixture.componentInstance.submit();
+    fixture.componentInstance.form.controls['name'].setValue('Terraza 2');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
+      'Ese nombre ya existe.',
+    );
+  });
+
+  it('un error de un campo que no existe cae al aviso general', async () => {
+    commit.mockResolvedValue({ field: 'otro', message: 'Dato inválido.' });
+    const fixture = TestBed.createComponent(FormDialog);
+    fixture.componentInstance.form.controls['name'].setValue('Terraza');
+    await fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.error()).toBe('Dato inválido.');
+    expect(close).not.toHaveBeenCalled();
+  });
 });
 
 describe('Formulario con acción asíncrona', () => {
