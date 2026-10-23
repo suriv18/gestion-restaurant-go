@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DIALOG_DATA, Dialog, DialogRef } from '@angular/cdk/dialog';
 import { FormControl, FormRecord, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Injectable } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Icon } from './icon';
 export interface Field {
   key: string;
@@ -16,6 +17,19 @@ export interface Field {
   options?: { value: string | number; label: string }[];
   hint?: string;
 }
+
+/** Rechazo del servidor asociado a un campo: el diálogo lo pinta bajo ese campo. */
+export interface FieldProblem {
+  field: string;
+  message: string;
+}
+
+function isFieldProblem(value: unknown): value is FieldProblem {
+  if (typeof value !== 'object' || value === null) return false;
+  const { field, message } = value as Record<string, unknown>;
+  return typeof field === 'string' && typeof message === 'string';
+}
+
 export interface FormDialogData {
   title: string;
   description: string;
@@ -23,9 +37,10 @@ export interface FormDialogData {
   submit?: string;
   danger?: boolean;
   /**
-   * Ejecuta la acción. Si devuelve una promesa (idealmente Promise<string | undefined>), el
+   * Ejecuta la acción. Si devuelve una promesa (idealmente Promise<string | FieldProblem | undefined>), el
    * diálogo espera: un texto resuelto (o un error lanzado) se muestra dentro del diálogo, que
-   * se mantiene abierto con los datos escritos; un resultado vacío lo cierra. Cualquier otro
+   * se mantiene abierto con los datos escritos. Un `FieldProblem` resuelto se muestra bajo su
+   * campo (o en el aviso general si el campo no existe). Un resultado vacío lo cierra. Cualquier otro
    * valor de retorno se ignora y el diálogo cierra al instante (acciones síncronas).
    */
   commit: (values: Record<string, string>) => unknown;
@@ -63,7 +78,7 @@ export interface FormDialogData {
                   [id]="'field-' + field.key"
                   [formControlName]="field.key"
                   [attr.aria-label]="field.label"
-                  [attr.aria-invalid]="invalid(field.key)"
+                  [attr.aria-invalid]="flagged(field.key)"
                 >
                   @for (option of field.options; track option.value) {
                     <option [value]="option.value">{{ option.label }}</option>
@@ -75,7 +90,7 @@ export interface FormDialogData {
                   [id]="'field-' + field.key"
                   [formControlName]="field.key"
                   [attr.aria-label]="field.label"
-                  [attr.aria-invalid]="invalid(field.key)"
+                  [attr.aria-invalid]="flagged(field.key)"
                   rows="3"
                 ></textarea>
               }
@@ -89,14 +104,16 @@ export interface FormDialogData {
                   [attr.max]="field.max ?? null"
                   [attr.step]="field.step ?? null"
                   [attr.autocomplete]="field.autocomplete ?? null"
-                  [attr.aria-invalid]="invalid(field.key)"
+                  [attr.aria-invalid]="flagged(field.key)"
                 />
               }
             }
             @if (field.hint) {
               <small>{{ field.hint }}</small>
             }
-            @if (invalid(field.key)) {
+            @if (fieldErrors()[field.key]; as message) {
+              <small class="text-red-700" role="alert">{{ message }}</small>
+            } @else if (invalid(field.key)) {
               <small class="text-red-700">Revisa este campo.</small>
             }
           </label>
@@ -141,9 +158,25 @@ export class FormDialog {
       }),
     ),
   );
+  readonly fieldErrors = signal<Record<string, string>>({});
+  constructor() {
+    for (const [key, control] of Object.entries(this.form.controls)) {
+      control.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+        if (!this.fieldErrors()[key]) return;
+        this.fieldErrors.update((current) => {
+          const next = { ...current };
+          delete next[key];
+          return next;
+        });
+      });
+    }
+  }
   invalid(key: string): boolean {
     const c = this.form.controls[key];
     return c.touched && c.invalid;
+  }
+  flagged(key: string): boolean {
+    return this.invalid(key) || !!this.fieldErrors()[key];
   }
   async submit(): Promise<void> {
     if (this.busy()) return;
@@ -154,12 +187,22 @@ export class FormDialog {
     }
     this.busy.set(true);
     this.error.set('');
+    this.fieldErrors.set({});
     try {
       const result = this.data.commit(this.form.getRawValue());
       // Solo se espera si la acción es asíncrona: la síncrona cierra sin ceder el turno.
-      const message = result instanceof Promise ? await result : undefined;
-      if (typeof message === 'string' && message) {
-        this.error.set(message);
+      const outcome = result instanceof Promise ? await result : undefined;
+      if (typeof outcome === 'string' && outcome) {
+        this.error.set(outcome);
+        return;
+      }
+      if (isFieldProblem(outcome)) {
+        if (Object.hasOwn(this.form.controls, outcome.field)) {
+          this.fieldErrors.set({ [outcome.field]: outcome.message });
+          this.form.controls[outcome.field].markAsTouched();
+        } else {
+          this.error.set(outcome.message);
+        }
         return;
       }
       this.ref.close(true);

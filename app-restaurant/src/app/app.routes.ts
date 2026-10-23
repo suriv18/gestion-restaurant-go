@@ -91,7 +91,7 @@ export const routes: Routes = [
         path: 'configuracion',
         title: 'Configuracion · Mesa',
         loadComponent: () =>
-          import('./features/catalogos/configuracion-page').then((m) => m.ConfiguracionPage),
+          import('./features/configuracion/configuracion-page').then((m) => m.ConfiguracionPage),
       },
       {
         path: '**',

@@ -33,6 +33,7 @@ Implementación Angular nativa: no usa iframe, inyección de HTML ni el controla
 
 - **Login real** contra el backend (`POST /api/v1/auth/login`, JWT con sesión en servidor): validación, estados de carga y errores (credenciales, conexión, servicio), control de visibilidad de contraseña y destino tras entrar. Las pantallas de operación **exigen sesión**; «Explorar la demo» es un modo explícito y separado. La recuperación de contraseña sigue sin existir (pendiente en DEC-06). Ver `LOGIN-DISENO.md`.
 - **Equipo y accesos conectado al backend** (`features/identidad`): con sesión real lista a las personas con sus roles y sedes, y permite crear una persona (alta + rol + sede), cambiar su rol, darla de baja con motivo (cierra sus sesiones) y restaurarla. Los errores del servidor (duplicado, último administrador, sede no autorizada…) aparecen dentro del diálogo, que conserva lo escrito; cada formulario usa una `Idempotency-Key` propia, así un reintento no duplica. La pantalla solo ofrece acciones a quien tiene `USUARIO_ADMINISTRAR` (el servidor lo vuelve a comprobar). En modo demostración sigue mostrando los datos de ejemplo.
+- **Configuración conectada al backend** (`features/configuracion`): con sesión real edita los datos del negocio (el RUC no se modifica), gestiona sedes (alta, edición, baja con motivo y restauración) y las zonas y mesas de cada sede (número, zona, capacidad, posición opcional, interruptor de habilitación, baja con motivo y restauración). Cada sección se muestra según los permisos `NEGOCIO_VER`/`NEGOCIO_ADMINISTRAR`, `SUCURSAL_VER`/`SUCURSAL_ADMINISTRAR` y `MESA_VER`/`MESA_ADMINISTRAR`: sin permiso de ver la sección no aparece, y sin el de administrar queda en solo lectura; el servidor vuelve a comprobarlo. Los errores del servidor aparecen en el campo o en el diálogo, que conserva lo escrito, y cada formulario usa su propia `Idempotency-Key`. Patrón: `configuracion-page` es un contenedor que elige entre `configuracion-real` (con el `ConfiguracionStore`, provisto en la página) y el HTML de demostración. En modo demostración sigue mostrando los datos de ejemplo.
 - Menú de usuario en el header: Mi perfil, Tema (Claro/Oscuro/Sistema) y Cerrar sesión. Preferencia local en `app-restaurant.theme`, compartida por páginas, login y diálogos. Cerrar sesión vuelve al login conservando los datos de la demo.
 - Resumen, salón/pedidos, cocina, reservas y delivery.
 - Caja, pagos parciales/mixtos, vuelto, devolución y cierre de turno.
@@ -43,7 +44,7 @@ Implementación Angular nativa: no usa iframe, inyección de HTML ni el controla
 
 **Modo demostración**, identificado permanentemente en la interfaz. Persistencia local en `app-restaurant.demo.v1`, independiente del prototipo. Los datos iniciales son ficticios. No es una aplicación multiusuario ni offline transaccional.
 
-El backend implementa hoy el acceso (`/auth/login`, `/auth/logout`, `/sesion`) y la administración de roles, permisos y usuarios (consumida por «Equipo y accesos»); **el resto de las pantallas sigue usando la proyección local de demostración** (aún no hay endpoints de pedidos, caja, carta, etc.). Autenticación real ya integrada; permisos por pantalla, sucursales múltiples, sucursales múltiples, concurrencia, impresión operativa, integración bancaria y SUNAT requieren los endpoints y decisiones pendientes del expediente. Los documentos mostrados no tienen validez tributaria.
+El backend implementa hoy el acceso (`/auth/login`, `/auth/logout`, `/sesion`) y la administración de roles, permisos y usuarios (consumida por «Equipo y accesos») y la configuración del negocio, las sedes, las zonas y las mesas (consumida por «Configuración»); **el resto de las pantallas, incluidos el Salón de pedidos, el plano y el resumen, sigue usando la proyección local de demostración hasta I3** (aún no hay endpoints de pedidos, caja, carta, etc.). Autenticación real ya integrada; permisos por pantalla, sucursales múltiples, concurrencia, impresión operativa, integración bancaria y SUNAT requieren los endpoints y decisiones pendientes del expediente. Los documentos mostrados no tienen validez tributaria.
 
 ## Estructura
 
@@ -58,7 +59,7 @@ src/app/
     engine/                # Reglas y semilla del prototipo, con frontera tipada
   features/
     atencion/ produccion/ caja/ abastecimiento/
-    catalogos/ identidad/ comprobantes/ consulta/
+    catalogos/ identidad/ comprobantes/ consulta/ configuracion/
   shared/
     models/                # Proyecciones de UI y payloads tipados
     ui/                    # Diálogos, campos, cabeceras, importes, iconos
@@ -66,6 +67,8 @@ e2e/
   restaurant.spec.ts
   login.spec.ts
   user-menu.spec.ts
+  equipo.spec.ts configuracion.spec.ts   # con la API simulada
+  *.real-api.spec.ts                    # opt-in, contra el backend real
 ```
 
 El motor de demostración conserva el JavaScript de reglas del prototipo, formateado y aislado, con declaraciones TypeScript explícitas. No es el dominio de producción. Todas las páginas y stores Angular están en TypeScript estricto. Las clases CSS de referencia mantienen el diseño de Mesa; Tailwind se usa para composición y responsive, y CDK para foco/overlay.
@@ -95,7 +98,7 @@ En Linux CI: `npx playwright install --with-deps chromium`.
 
 Pipeline: `.github/workflows/app-restaurant-ci.yml`. La revisión y las decisiones de migración están en `docs/estructura/REVISION_FRONTEND_IMPLEMENTACION.md`.
 
-Resultado local: **55 pruebas unitarias/de componentes y 48 E2E aprobados**, además de lint, formato y build. Ver [VERIFICACION.md](VERIFICACION.md) para alcance y evidencia.
+Resultado local: **194 pruebas unitarias/de componentes (24 archivos) y 141 E2E aprobados** (15 omitidas: las del API real, opt-in), además de lint, formato y build. Ver [VERIFICACION.md](VERIFICACION.md) para alcance y evidencia.
 
 ## Versiones
 

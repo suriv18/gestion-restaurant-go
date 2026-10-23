@@ -1,15 +1,16 @@
 # Verificación local
 
-Fecha: 17 de octubre de 2026, America/Lima. Windows, Node 24.14.1, npm 11.14.0.
+Fecha: 22 de octubre de 2026, America/Lima. Windows, Node 24.14.1, npm 11.14.0.
 
 | Comprobación | Resultado |
 | --- | --- |
 | Angular ESLint (TypeScript y plantillas accesibles) | Sin errores ni advertencias |
 | Prettier | Todos los archivos comprobados cumplen formato |
-| Vitest / Angular CLI | **123 pruebas aprobadas, 15 archivos spec** (incluye sesión, interceptores, guards, login, estado de Equipo y accesos y el diálogo asíncrono) |
-| Build de producción | Aprobado; entrada 333.82 kB, transferencia estimada 89.16 kB, dentro del presupuesto de 500 kB |
-| Playwright | **99 pruebas aprobadas** (33 por dispositivo), 0 fallos; 12 omitidas (las del API real, que son opt-in) |
+| Vitest / Angular CLI | **194 pruebas aprobadas, 24 archivos spec** (incluye sesión, interceptores, guards, login, estado de Equipo y accesos, estado y secciones de Configuración y el diálogo asíncrono) |
+| Build de producción | Aprobado; entrada 334.09 kB, transferencia estimada 89.15 kB, dentro del presupuesto de 500 kB |
+| Playwright | **141 pruebas aprobadas**, 0 fallos; 15 omitidas (las del API real, que son opt-in) |
 | Integración con el API real | `e2e/login.real-api.spec.ts` y `e2e/equipo.real-api.spec.ts` aprobados contra el stack de Docker: login y cierre que revoca el token; alta de una persona, duplicado rechazado con el mensaje del servidor, cambio de rol, baja (la persona recibe 401 al entrar), restauración, y 403 real para quien no administra |
+| Integración de Configuración con el API real | `e2e/configuracion.real-api.spec.ts` escrita (sede con su aviso de éxito —sin esperar verla en el listado, porque el backend no se la asigna a quien la crea—, código repetido, zona, mesa, baja con motivo y restauración); **no se ha ejecutado contra el API real**: requiere `E2E_API_USER` y `E2E_API_PASSWORD`. Sin ellas queda omitida (verificado) |
 | Rutas | Login y las 14 pantallas de operación cargan sin errores JavaScript y sin desbordamiento horizontal en los tres tamaños |
 
 ## Entornos E2E
@@ -40,6 +41,7 @@ La emulación comprueba adaptación e interacción. No sustituye pruebas en hard
 14. Abrir el menú de usuario con teclado, consultar Mi perfil, cerrar con Escape/clic exterior y restaurar el foco.
 15. Persistir el tema, recorrer las 14 pantallas en oscuro, comprobar diálogos y seguir cambios de la apariencia del sistema.
 16. Cerrar sesión desde el header, volver al login y conservar tanto el tema como los datos de la demo.
+17. Configuración (con la API simulada): negocio editable con el RUC fijo; alta, edición, baja con motivo y restauración de sede, con el aviso de asignación; zonas (incluido el 409 de zona con mesas) y mesas con su interruptor, baja con motivo y restauración; solo lectura con `MESA_VER`; sesión sin permisos de configuración; modo demostración.
 
 ## Evidencia y reproducción
 
