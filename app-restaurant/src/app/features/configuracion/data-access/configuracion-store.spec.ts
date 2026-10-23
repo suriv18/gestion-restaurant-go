@@ -146,6 +146,8 @@ describe('Estado de Configuración', () => {
     await store.load();
     expect(api.negocio).not.toHaveBeenCalled();
     expect(api.sucursales).not.toHaveBeenCalled();
+    expect(store.zonas()).toHaveLength(1);
+    expect(store.mesas()).toHaveLength(1);
     expect(store.sedesSalon()).toEqual([{ id: '1', nombre: 'Sede 1' }]);
     expect(store.puedeEditarSalon()).toBe(false);
   });
@@ -166,6 +168,18 @@ describe('Estado de Configuración', () => {
     expect(store.errors().negocio).toBe('No tienes permiso para realizar esta acción.');
     expect(store.errors().salon).toBeUndefined();
     expect(store.zonas()).toHaveLength(1);
+  });
+
+  it('un fallo al cargar las sedes lo marca en su sección y las demás cargan', async () => {
+    api.sucursales.mockReturnValue(problem(500, 'error_interno', 'Falló.'));
+    const store = setup();
+    await store.load();
+    expect(store.errors().sedes).toBeTruthy();
+    expect(store.sedes()).toEqual([]);
+    expect(store.negocio()).not.toBeNull();
+    expect(store.zonas()).toHaveLength(1);
+    expect(store.mesas()).toHaveLength(1);
+    expect(store.status()).toBe('ready');
   });
 
   it('las sedes del salón son solo las activas con nombre real cuando se pueden ver', async () => {
@@ -241,6 +255,35 @@ describe('Estado de Configuración', () => {
     expect(api.editarSucursal).not.toHaveBeenCalled();
     await store.editarSede(original, { nombre: 'Centro' });
     expect(api.editarSucursal).toHaveBeenCalledWith('1', { nombre: 'Centro' });
+    expect(store.notice()).toEqual({
+      kind: 'ok',
+      text: 'Guardamos los cambios de la sede Sede 1.',
+    });
+    expect(api.sucursales).toHaveBeenCalledTimes(2);
+  });
+
+  it('si la lista no se pudo refrescar tras guardar, el aviso no es de éxito simple', async () => {
+    api.crearSucursal.mockReturnValue(of(sede('3')));
+    api.sucursales
+      .mockReturnValueOnce(lista([sede('1')]))
+      .mockReturnValue(problem(500, 'error_interno', 'Falló.'));
+    const store = setup();
+    await store.load();
+    const result = await store.crearSede({ codigo: 'S3', nombre: 'Sede 3', direccion: 'x' }, 'k1');
+    expect(result).toBeUndefined();
+    expect(store.notice()?.kind).toBe('error');
+    expect(store.notice()?.text).toContain('Se creó la sede Sede 3');
+    expect(store.notice()?.text).toContain('no pudimos actualizar la lista de sedes');
+    expect(store.sedes()).toHaveLength(1);
+  });
+
+  it('restaurarSede con rechazo avisa del error y libera el bloqueo', async () => {
+    api.restaurarSucursal.mockReturnValue(problem(409, 'conflicto', 'No se pudo restaurar.'));
+    const store = setup();
+    await store.load();
+    await store.restaurarSede(store.sedes()[1], 'k1');
+    expect(store.notice()).toEqual({ kind: 'error', text: 'No se pudo restaurar.' });
+    expect(store.busyId()).toBeNull();
   });
 
   it('bajaSede con la última sede activa devuelve el mensaje del servidor', async () => {
@@ -272,8 +315,11 @@ describe('Estado de Configuración', () => {
     expect(store.busyId()).toBe('2');
     await store.restaurarSede(inactiva, 'k2');
     expect(api.restaurarSucursal).toHaveBeenCalledTimes(1);
+    api.sucursales.mockReturnValue(lista([sede('1'), sede('2')]));
     liberar(sede('2'));
     await primera;
     expect(store.busyId()).toBeNull();
+    expect(store.notice()).toEqual({ kind: 'ok', text: 'La sede Sede 2 volvió a estar activa.' });
+    expect(store.sedes()[1].es_activo).toBe(true);
   });
 });

@@ -193,8 +193,10 @@ export class ConfiguracionStore {
   async restaurarSede(sede: Sucursal, key: string): Promise<void> {
     await this.conBloqueo(sede.id, async () => {
       await firstValueFrom(this.api.restaurarSucursal(sede.id, key));
-      await this.refrescarSedes();
-      this.say('ok', `La sede ${sede.nombre} volvió a estar activa.`);
+      this.avisarTrasRefresco(
+        await this.refrescarSedes(),
+        `La sede ${sede.nombre} volvió a estar activa.`,
+      );
     });
   }
 
@@ -242,8 +244,7 @@ export class ConfiguracionStore {
     } catch (error) {
       return this.comoError(error);
     }
-    await this.refrescarSedes();
-    this.say('ok', ok);
+    this.avisarTrasRefresco(await this.refrescarSedes(), ok);
     return undefined;
   }
 
@@ -279,11 +280,25 @@ export class ConfiguracionStore {
     }
   }
 
-  private async refrescarSedes(): Promise<void> {
+  /** Vuelve a pedir las sedes; devuelve si lo logró (si no, la lista queda desactualizada). */
+  private async refrescarSedes(): Promise<boolean> {
     try {
       this.sedes.set(await collect((c) => firstValueFrom(this.api.sucursales(c))));
-    } catch (error) {
-      this.say('error', `No se pudo actualizar la lista de sedes: ${describeProblem(error)}`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Aviso tras una acción ya hecha: éxito, o éxito con advertencia si la lista no se pudo actualizar. */
+  private avisarTrasRefresco(refrescada: boolean, ok: string): void {
+    if (refrescada) {
+      this.say('ok', ok);
+    } else {
+      this.say(
+        'error',
+        `${ok} Pero no pudimos actualizar la lista de sedes: recarga la página para verla al día.`,
+      );
     }
   }
 }
