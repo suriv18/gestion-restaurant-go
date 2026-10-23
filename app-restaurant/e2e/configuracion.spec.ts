@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { mockConfiguracionApi } from './configuracion-support';
+import { mockConfiguracionApi, type ConfiguracionMock } from './configuracion-support';
 import { enterDemo, mockAuthApi } from './support';
 
 const TODOS = [
@@ -11,7 +11,11 @@ const TODOS = [
   'MESA_ADMINISTRAR',
 ];
 
-async function abrir(page: Page, permisos: string[]) {
+async function abrir(
+  page: Page,
+  permisos: string[],
+  antesDeConfiguracion?: (mock: ConfiguracionMock) => void,
+) {
   const auth = await mockAuthApi(page);
   auth.session = { ...auth.session, permisos };
   const mock = await mockConfiguracionApi(page);
@@ -20,11 +24,33 @@ async function abrir(page: Page, permisos: string[]) {
   await page.getByLabel('Contraseña', { exact: true }).fill('UnaClaveSegura2026');
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
   await expect(page).toHaveURL(/dashboard$/);
+  antesDeConfiguracion?.(mock);
   await page.goto('/configuracion');
   return mock;
 }
 
 const dialogo = (page: Page) => page.getByRole('dialog');
+const seccionSedes = (page: Page) => page.locator('section[aria-labelledby="sedes-title"]');
+
+function sinCamposDeAuditoria(body: unknown) {
+  const claves = Object.keys((body ?? {}) as Record<string, unknown>);
+  expect(
+    claves.filter(
+      (k) => k === 'creado_por' || k === 'actualizado_por' || k.startsWith('eliminado_'),
+    ),
+  ).toEqual([]);
+}
+
+/** Contrato: POST lleva Idempotency-Key, PATCH no; ningún cuerpo trae campos de auditoría. */
+function contratoDeEscrituras(mock: ConfiguracionMock) {
+  const escrituras = mock.llamadas.filter((c) => c.method === 'POST' || c.method === 'PATCH');
+  expect(escrituras.length).toBeGreaterThan(0);
+  for (const c of escrituras) {
+    sinCamposDeAuditoria(c.body);
+    if (c.method === 'POST') expect(c.idempotencyKey, 'POST ' + c.path).toMatch(/^[0-9a-f-]{36}$/);
+    else expect(c.idempotencyKey, 'PATCH ' + c.path).toBeUndefined();
+  }
+}
 
 test.describe('Configuración con la API simulada', () => {
   test('muestra negocio, sedes, zonas y mesas', async ({ page }) => {
@@ -42,6 +68,7 @@ test.describe('Configuración con la API simulada', () => {
     await expect(page.getByText('Guardamos los datos de tu restaurante.')).toBeVisible();
     const patch = mock.llamadas.find((c) => c.method === 'PATCH' && c.path === '/negocio');
     expect(patch?.body).toEqual({ nombre_comercial: 'La Casa' });
+    contratoDeEscrituras(mock);
   });
 
   test('un rechazo de campo del negocio aparece bajo el campo y conserva lo escrito', async ({
@@ -72,6 +99,10 @@ test.describe('Configuración con la API simulada', () => {
     const alta = mock.llamadas.find((c) => c.method === 'POST' && c.path === '/sucursales');
     expect(alta?.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
     expect(alta?.body).toMatchObject({ codigo: 'NORTE', nombre: 'Sede Norte' });
+    expect(
+      mock.llamadas.filter((c) => c.method === 'POST' && c.path === '/sucursales'),
+    ).toHaveLength(1);
+    contratoDeEscrituras(mock);
   });
 
   test('código de sede duplicado se muestra en el campo y el diálogo sigue abierto', async ({
@@ -94,15 +125,19 @@ test.describe('Configuración con la API simulada', () => {
 
   test('baja de sede pide motivo y la sede puede restaurarse', async ({ page }) => {
     const mock = await abrir(page, TODOS);
-    await page.getByRole('button', { name: 'Dar de baja' }).first().click();
+    await seccionSedes(page).getByRole('button', { name: 'Dar de baja', exact: true }).click();
     await dialogo(page).getByLabel('Motivo').fill('Cierre temporal');
     await dialogo(page).getByRole('button', { name: 'Confirmar baja' }).click();
     await expect(page.getByText('Motivo de la baja: Cierre temporal')).toBeVisible();
     expect(
       mock.llamadas.find((c) => c.path.endsWith('/baja') && c.path.startsWith('/sucursales'))?.body,
     ).toEqual({ motivo: 'Cierre temporal' });
-    await page.getByRole('button', { name: 'Restaurar' }).first().click();
+    await seccionSedes(page).getByRole('button', { name: 'Restaurar', exact: true }).click();
     await expect(page.getByText(/volvió a estar activa/)).toBeVisible();
+    expect(
+      mock.llamadas.filter((c) => c.method === 'POST' && c.path === '/sucursales/1/restauracion'),
+    ).toHaveLength(1);
+    contratoDeEscrituras(mock);
   });
 
   test('crea una zona y una mesa en esa zona', async ({ page }) => {
@@ -120,6 +155,8 @@ test.describe('Configuración con la API simulada', () => {
     await expect(page.getByText('Mesa T1 · 6 personas')).toBeVisible();
     const alta = mock.llamadas.find((c) => c.method === 'POST' && c.path === '/mesas');
     expect(alta?.body).toMatchObject({ numero_mesa: 'T1', capacidad: 6, sucursal_id: '1' });
+    expect(mock.llamadas.some((c) => c.method === 'POST' && c.path === '/zonas')).toBe(true);
+    contratoDeEscrituras(mock);
   });
 
   test('número de mesa duplicado aparece en el campo', async ({ page }) => {
@@ -143,6 +180,7 @@ test.describe('Configuración con la API simulada', () => {
     await expect
       .poll(() => mock.llamadas.find((c) => c.method === 'PATCH' && c.path === '/mesas/100')?.body)
       .toEqual({ habilitada: false });
+    contratoDeEscrituras(mock);
   });
 
   test('baja de mesa pide motivo; baja de zona con mesas muestra el 409 del servidor', async ({
@@ -163,6 +201,29 @@ test.describe('Configuración con la API simulada', () => {
     await dialogo(page).getByLabel('Motivo').fill('Mesa rota');
     await dialogo(page).getByRole('button', { name: 'Confirmar baja' }).click();
     await expect(page.getByText('Motivo de la baja: Mesa rota')).toBeVisible();
+    expect(mock.llamadas.some((c) => c.method === 'POST' && c.path === '/mesas/100/baja')).toBe(
+      true,
+    );
+    contratoDeEscrituras(mock);
+  });
+
+  test('si la lista de sedes falla (403) muestra el error con Reintentar y el negocio sigue visible', async ({
+    page,
+  }) => {
+    await abrir(page, TODOS, (m) =>
+      m.rechazos.set('GET /sucursales', {
+        status: 403,
+        code: 'prohibido',
+        detail: 'No tienes permiso para ver las sedes.',
+      }),
+    );
+    await expect(page.locator('#negocio-ruc')).toHaveValue('20123456789');
+    const sedes = seccionSedes(page);
+    await expect(sedes.getByText('No pudimos cargar las sedes')).toBeVisible();
+    await expect(sedes.getByRole('alert')).toContainText('No tienes permiso para ver las sedes.');
+    await sedes.getByRole('button', { name: 'Reintentar', exact: true }).click();
+    await expect(sedes.getByText('Sede Principal')).toBeVisible();
+    await expect(sedes.getByText('No pudimos cargar las sedes')).toHaveCount(0);
   });
 
   test('un mesero (solo MESA_VER) ve el salón en solo lectura y no pide negocio ni sedes', async ({
