@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AuthSession } from '../../core/auth/auth-session';
 import { RestaurantStore } from '../../core/demo/restaurant-store';
 import { PageHeader } from '../../shared/ui/page-header';
 import { Dialogs } from '../../shared/ui/form-dialog';
+import { ConfiguracionReal } from './configuracion-real';
 @Component({
-  imports: [PageHeader, ReactiveFormsModule],
+  imports: [PageHeader, ReactiveFormsModule, ConfiguracionReal],
   templateUrl: './configuracion-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfiguracionPage {
+  readonly auth = inject(AuthSession);
   readonly store = inject(RestaurantStore);
   private readonly dialogs = inject(Dialogs);
   readonly error = signal('');
