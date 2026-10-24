@@ -53,12 +53,14 @@ type PermisoEdicion struct {
 }
 
 // UsuarioAlta: nombre se acepta por contrato pero no se persiste (los nombres de personas
-// pertenecen a empleados; usuarios solo guarda username y email).
+// pertenecen a empleados; usuarios solo guarda username y email). Con empleado, el alta crea
+// además al empleado vinculado en la misma transacción.
 type UsuarioAlta struct {
-	Username string  `json:"username"`
-	Nombre   *string `json:"nombre"`
-	Email    *string `json:"email"`
-	Password string  `json:"password"`
+	Username string         `json:"username"`
+	Nombre   *string        `json:"nombre"`
+	Email    *string        `json:"email"`
+	Password string         `json:"password"`
+	Empleado *EmpleadoDatos `json:"empleado"`
 }
 
 // Asignaciones: los ids viajan como cadenas, según el contrato.

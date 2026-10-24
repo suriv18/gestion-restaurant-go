@@ -31,6 +31,7 @@ export const navigation = [
     label: 'ADMINISTRACIÓN',
     items: [
       { path: '/contactos', label: 'Clientes y proveedores', icon: 'users' },
+      { path: '/empleados', label: 'Empleados', icon: 'users' },
       { path: '/usuarios', label: 'Equipo y accesos', icon: 'shield' },
       { path: '/auditoria', label: 'Auditoría', icon: 'clock' },
       { path: '/configuracion', label: 'Configuración', icon: 'settings' },

@@ -19,6 +19,7 @@ export interface Persona {
   ultimo_acceso_en: string | null;
   bloqueado_hasta: string | null;
   motivo_baja: string | null;
+  empleado: { id: string; nombres: string; apellidos: string; cargo: string | null } | null;
   roles: Rol[];
   sucursales: Sede[];
 }
@@ -59,6 +60,7 @@ const persona = (id: string, username: string, over: Partial<Persona> = {}): Per
   ultimo_acceso_en: '2026-10-17T20:15:00Z',
   bloqueado_hasta: null,
   motivo_baja: null,
+  empleado: null,
   roles: [MESERO],
   sucursales: [PRINCIPAL],
   ...over,
@@ -126,7 +128,17 @@ export async function mockTeamApi(page: Page): Promise<TeamMock> {
           'ya existe un registro con ese valor único',
         );
       }
+      const datos = body?.['empleado'] as
+        { nombres: string; apellidos: string; cargo?: string } | undefined;
       const created = persona(String(nextId++), username, {
+        empleado: datos
+          ? {
+              id: `e${nextId}`,
+              nombres: datos.nombres,
+              apellidos: datos.apellidos,
+              cargo: datos.cargo ?? null,
+            }
+          : null,
         roles: [],
         sucursales: [],
         email: (body?.['email'] as string) ?? null,
