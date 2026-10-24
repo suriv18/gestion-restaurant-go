@@ -57,7 +57,10 @@ const dateTime = new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeSty
                 <div class="user-card-top">
                   <span class="avatar" aria-hidden="true">{{ initials(u) }}</span>
                   <div>
-                    <h2 class="text-sm font-bold">{{ u.username }}</h2>
+                    <h2 class="text-sm font-bold">{{ displayName(u) }}</h2>
+                    @if (u.empleado) {
+                      <p>{{ u.empleado.cargo ? u.empleado.cargo + ' · ' : '' }}{{ u.username }}</p>
+                    }
                     <p>{{ roleNames(u) }} · {{ branchNames(u) }}</p>
                     @if (u.email) {
                       <p>{{ u.email }}</p>
@@ -109,8 +112,14 @@ export class TeamAccess implements OnInit {
     void this.store.load();
   }
 
+  /** El nombre real si la persona tiene empleado vinculado; si no, su usuario. */
+  displayName(u: UsuarioEquipo): string {
+    return u.empleado ? `${u.empleado.nombres} ${u.empleado.apellidos}` : u.username;
+  }
+
   initials(u: UsuarioEquipo): string {
-    return u.username.slice(0, 2).toUpperCase();
+    const e = u.empleado;
+    return (e ? e.nombres[0] + e.apellidos[0] : u.username.slice(0, 2)).toUpperCase();
   }
 
   roleNames(u: UsuarioEquipo): string {
@@ -139,11 +148,36 @@ export class TeamAccess implements OnInit {
     }
     // Una clave por formulario abierto: si el envío se reintenta, el servidor no lo duplica.
     const key = newIdempotencyKey();
+    const conEmpleado = this.store.canAdministerEmployees();
     this.dialogs.form({
       title: 'Nueva persona del equipo',
       description: 'Crea su acceso. Podrá iniciar sesión de inmediato con esta contraseña.',
       submit: 'Crear acceso',
       fields: [
+        // Con permiso para administrar empleados, el alta guarda también los datos de la persona.
+        ...(conEmpleado
+          ? [
+              { key: 'nombres', label: 'Nombres', autocomplete: 'off' },
+              { key: 'apellidos', label: 'Apellidos', autocomplete: 'off' },
+              {
+                key: 'tipo_documento',
+                label: 'Tipo de documento',
+                type: 'select' as const,
+                options: [
+                  { value: 'DNI', label: 'DNI' },
+                  { value: 'CE', label: 'Carné de extranjería' },
+                  { value: 'PASAPORTE', label: 'Pasaporte' },
+                ],
+              },
+              {
+                key: 'numero_documento',
+                label: 'Número de documento',
+                autocomplete: 'off',
+                hint: 'DNI de 8 dígitos.',
+              },
+              { key: 'cargo', label: 'Cargo', required: false, autocomplete: 'off' },
+            ]
+          : []),
         { key: 'username', label: 'Usuario', autocomplete: 'off' },
         { key: 'email', label: 'Correo', type: 'email', required: false, autocomplete: 'off' },
         {
@@ -174,6 +208,15 @@ export class TeamAccess implements OnInit {
             password: v['password'],
             roleId: v['role'],
             branchId: v['branch'],
+            empleado: conEmpleado
+              ? {
+                  nombres: v['nombres'],
+                  apellidos: v['apellidos'],
+                  tipo_documento: v['tipo_documento'],
+                  numero_documento: v['numero_documento'],
+                  cargo: v['cargo'],
+                }
+              : undefined,
           },
           key,
         ),
@@ -215,7 +258,7 @@ export class TeamAccess implements OnInit {
           ]),
     ];
     this.dialogs.form({
-      title: 'Cambiar rol de ' + u.username,
+      title: 'Cambiar rol de ' + this.displayName(u),
       description: 'El cambio se aplica de inmediato a su próxima acción.',
       fields,
       commit: (v) =>
@@ -230,7 +273,7 @@ export class TeamAccess implements OnInit {
   remove(u: UsuarioEquipo): void {
     const key = newIdempotencyKey();
     this.dialogs.form({
-      title: 'Dar de baja: ' + u.username,
+      title: 'Dar de baja: ' + this.displayName(u),
       description: 'Se cierran sus sesiones. Se conserva la persona y su historial.',
       danger: true,
       submit: 'Confirmar baja',

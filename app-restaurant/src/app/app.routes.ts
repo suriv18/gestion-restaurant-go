@@ -76,6 +76,12 @@ export const routes: Routes = [
           import('./features/catalogos/contactos-page').then((m) => m.ContactosPage),
       },
       {
+        path: 'empleados',
+        title: 'Empleados · Mesa',
+        loadComponent: () =>
+          import('./features/identidad/empleados-page').then((m) => m.EmpleadosPage),
+      },
+      {
         path: 'usuarios',
         title: 'Usuarios · Mesa',
         loadComponent: () =>

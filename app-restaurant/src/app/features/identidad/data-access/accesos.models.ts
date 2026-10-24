@@ -15,6 +15,13 @@ export interface SucursalRef {
   nombre: string;
 }
 
+export interface EmpleadoRef {
+  id: string;
+  nombres: string;
+  apellidos: string;
+  cargo: string | null;
+}
+
 /** Una persona del equipo con sus roles y sedes vigentes (`GET /usuarios`). */
 export interface UsuarioEquipo {
   id: string;
@@ -24,6 +31,8 @@ export interface UsuarioEquipo {
   ultimo_acceso_en: string | null;
   bloqueado_hasta: string | null;
   motivo_baja: string | null;
+  /** Datos personales de la persona (nombres y cargo), si tiene empleado vinculado. */
+  empleado: EmpleadoRef | null;
   roles: RolRef[];
   sucursales: SucursalRef[];
 }
@@ -43,8 +52,19 @@ export interface UsuarioCreado {
   username: string;
 }
 
+/** Datos personales que el alta de usuario guarda como su empleado, en la misma operación. */
+export interface DatosEmpleado {
+  tipo_documento: string;
+  numero_documento: string;
+  nombres: string;
+  apellidos: string;
+  telefono?: string;
+  cargo?: string;
+}
+
 export interface NuevoUsuario {
   username: string;
   email?: string;
   password: string;
+  empleado?: DatosEmpleado;
 }

@@ -18,6 +18,7 @@ const user = (id: string, over: Partial<UsuarioEquipo> = {}): UsuarioEquipo => (
   ultimo_acceso_en: null,
   bloqueado_hasta: null,
   motivo_baja: null,
+  empleado: null,
   roles: [{ id: '3', codigo: 'MESERO', nombre: 'Mesero', es_activo: true }],
   sucursales: [{ id: '1', codigo: 'PRINCIPAL', nombre: 'Local Principal' }],
   ...over,
@@ -126,6 +127,57 @@ describe('Estado de Equipo y accesos', () => {
       );
       expect(api.asignar).toHaveBeenCalledWith('9', ['1'], ['1']);
       expect(store.notice()).toEqual({ kind: 'ok', text: 'Se creó el acceso de ana.' });
+    });
+
+    it('con datos personales, el alta los guarda como empleado en la misma operación', async () => {
+      api.crearUsuario.mockReturnValue(of({ id: '9', username: 'ana' }));
+      api.asignar.mockReturnValue(of({ id: '9' }));
+      const store = setup();
+      await store.invite(
+        {
+          ...values,
+          empleado: {
+            nombres: ' Ana ',
+            apellidos: 'Ríos',
+            tipo_documento: 'DNI',
+            numero_documento: '12345678',
+            cargo: 'Cajera',
+          },
+        },
+        'key-1',
+      );
+      expect(api.crearUsuario).toHaveBeenCalledWith(
+        {
+          username: 'ana',
+          email: undefined,
+          password: 'ClaveSegura2026',
+          empleado: {
+            nombres: 'Ana',
+            apellidos: 'Ríos',
+            tipo_documento: 'DNI',
+            numero_documento: '12345678',
+            telefono: undefined,
+            cargo: 'Cajera',
+          },
+        },
+        'key-1',
+      );
+    });
+
+    it('un documento repetido se muestra bajo su campo y no asigna nada', async () => {
+      api.crearUsuario.mockReturnValue(
+        problem(409, 'documento_duplicado', 'ya existe ese documento'),
+      );
+      const store = setup();
+      const result = await store.invite(
+        {
+          ...values,
+          empleado: { nombres: 'A', apellidos: 'B', tipo_documento: 'DNI', numero_documento: '1' },
+        },
+        'key-1',
+      );
+      expect(result).toEqual({ field: 'numero_documento', message: 'ya existe ese documento' });
+      expect(api.asignar).not.toHaveBeenCalled();
     });
 
     it('si el alta se rechaza, devuelve el motivo del servidor y no asigna nada', async () => {
