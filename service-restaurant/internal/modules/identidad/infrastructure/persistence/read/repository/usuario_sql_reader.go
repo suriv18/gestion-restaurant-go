@@ -34,7 +34,7 @@ func (r *UsuarioSQLReader) ListUsuarios(ctx context.Context, despuesDeID int64, 
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT u.id, u.username, u.email, u.es_sistema, u.es_activo, u.ultimo_acceso_en, u.bloqueado_hasta,
 		       u.intentos_fallidos, u.creado_en, u.creado_por, u.actualizado_en, u.actualizado_por,
-		       u.motivo_eliminacion,
+		       u.motivo_eliminacion, emp.id, emp.nombres, emp.apellidos, emp.cargo,
 		       COALESCE((SELECT json_agg(json_build_object('id', r.id, 'codigo', r.codigo, 'nombre', r.nombre, 'es_activo', r.es_activo) ORDER BY r.id)
 		                 FROM sch_restaurante.usuarios_roles ur JOIN sch_restaurante.roles r ON r.id = ur.rol_id
 		                 WHERE ur.usuario_id = u.id AND ur.es_activo), '[]'::json),
@@ -42,6 +42,7 @@ func (r *UsuarioSQLReader) ListUsuarios(ctx context.Context, despuesDeID int64, 
 		                 FROM sch_restaurante.usuarios_sucursales us JOIN sch_restaurante.sucursales s ON s.id = us.sucursal_id
 		                 WHERE us.usuario_id = u.id AND us.es_activo), '[]'::json)
 		FROM sch_restaurante.usuarios u
+		LEFT JOIN sch_restaurante.empleados emp ON emp.usuario_id = u.id AND emp.es_activo
 		WHERE NOT u.es_sistema AND u.id > $1
 		ORDER BY u.id LIMIT $2`, despuesDeID, limite)
 	if err != nil {
@@ -52,13 +53,21 @@ func (r *UsuarioSQLReader) ListUsuarios(ctx context.Context, despuesDeID int64, 
 	var out []dtoresult.UsuarioConAccesos
 	for rows.Next() {
 		var u dtoresult.UsuarioConAccesos
-		var email, motivo sql.NullString
+		var email, motivo, empNombres, empApellidos, empCargo sql.NullString
+		var empID sql.NullInt64
 		var acceso, bloqueo sql.NullTime
 		var roles, sedes []byte
 		if err := rows.Scan(&u.ID, &u.Username, &email, &u.EsSistema, &u.EsActivo, &acceso, &bloqueo,
 			&u.IntentosFallidos, &u.CreadoEn, &u.CreadoPor, &u.ActualizadoEn, &u.ActualizadoPor,
-			&motivo, &roles, &sedes); err != nil {
+			&motivo, &empID, &empNombres, &empApellidos, &empCargo, &roles, &sedes); err != nil {
 			return nil, err
+		}
+		if empID.Valid {
+			e := &dtoresult.EmpleadoResumen{ID: empID.Int64, Nombres: empNombres.String, Apellidos: empApellidos.String}
+			if empCargo.Valid {
+				e.Cargo = &empCargo.String
+			}
+			u.Empleado = e
 		}
 		if email.Valid {
 			u.Email = &email.String

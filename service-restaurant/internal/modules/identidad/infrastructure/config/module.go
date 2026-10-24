@@ -114,7 +114,7 @@ func (m *Module) Authenticator() platsec.Authenticator { return bearerAuthentica
 // RegisterRoutes monta las rutas del módulo sobre mux (relativas a /api/v1).
 func (m *Module) RegisterRoutes(mux *http.ServeMux, protect func(http.Handler) http.Handler) {
 	controller.RegisterAuthRoutes(mux, controller.NewAuthHandler(m.iniciar, m.cerrar, m.sesion), protect, m.deps.Logger)
-	controller.RegisterAdminRoutes(mux, m.admin.roles, m.admin.permisos, m.admin.usuarios, protect, m.deps.Logger)
+	controller.RegisterAdminRoutes(mux, m.admin.roles, m.admin.permisos, m.admin.usuarios, m.admin.empleados, protect, m.deps.Logger)
 	controller.RegisterConfiguracionRoutes(mux, m.conf.negocio, m.conf.sucursales, protect, m.deps.Logger)
 }
 

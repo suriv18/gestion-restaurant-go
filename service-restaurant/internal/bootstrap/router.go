@@ -26,6 +26,7 @@ func (a *App) router() http.Handler {
 	protect := middleware.Authenticate(a.identidad.Authenticator(), a.logger)
 	a.identidad.RegisterRoutes(api, protect)
 	a.atencion.RegisterRoutes(api, protect)
+	a.catalogo.RegisterRoutes(api, protect)
 	mux.Handle("/api/v1/", http.StripPrefix("/api/v1", api))
 
 	var h http.Handler = mux

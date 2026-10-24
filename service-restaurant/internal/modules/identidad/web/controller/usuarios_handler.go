@@ -68,17 +68,23 @@ func (h *UsuariosHandler) Crear(w http.ResponseWriter, r *http.Request) error {
 	// Huella: usuario y correo identifican la intención; la contraseña se incluye solo como
 	// su propio hash SHA-256 para detectar un cambio de contenido sin conservar el secreto.
 	canonico := struct {
-		Username string   `json:"username"`
-		Nombre   *string  `json:"nombre"`
-		Email    *string  `json:"email"`
-		Password [32]byte `json:"password_sha256"`
-	}{body.Username, body.Nombre, body.Email, sha256Of(body.Password)}
+		Username string                 `json:"username"`
+		Nombre   *string                `json:"nombre"`
+		Email    *string                `json:"email"`
+		Password [32]byte               `json:"password_sha256"`
+		Empleado *request.EmpleadoDatos `json:"empleado"`
+	}{body.Username, body.Nombre, body.Email, sha256Of(body.Password), body.Empleado}
 	in, err := intencion(r, "POST /usuarios", canonico)
 	if err != nil {
 		return err
 	}
+	var empleado *command.DatosEmpleado
+	if body.Empleado != nil {
+		d := datosEmpleado(*body.Empleado)
+		empleado = &d
+	}
 	res, err := h.crear.Execute(r.Context(), command.CrearUsuario{
-		Intencion: in, Actor: actor, Username: body.Username, Password: body.Password, Email: body.Email,
+		Intencion: in, Actor: actor, Username: body.Username, Password: body.Password, Email: body.Email, Empleado: empleado,
 	})
 	return responder(w, res, err, http.StatusCreated, webmapper.ToUsuario)
 }

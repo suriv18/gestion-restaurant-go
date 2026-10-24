@@ -70,7 +70,7 @@ func ToUsuariosLista(p dtoresult.PaginaUsuarios) response.UsuariosLista {
 			sedes[j] = ToSucursalResumen(s)
 		}
 		items[i] = response.UsuarioEquipo{
-			Usuario: ToUsuario(u.UsuarioAdmin), MotivoBaja: u.MotivoBaja, Roles: roles, Sucursales: sedes,
+			Usuario: ToUsuario(u.UsuarioAdmin), MotivoBaja: u.MotivoBaja, Empleado: toEmpleadoResumen(u.Empleado), Roles: roles, Sucursales: sedes,
 		}
 	}
 	return response.UsuariosLista{Items: items, NextCursor: cursor(p.NextCursor)}

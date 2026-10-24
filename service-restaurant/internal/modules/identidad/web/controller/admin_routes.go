@@ -13,7 +13,7 @@ func sha256Of(s string) [32]byte { return sha256.Sum256([]byte(s)) }
 // RegisterAdminRoutes monta la administración de accesos (todas exigen autenticación;
 // el permiso USUARIO_ADMINISTRAR lo verifica cada caso de uso).
 func RegisterAdminRoutes(mux *http.ServeMux, roles *RolesHandler, permisos *PermisosHandler, usuarios *UsuariosHandler,
-	protect func(http.Handler) http.Handler, logger *slog.Logger) {
+	empleados *EmpleadosHandler, protect func(http.Handler) http.Handler, logger *slog.Logger) {
 	ruta := func(patron string, e handler.Endpoint) { mux.Handle(patron, protect(handler.Adapt(logger, e))) }
 
 	ruta("GET /roles", roles.Listar)
@@ -36,4 +36,11 @@ func RegisterAdminRoutes(mux *http.ServeMux, roles *RolesHandler, permisos *Perm
 	ruta("PUT /usuarios/{id}/asignaciones", usuarios.Asignaciones)
 	ruta("POST /usuarios/{id}/baja", usuarios.Baja)
 	ruta("POST /usuarios/{id}/restauracion", usuarios.Restauracion)
+
+	ruta("GET /empleados", empleados.Listar)
+	ruta("POST /empleados", empleados.Crear)
+	ruta("GET /empleados/{id}", empleados.Obtener)
+	ruta("PATCH /empleados/{id}", empleados.Editar)
+	ruta("POST /empleados/{id}/baja", empleados.Baja)
+	ruta("POST /empleados/{id}/restauracion", empleados.Restauracion)
 }

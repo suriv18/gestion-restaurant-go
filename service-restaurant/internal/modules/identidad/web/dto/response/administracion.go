@@ -69,6 +69,7 @@ type SucursalResumen struct {
 type UsuarioEquipo struct {
 	Usuario
 	MotivoBaja *string           `json:"motivo_baja"`
+	Empleado   *EmpleadoResumen  `json:"empleado"`
 	Roles      []RolResumen      `json:"roles"`
 	Sucursales []SucursalResumen `json:"sucursales"`
 }
