@@ -108,6 +108,35 @@ func ScanTasaImpuesto(s Fila) (dtoresult.TasaImpuesto, error) {
 	return t, err
 }
 
+// Producto: precio y factor se leen como texto (numeric::text) para no pasar por float; la
+// respuesta trae el precio con 2 decimales y el factor con 6, tal como los guarda PostgreSQL.
+const Producto = `id, categoria_id, codigo, nombre, descripcion, tipo, articulo_id, factor_consumo::text, precio_venta::text,
+	afectacion_igv, impuesto_id, imagen_url, es_activo, motivo_eliminacion, eliminado_en, eliminado_por,
+	creado_en, creado_por, actualizado_en, actualizado_por`
+
+// ScanProducto lee una fila con las columnas de Producto.
+func ScanProducto(s Fila) (dtoresult.Producto, error) {
+	var p dtoresult.Producto
+	var desc, imagen, motivo sql.NullString
+	var articulo, impuesto, elimPor sql.NullInt64
+	var elimEn sql.NullTime
+	err := s.Scan(&p.ID, &p.CategoriaID, &p.Codigo, &p.Nombre, &desc, &p.Tipo, &articulo, &p.FactorConsumo, &p.PrecioVenta,
+		&p.AfectacionIGV, &impuesto, &imagen, &p.EsActivo, &motivo, &elimEn, &elimPor,
+		&p.CreadoEn, &p.CreadoPor, &p.ActualizadoEn, &p.ActualizadoPor)
+	p.Descripcion, p.ImagenURL = textoNulo(desc), textoNulo(imagen)
+	p.ArticuloID, p.ImpuestoID = enteroNulo(articulo), enteroNulo(impuesto)
+	p.Baja = baja(motivo, elimEn, elimPor)
+	return p, err
+}
+
+func enteroNulo(v sql.NullInt64) *int64 {
+	if !v.Valid {
+		return nil
+	}
+	n := v.Int64
+	return &n
+}
+
 // Estacion: estación de preparación de una sede.
 const Estacion = `id, sucursal_id, codigo, nombre, es_activo, creado_en, creado_por, actualizado_en, actualizado_por`
 

@@ -14,6 +14,7 @@ type Handlers struct {
 	Categorias  *CategoriasHandler
 	Impuestos   *ImpuestosHandler
 	Estaciones  *EstacionesHandler
+	Productos   *ProductosHandler
 }
 
 // RegisterRoutes monta clientes, proveedores y la carta (todas exigen autenticación; el permiso
@@ -55,4 +56,11 @@ func RegisterRoutes(mux *http.ServeMux, h Handlers, protect func(http.Handler) h
 	ruta("PATCH /estaciones/{id}", h.Estaciones.Editar)
 	ruta("POST /estaciones/{id}/baja", h.Estaciones.Baja)
 	ruta("POST /estaciones/{id}/restauracion", h.Estaciones.Restauracion)
+
+	ruta("GET /productos", h.Productos.Listar)
+	ruta("POST /productos", h.Productos.Crear)
+	ruta("GET /productos/{id}", h.Productos.Obtener)
+	ruta("PATCH /productos/{id}", h.Productos.Editar)
+	ruta("POST /productos/{id}/baja", h.Productos.Baja)
+	ruta("POST /productos/{id}/restauracion", h.Productos.Restauracion)
 }

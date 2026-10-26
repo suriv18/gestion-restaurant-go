@@ -28,6 +28,7 @@ func New(d Deps) (*Module, error) {
 		Categorias:  armarCategorias(d.DB, d.Logger),
 		Impuestos:   armarImpuestos(d.DB, d.Logger),
 		Estaciones:  armarEstaciones(d.DB, d.Logger),
+		Productos:   armarProductos(d.DB, d.Logger),
 	}}, nil
 }
 

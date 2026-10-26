@@ -30,3 +30,6 @@ var ErrVigenciaSolapada = errors.New("vigencia de tasa solapada")
 // ErrEstacionDuplicada distingue la colisión de (sucursal, código) de estación (único también
 // tras la baja).
 var ErrEstacionDuplicada = fmt.Errorf("estación duplicada: %w", ErrDuplicado)
+
+// ErrProductoDuplicado distingue la colisión del código de producto (único también tras la baja).
+var ErrProductoDuplicado = fmt.Errorf("producto duplicado: %w", ErrDuplicado)
