@@ -337,3 +337,22 @@ td {
     width: 100%;
   }
 }
+
+/* Carta: filtros y acciones de la tabla de productos */
+.filtros-carta select {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+@media (max-width: 1100px) {
+  .tabla-carta .inline-actions {
+    flex-wrap: nowrap;
+  }
+}
+.tabla-carta td small {
+  display: block;
+}
