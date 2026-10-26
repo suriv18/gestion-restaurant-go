@@ -39,7 +39,7 @@ CONTENIDO
                matriz de auditoría y baja lógica por tabla; estados de negocio con valores.
                10 maestros con datos de eliminación, 16 catálogos/relaciones sin ellos.
                13 tablas operativas conservan estado; es_activo no lo sustituye.
-03_api: contrato OpenAPI 3.1.1 propuesto: 113 rutas y 155 operaciones.
+03_api: contrato OpenAPI 3.1.1 propuesto: 115 rutas y 157 operaciones.
 04_prototipo: código HTML/CSS/JavaScript, datos ficticios, servidor y pruebas.
 05_diagramas: arquitectura y atención en SVG, modelo físico editable PlantUML.
 06_calidad: 44 casos previstos para el sistema implementado, pruebas ejecutables

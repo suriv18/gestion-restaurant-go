@@ -157,9 +157,12 @@ paths:
       summary: Listar productos
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Lista paginada por cursor (id ascendente) del maestro global de productos. Por defecto solo activos;
+        `es_activo=todos` lista también las bajas. Con `sucursal_id` cada ítem añade `en_sucursal` (estado en esa
+        sede, null si no hay fila activa) y se habilita el filtro `disponible`.
+      x-implementado: true
+      x-permiso: CARTA_VER | CARTA_DISPONIBILIDAD | CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -179,14 +182,14 @@ paths:
         in: query
         schema:
           $ref: '#/components/schemas/Id'
-        description: Filtro solicitado, siempre validado contra sedes autorizadas.
+        description: Sede cuyo estado se añade a cada ítem como `en_sucursal`; el actor necesita CARTA_VER, CARTA_DISPONIBILIDAD o CARTA_ADMINISTRAR en ella (si no, 404).
       - name: limit
         in: query
         schema:
           type: integer
           minimum: 1
           maximum: 100
-          default: 30
+          default: 25
       - name: cursor
         in: query
         schema:
@@ -196,21 +199,38 @@ paths:
         schema:
           type: string
           maxLength: 150
+        description: Busca en el nombre (contiene) o en el inicio del código.
       - name: es_activo
+        in: query
+        description: Por defecto solo activos; `todos` no filtra por estado.
+        schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          - todos
+          default: 'true'
+      - name: categoria_id
+        in: query
+        schema:
+          $ref: '#/components/schemas/Id'
+      - name: disponible
         in: query
         schema:
           type: boolean
-          default: true
+        description: Requiere `sucursal_id` (400 `disponible_requiere_sucursal`). true = habilitado en esa sede; false = pausado en esa sede (los productos sin fila no aparecen; se ven sin este filtro con `en_sucursal` null).
     post:
       operationId: operacion_006
       summary: Crear productos
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Alta del producto. `codigo` único aunque el producto esté dado de baja (409 `codigo_duplicado`). `tipo`
+        REVENTA exige `articulo_id` (hasta I5 no hay artículos: 422 `referencia_invalida`); `afectacion_igv` 10 exige
+        `impuesto_id` (422 `impuesto_requerido`). Categoría e impuesto deben estar activos (422
+        `referencia_invalida`). Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -239,9 +259,10 @@ paths:
       summary: Consultar productos
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Detalle del producto, también si está dado de baja. Con `sucursal_id` añade `en_sucursal`.
+      x-implementado: true
+      x-permiso: CARTA_VER | CARTA_DISPONIBILIDAD | CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -262,14 +283,21 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/Id'
+      - name: sucursal_id
+        in: query
+        schema:
+          $ref: '#/components/schemas/Id'
+        description: Si se indica, la respuesta añade `en_sucursal` con el estado del producto en esa sede.
     patch:
       operationId: operacion_008
       summary: Editar productos
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Edición parcial con los campos del alta; `descripcion`, `articulo_id`, `impuesto_id` e `imagen_url` admiten
+        null para vaciar. Producto dado de baja: 409 `producto_inactivo`; sin cambios: 422 `sin_cambios`.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -302,11 +330,11 @@ paths:
       summary: Dar de baja productos
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Baja con `motivo` obligatorio (décimo maestro principal): retira el producto de todas las sedes. Ya dado de
+        baja: 409 `ya_dada_de_baja`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -340,12 +368,11 @@ paths:
       summary: Restaurar productos
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
-        marcadores de baja.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Reactiva el mismo ID y limpia los marcadores de baja. Ya activo: 409 `ya_activa`; categoría, artículo o
+        impuesto dados de baja: 409 `referencia_inactiva`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1681,9 +1708,11 @@ paths:
       summary: Listar categorias
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Lista paginada por cursor (id ascendente) de las categorías de la carta, un maestro global. Sin `es_activo`
+        devuelve activas e inactivas.
+      x-implementado: true
+      x-permiso: CARTA_VER | CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1699,32 +1728,36 @@ paths:
         '422': *id006
         '503': *id007
       parameters:
-      - name: sucursal_id
-        in: query
-        schema:
-          $ref: '#/components/schemas/Id'
-        description: Filtro solicitado, siempre validado contra sedes autorizadas.
       - name: limit
         in: query
         schema:
           type: integer
           minimum: 1
           maximum: 100
-          default: 30
+          default: 25
       - name: cursor
         in: query
         schema:
           type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: Texto a buscar en el nombre.
+      - name: es_activo
+        in: query
+        schema:
+          type: boolean
     post:
       operationId: operacion_048
       summary: Crear categorias
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Alta de categoría. Nombre repetido: 409 `categoria_duplicada`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1753,9 +1786,10 @@ paths:
       summary: Consultar categorias
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Detalle de la categoría, también si está inactiva.
+      x-implementado: true
+      x-permiso: CARTA_VER | CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1781,9 +1815,10 @@ paths:
       summary: Editar categorias
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Edición parcial. Categoría inactiva: 409 `categoria_inactiva`; sin cambios: 422 `sin_cambios`.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1816,12 +1851,11 @@ paths:
       summary: Desactivar categorias
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
-        eliminación; registra actor de actualización y evento.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Desactivación simple (sin body ni motivo). Con productos activos: 409 `categoria_con_productos_activos`; ya
+        inactiva: 409 `ya_dada_de_baja`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -1849,12 +1883,10 @@ paths:
       summary: Restaurar categorias
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
-        marcadores de baja.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Reactiva la categoría. Ya activa: 409 `ya_activa`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2100,9 +2132,11 @@ paths:
       summary: Listar estaciones
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Lista paginada por cursor de las estaciones de las sedes que el actor puede ver; un `sucursal_id` no visible
+        responde 404.
+      x-implementado: true
+      x-permiso: ESTACION_VER | ESTACION_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2122,28 +2156,38 @@ paths:
         in: query
         schema:
           $ref: '#/components/schemas/Id'
-        description: Filtro solicitado, siempre validado contra sedes autorizadas.
+        description: Sede cuyas estaciones se listan; debe ser visible para el actor (si no, 404). Sin ella se listan las de todas las sedes visibles.
       - name: limit
         in: query
         schema:
           type: integer
           minimum: 1
           maximum: 100
-          default: 30
+          default: 25
       - name: cursor
         in: query
         schema:
           type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 80
+        description: Texto a buscar en el nombre.
+      - name: es_activo
+        in: query
+        schema:
+          type: boolean
     post:
       operationId: operacion_060
       summary: Crear estaciones_preparacion
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Alta en la sede indicada (404 si no la ve, 403 `sede_no_autorizada` si la ve sin administrarla). El código es
+        único por sede, también entre inactivas (409 `estacion_duplicada`). Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: ESTACION_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2172,9 +2216,10 @@ paths:
       summary: Consultar estaciones_preparacion
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Detalle de la estación; una sede no visible responde 404.
+      x-implementado: true
+      x-permiso: ESTACION_VER | ESTACION_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2200,9 +2245,11 @@ paths:
       summary: Editar estaciones_preparacion
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Edición parcial de `codigo` y `nombre`; una estación no cambia de sede. Estación inactiva: 409
+        `estacion_inactiva`.
+      x-implementado: true
+      x-permiso: ESTACION_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2235,12 +2282,11 @@ paths:
       summary: Desactivar estaciones_preparacion
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Cambia es_activo a false. No recibe motivo ni guarda marcadores de
-        eliminación; registra actor de actualización y evento.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Desactivación simple (sin body ni motivo). En uso por disponibilidad activa de productos: 409
+        `estacion_en_uso`; ya inactiva: 409 `ya_dada_de_baja`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: ESTACION_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2268,12 +2314,10 @@ paths:
       summary: Restaurar estaciones_preparacion
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
-        marcadores de baja.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Reactiva la estación. Ya activa: 409 `ya_activa`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: ESTACION_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2927,15 +2971,87 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Confirmacion'
+  /impuestos:
+    get:
+      operationId: operacion_156
+      summary: Listar impuestos
+      tags:
+      - Catálogos
+      description: >-
+        Lista paginada por cursor (id ascendente) de los impuestos, un maestro global de solo lectura. Sin `es_activo`
+        devuelve activos e inactivos. Alimenta el formulario de productos.
+      x-implementado: true
+      x-permiso: IMPUESTO_VER | IMPUESTO_ADMINISTRAR | CARTA_ADMINISTRAR
+      responses:
+        '200':
+          description: Página de impuestos; nextCursor es null en la última página.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpuestosLista'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: es_activo
+        in: query
+        schema:
+          type: boolean
+  /impuestos/{id}:
+    get:
+      operationId: operacion_157
+      summary: Consultar impuestos
+      tags:
+      - Catálogos
+      description: Detalle del impuesto, también si está inactivo. No hay altas ni ediciones de impuestos por API.
+      x-implementado: true
+      x-permiso: IMPUESTO_VER | IMPUESTO_ADMINISTRAR | CARTA_ADMINISTRAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Impuestos'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
   /tasas-impuesto:
     get:
       operationId: operacion_083
       summary: Listar tasas-impuesto
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Lista paginada por cursor de las tasas, un maestro global; filtro `impuesto_id`. Las tasas no se dan de baja
+        ni tienen `es_activo`.
+      x-implementado: true
+      x-permiso: IMPUESTO_VER | IMPUESTO_ADMINISTRAR | CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -2951,18 +3067,18 @@ paths:
         '422': *id006
         '503': *id007
       parameters:
-      - name: sucursal_id
+      - name: impuesto_id
         in: query
         schema:
           $ref: '#/components/schemas/Id'
-        description: Filtro solicitado, siempre validado contra sedes autorizadas.
+        description: Limita el listado a las tasas de ese impuesto.
       - name: limit
         in: query
         schema:
           type: integer
           minimum: 1
           maximum: 100
-          default: 30
+          default: 25
       - name: cursor
         in: query
         schema:
@@ -2972,11 +3088,13 @@ paths:
       summary: Crear tasas_impuesto
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Alta de una vigencia [desde,hasta). `tasa` entre 0 y 100 con hasta 4 decimales; el impuesto debe existir y
+        estar activo (422 `referencia_invalida`). Vigencia solapada con otra del mismo impuesto: 409
+        `vigencia_solapada`; `vigente_hasta` debe ser posterior a `vigente_desde` (422 `vigencia_invalida`). Exige
+        Idempotency-Key.
+      x-implementado: true
+      x-permiso: IMPUESTO_ADMINISTRAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3005,9 +3123,10 @@ paths:
       summary: Consultar tasas_impuesto
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Detalle de la tasa.
+      x-implementado: true
+      x-permiso: IMPUESTO_VER | IMPUESTO_ADMINISTRAR | CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3033,9 +3152,11 @@ paths:
       summary: Editar tasas_impuesto
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Edición parcial de `tasa`, vigencias y `fundamento`; `impuesto_id` no se edita (se crea otra tasa).
+        `vigente_hasta` null deja la vigencia abierta. Solape: 409 `vigencia_solapada`.
+      x-implementado: true
+      x-permiso: IMPUESTO_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -3898,9 +4019,14 @@ paths:
       summary: Pausar o habilitar carta por sede
       tags:
       - Catálogos
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      description: >-
+        Upsert de la fila (producto, sede); siempre devuelve la fila. Sin fila el producto no se ofrece en esa sede.
+        Cambiar solo `disponible` pide CARTA_DISPONIBILIDAD o CARTA_ADMINISTRAR en la sede; `precio_venta` o
+        `estacion_id` (opcionales y anulables: ausente = sin cambio, null = precio general / sin estación) piden
+        CARTA_ADMINISTRAR (si no, 403 `sede_no_autorizada`). Producto dado de baja: 409 `producto_inactivo`; estación
+        de otra sede: 422 `estacion_de_otra_sede`. No altera pedidos ya registrados. No usa Idempotency-Key.
+      x-implementado: true
+      x-permiso: CARTA_DISPONIBILIDAD | CARTA_ADMINISTRAR
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -6593,8 +6719,8 @@ components:
           description: Identificador BIGINT serializado como cadena.
         tasa: &id088
           type: string
-          pattern: ^-?[0-9]+(\.[0-9]+)?$
-          description: 'Decimal exacto. Precisión SQL: numeric(7,4)'
+          pattern: ^(100(\.0{1,4})?|[0-9]{1,2}(\.[0-9]{1,4})?)$
+          description: 'Porcentaje decimal exacto entre 0 y 100, sin signo, con hasta 4 decimales (numeric(7,4)). La respuesta lo normaliza a 4 decimales (por ejemplo "18.0000").'
         vigente_desde: &id089
           type: string
           format: date
@@ -6650,7 +6776,9 @@ components:
           description: Identificador BIGINT serializado como cadena.
         codigo: &id069
           type: string
+          pattern: ^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$
           maxLength: 20
+          description: Se normaliza a mayúsculas.
         nombre: &id070
           type: string
           maxLength: 80
@@ -7030,7 +7158,12 @@ components:
           - type: 'null'
         tipo: &id013
           type: string
-          maxLength: 20
+          enum:
+          - PREPARADO
+          - REVENTA
+          - ADICIONAL
+          - SERVICIO
+          description: REVENTA exige articulo_id y los demás tipos no lo admiten.
         articulo_id: &id014
           anyOf:
           - type: string
@@ -7039,15 +7172,19 @@ components:
           - type: 'null'
         factor_consumo: &id015
           type: string
-          pattern: ^-?[0-9]+(\.[0-9]+)?$
-          description: 'Decimal exacto. Precisión SQL: numeric(18,6)'
+          pattern: ^[0-9]{1,12}(\.[0-9]{1,6})?$
+          description: 'Decimal exacto mayor que cero, sin signo, con hasta 6 decimales (numeric(18,6)). La respuesta lo normaliza a 6 decimales.'
         precio_venta: &id016
           type: string
-          pattern: ^-?[0-9]+(\.[0-9]+)?$
-          description: 'Decimal exacto. Precisión SQL: numeric(14,2)'
+          pattern: ^[0-9]{1,11}(\.[0-9]{1,2})?$
+          description: 'Decimal exacto de 0 a 99999999999.99, sin signo, con hasta 2 decimales (numeric(14,2)). La respuesta lo normaliza a 2 decimales.'
         afectacion_igv: &id017
           type: string
-          maxLength: 2
+          enum:
+          - '10'
+          - '20'
+          - '30'
+          description: 10 gravado (exige impuesto_id), 20 exonerado, 30 inafecto.
         impuesto_id: &id018
           anyOf:
           - type: string
@@ -7057,6 +7194,8 @@ components:
         imagen_url: &id019
           anyOf:
           - type: string
+            maxLength: 2000
+            description: URL http o https.
           - type: 'null'
         es_activo:
           type: boolean
@@ -7096,6 +7235,35 @@ components:
           - type: string
           - type: 'null'
           readOnly: true
+        en_sucursal:
+          description: Solo aparece cuando la consulta indicó sucursal_id; null si el producto no tiene fila activa en esa sede (no se ofrece allí).
+          readOnly: true
+          anyOf:
+          - $ref: '#/components/schemas/ProductoEnSucursal'
+          - type: 'null'
+    ProductoEnSucursal:
+      type: object
+      description: Estado de un producto en la sede consultada.
+      required:
+      - disponible
+      - precio_sucursal
+      - precio_efectivo
+      - estacion_id
+      properties:
+        disponible:
+          type: boolean
+        precio_sucursal:
+          description: Precio propio de la sede; null usa el precio general.
+          anyOf:
+          - $ref: '#/components/schemas/Dinero'
+          - type: 'null'
+        precio_efectivo:
+          description: Precio que se cobra en la sede (el de la sede o el general).
+          $ref: '#/components/schemas/Dinero'
+        estacion_id:
+          anyOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
     ProductosSucursal:
       type: object
       description: Disponibilidad, precio opcional y estacion por sucursal; NULL usa precio general.
@@ -7132,8 +7300,8 @@ components:
         precio_venta:
           anyOf:
           - type: string
-            pattern: ^-?[0-9]+(\.[0-9]+)?$
-            description: 'Decimal exacto. Precisión SQL: numeric(14,2)'
+            pattern: ^[0-9]{1,11}(\.[0-9]{1,2})?$
+            description: 'Decimal exacto de 0 a 99999999999.99, sin signo (numeric(14,2)).'
           - type: 'null'
         disponible:
           type: boolean
@@ -9426,7 +9594,10 @@ components:
       type: object
       additionalProperties: false
       minProperties: 1
-      properties: *id071
+      description: No admite sucursal_id (400 por campo desconocido); una estación no cambia de sede.
+      properties:
+        codigo: *id069
+        nombre: *id070
     CajasAlta:
       type: object
       additionalProperties: false
@@ -9494,7 +9665,12 @@ components:
       type: object
       additionalProperties: false
       minProperties: 1
-      properties: *id092
+      description: No admite impuesto_id (400 por campo desconocido); para cambiar de impuesto se crea otra tasa.
+      properties:
+        tasa: *id088
+        vigente_desde: *id089
+        vigente_hasta: *id090
+        fundamento: *id091
     SucursalesAlta:
       type: object
       additionalProperties: false
@@ -10129,6 +10305,17 @@ components:
           $ref: '#/components/schemas/Id'
         disponible:
           type: boolean
+        precio_venta:
+          description: Extensión del contrato. Ausente = sin cambio; null = usar el precio general del producto. Exige CARTA_ADMINISTRAR en la sede.
+          anyOf:
+          - type: string
+            pattern: ^[0-9]{1,11}(\.[0-9]{1,2})?$
+          - type: 'null'
+        estacion_id:
+          description: Extensión del contrato. Ausente = sin cambio; null = sin estación. Debe ser una estación activa de la misma sede (422 estacion_de_otra_sede). Exige CARTA_ADMINISTRAR en la sede.
+          anyOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
     Asignaciones:
       type: object
       additionalProperties: false
@@ -10433,6 +10620,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SeriesComprobantes'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+    ImpuestosLista:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Impuestos'
         nextCursor:
           type:
           - string

@@ -108,7 +108,7 @@
     "incremento": "I2",
     "aceptacion": "El documento duplicado se rechaza; el contacto dado de baja puede restaurarse con el mismo ID.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -116,7 +116,8 @@
     ],
     "add": [
       "ADD-05"
-    ]
+    ],
+    "situacion_backend": "Implementado en I2 (rebanada 2: clientes y proveedores, con empleados; frontend hecho); la prueba de aceptación RES-CP-004 sigue NO_EJECUTADA hasta ejecutarse contra la API real."
   },
   {
     "id": "RES-RF-005",
@@ -137,7 +138,7 @@
     "incremento": "I2",
     "aceptacion": "Pausar un plato impide agregarlo a pedidos nuevos, sin alterar consumos ya registrados.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -146,7 +147,8 @@
     "add": [
       "ADD-05",
       "ADD-06"
-    ]
+    ],
+    "situacion_backend": "Backend implementado en I2 (rebanada 3: categorías, estaciones, productos y disponibilidad por sede; suite de integración del repositorio en verde). Falta el frontend de la carta y la parte del criterio de aceptación sobre pedidos nuevos, que solo se verifica con el módulo de pedidos (I3); RES-CP-005 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-006",
@@ -784,7 +786,7 @@
     "incremento": "I2",
     "aceptacion": "Una venta utiliza la tasa vigente aprobada y conserva esa tasa; no recalcular documentos antiguos.",
     "cobertura_prototipo": "Pendiente",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -793,7 +795,8 @@
     "add": [
       "ADD-06",
       "ADD-09"
-    ]
+    ],
+    "situacion_backend": "Backend implementado en I2 (rebanada 3: impuestos de solo lectura y tasas con vigencias sin solape, 409 vigencia_solapada; suite de integración del repositorio en verde). Falta el frontend; RES-CP-027 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-028",

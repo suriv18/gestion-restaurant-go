@@ -2,12 +2,12 @@
 
 ## Módulos
 
-Módulos hoy: **`identidad`** (implementado en I1: acceso, autorización y administración de accesos; en I2, negocio y sucursales), **`atencion`** (zonas y mesas, implementado en I2) y `catalogo` (clientes y proveedores, implementados en I2 rebanada 2; el resto de sus carpetas, como `producto_*`, sigue siendo el **esqueleto de ejemplo sustituible** de la plantilla, con archivos de solo `package`). Los empleados viven en `identidad`. Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
+Módulos hoy: **`identidad`** (implementado en I1: acceso, autorización y administración de accesos; en I2, negocio y sucursales), **`atencion`** (zonas y mesas, implementado en I2) y **`catalogo`** (implementado en I2: clientes y proveedores en la rebanada 2; categorías, impuestos de solo lectura, tasas de impuesto, estaciones de preparación, productos y su disponibilidad por sede en la rebanada 3). En `catalogo` sigue presente, sin usarse, el **esqueleto de ejemplo** de la plantilla: 51 archivos de una sola línea `package x` con nombres `*producto*` (p. ej. `crear_producto.go`, `producto_handler.go`, `infrastructure/client/precio`) que conviven con las implementaciones reales (`productos.go`, `productos_handler.go`) y deben borrarse en una limpieza aparte. Los empleados viven en `identidad`. Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
 
 | Módulo (ADR-01) | Tablas (migración) | Incremento |
 |---|---|---|
 | Identidad | negocio y sucursales (administración en I2), roles, permisos, usuarios, empleados… (`00001`) | I1 / I2 |
-| Catálogos | unidades, categorías, impuestos, productos, recetas, inventario maestro (`00002`) | I2 |
+| Catálogos | categorías, impuestos, tasas, estaciones, productos y disponibilidad por sede (`00002`, implementados en I2); unidades, recetas e inventario maestro quedan para I5 | I2 / I5 |
 | Atención | zonas y mesas (`00003`, I2) · reservas, pedidos, cuentas, detalles (I3; reservas: I6) | I2 / I3 (reservas: I6) |
 | Producción | comandas, comanda_detalles, delivery (`00003`) | I3 / I6 |
 | Caja | métodos de pago, cajas, sesiones, movimientos, pagos, devoluciones (`00004`) | I4 |
