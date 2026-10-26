@@ -18,6 +18,8 @@ const (
 
 	Proveedor = `id, tipo_documento, numero_documento, razon_social, contacto_nombre, telefono, email, direccion,
 	es_activo, motivo_eliminacion, eliminado_en, eliminado_por, creado_en, creado_por, actualizado_en, actualizado_por`
+
+	Categoria = `id, nombre, descripcion, orden_visualizacion, es_activo, creado_en, creado_por, actualizado_en, actualizado_por`
 )
 
 func textoNulo(v sql.NullString) *string {
@@ -53,6 +55,15 @@ func ScanCliente(s Fila) (dtoresult.Cliente, error) {
 	c.TipoDocumento, c.NumeroDocumento = textoNulo(tipo), textoNulo(numero)
 	c.Telefono, c.Email, c.Direccion = textoNulo(tel), textoNulo(email), textoNulo(dir)
 	c.Baja = baja(motivo, elimEn, elimPor)
+	return c, err
+}
+
+// ScanCategoria lee una fila con las columnas de Categoria.
+func ScanCategoria(s Fila) (dtoresult.Categoria, error) {
+	var c dtoresult.Categoria
+	var desc sql.NullString
+	err := s.Scan(&c.ID, &c.Nombre, &desc, &c.Orden, &c.EsActivo, &c.CreadoEn, &c.CreadoPor, &c.ActualizadoEn, &c.ActualizadoPor)
+	c.Descripcion = textoNulo(desc)
 	return c, err
 }
 

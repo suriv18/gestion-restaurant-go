@@ -19,6 +19,7 @@ const codigoUniqueViolation = "23505"
 const (
 	restriccionDocumentoCliente   = "clientes_tipo_documento_numero_documento_key"
 	restriccionDocumentoProveedor = "proveedores_tipo_documento_numero_documento_key"
+	restriccionNombreCategoria    = "categorias_nombre_key"
 )
 
 // Translate convierte los errores de PostgreSQL conocidos en los errores de puerto que los
@@ -32,6 +33,9 @@ func Translate(err error) error {
 	case codigoUniqueViolation:
 		if pg.ConstraintName == restriccionDocumentoCliente || pg.ConstraintName == restriccionDocumentoProveedor {
 			return outbound.ErrDocumentoDuplicado
+		}
+		if pg.ConstraintName == restriccionNombreCategoria {
+			return outbound.ErrCategoriaDuplicada
 		}
 		return fmt.Errorf("%w (%s)", outbound.ErrDuplicado, pg.ConstraintName)
 	case "23503": // foreign_key_violation

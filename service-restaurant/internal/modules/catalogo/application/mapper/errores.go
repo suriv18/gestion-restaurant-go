@@ -31,6 +31,11 @@ func NoEncontrado(que string) *apperror.AppError {
 	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrado")
 }
 
+// NoEncontrada es el equivalente femenino ("categoría no encontrada").
+func NoEncontrada(que string) *apperror.AppError {
+	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrada")
+}
+
 func Validacion(code, msg string) *apperror.AppError {
 	return apperror.New(apperror.KindValidation, code, msg)
 }

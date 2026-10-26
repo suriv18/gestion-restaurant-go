@@ -15,6 +15,9 @@ var (
 // sigue vigente tras la baja: un documento dado de baja no se libera.
 var ErrDocumentoDuplicado = fmt.Errorf("documento duplicado: %w", ErrDuplicado)
 
+// ErrCategoriaDuplicada distingue la colisión del nombre de categoría (único también tras la baja).
+var ErrCategoriaDuplicada = fmt.Errorf("categoría duplicada: %w", ErrDuplicado)
+
 // ErrReglaDatos señala una regla de integridad de la base (triggers de la V4).
 type ErrReglaDatos struct{ Mensaje string }
 

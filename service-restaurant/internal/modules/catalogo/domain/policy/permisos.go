@@ -8,3 +8,9 @@ const (
 	ProveedorVer         = "PROVEEDOR_VER"
 	ProveedorAdministrar = "PROVEEDOR_ADMINISTRAR"
 )
+
+// Permisos de la carta (migración 00010). CartaAdministrar implica ver.
+const (
+	CartaVer         = "CARTA_VER"
+	CartaAdministrar = "CARTA_ADMINISTRAR"
+)
