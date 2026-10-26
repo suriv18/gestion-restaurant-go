@@ -20,6 +20,9 @@ const (
 	maxNombreCategoria = 100
 	maxDescripcion     = 1000
 	maxOrden           = 9999
+
+	maxCodigoEstacion = 20
+	maxNombreEstacion = 80
 )
 
 // Validaciones de campos compartidas por el alta y la edición: cada una devuelve el valor ya
@@ -131,3 +134,13 @@ func campoOpcional(c cmd.Campo[string], campo string, f formato) (outbound.Campo
 
 // vacio indica que el texto opcional no trae valor.
 func vacio(p *string) bool { return p == nil || strings.TrimSpace(*p) == "" }
+
+// validarCodigoEstacion normaliza a mayúsculas y comprueba el formato del código de estación.
+func validarCodigoEstacion(raw string) (string, *apperror.AppError) {
+	c, err := vo.NewCodigoEstacion(raw)
+	if err != nil {
+		return "", mapper.Validacion("codigo_invalido",
+			fmt.Sprintf("el código admite letras (se pasa a mayúsculas), dígitos, _ y - (1 a %d caracteres)", maxCodigoEstacion))
+	}
+	return c, nil
+}

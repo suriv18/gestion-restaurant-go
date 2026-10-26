@@ -21,6 +21,10 @@ const (
 	CodigoCategoriaInactiva            = "categoria_inactiva"
 	CodigoCategoriaConProductosActivos = "categoria_con_productos_activos"
 
+	CodigoEstacionDuplicada = "estacion_duplicada"
+	CodigoEstacionInactiva  = "estacion_inactiva"
+	CodigoEstacionEnUso     = "estacion_en_uso"
+
 	CodigoVigenciaInvalida = "vigencia_invalida"
 	CodigoVigenciaSolapada = "vigencia_solapada"
 )

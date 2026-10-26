@@ -21,3 +21,9 @@ const (
 	ImpuestoVer         = "IMPUESTO_VER"
 	ImpuestoAdministrar = "IMPUESTO_ADMINISTRAR"
 )
+
+// Permisos de estaciones de preparación (migración 00010). Son por sede; EstacionAdministrar implica ver.
+const (
+	EstacionVer         = "ESTACION_VER"
+	EstacionAdministrar = "ESTACION_ADMINISTRAR"
+)

@@ -26,3 +26,7 @@ func (e *ErrReglaDatos) Error() string { return "regla de datos: " + e.Mensaje }
 // ErrVigenciaSolapada señala que la vigencia de una tasa se cruza con otra del mismo impuesto
 // (restricción de exclusión, SQLSTATE 23P01).
 var ErrVigenciaSolapada = errors.New("vigencia de tasa solapada")
+
+// ErrEstacionDuplicada distingue la colisión de (sucursal, código) de estación (único también
+// tras la baja).
+var ErrEstacionDuplicada = fmt.Errorf("estación duplicada: %w", ErrDuplicado)

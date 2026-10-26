@@ -107,3 +107,13 @@ func ScanTasaImpuesto(s Fila) (dtoresult.TasaImpuesto, error) {
 	t.VigenteHasta, t.Fundamento = textoNulo(hasta), textoNulo(fund)
 	return t, err
 }
+
+// Estacion: estación de preparación de una sede.
+const Estacion = `id, sucursal_id, codigo, nombre, es_activo, creado_en, creado_por, actualizado_en, actualizado_por`
+
+// ScanEstacion lee una fila con las columnas de Estacion.
+func ScanEstacion(s Fila) (dtoresult.Estacion, error) {
+	var e dtoresult.Estacion
+	err := s.Scan(&e.ID, &e.SucursalID, &e.Codigo, &e.Nombre, &e.EsActivo, &e.CreadoEn, &e.CreadoPor, &e.ActualizadoEn, &e.ActualizadoPor)
+	return e, err
+}
