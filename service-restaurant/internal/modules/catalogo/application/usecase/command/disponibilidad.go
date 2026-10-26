@@ -15,11 +15,8 @@ import (
 )
 
 const (
-	CodigoEstacionDeOtraSede = "estacion_de_otra_sede"
-
 	mensajeSinPermisoDisponibilidad = "no tiene permiso para cambiar la disponibilidad de productos"
-	mensajeEstacionDeOtraSede       = "la estación indicada pertenece a otra sucursal"
-	mensajeEstacionNoValida         = "la estación indicada no existe o está dada de baja"
+	mensajeEstacionNoValida         = "la estación indicada no existe, está inactiva o no pertenece a esta sucursal"
 )
 
 // deDisponibilidad traduce los errores de almacenamiento de productos_sucursal: la estación de
@@ -28,9 +25,10 @@ const (
 func deDisponibilidad(err error) (appresult.Result[dtoresult.ProductoSucursal], error) {
 	var regla *outbound.ErrReglaDatos
 	switch {
-	case errors.Is(err, outbound.ErrEstacionOtraSede):
-		return rechazar[dtoresult.ProductoSucursal](mapper.Validacion(CodigoEstacionDeOtraSede, mensajeEstacionDeOtraSede))
-	case errors.As(err, &regla) && strings.HasPrefix(regla.Mensaje, "Referencia estacion_id="):
+	// Estación de otra sede (FK compuesta), inexistente o inactiva (trigger): mismo código y mensaje
+	// para no revelar a un admin de una sede que existe una estación en otra.
+	case errors.Is(err, outbound.ErrEstacionOtraSede),
+		errors.As(err, &regla) && strings.HasPrefix(regla.Mensaje, "Referencia estacion_id="):
 		return rechazar[dtoresult.ProductoSucursal](mapper.Validacion(mapper.CodigoReferenciaInvalida, mensajeEstacionNoValida))
 	case errors.As(err, &regla) && strings.Contains(regla.Mensaje, "maestro sucursales"):
 		return rechazar[dtoresult.ProductoSucursal](mapper.Validacion(mapper.CodigoReferenciaInvalida, mensajeSedeNoValida))

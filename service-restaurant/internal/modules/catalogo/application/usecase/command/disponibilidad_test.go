@@ -152,7 +152,7 @@ func TestDisponibilidadTraduceErroresDeAlmacenamiento(t *testing.T) {
 		code    string
 		mensaje string
 	}{
-		{outbound.ErrEstacionOtraSede, apperror.KindValidation, CodigoEstacionDeOtraSede, mensajeEstacionDeOtraSede},
+		{outbound.ErrEstacionOtraSede, apperror.KindValidation, "referencia_invalida", mensajeEstacionNoValida},
 		{&outbound.ErrReglaDatos{Mensaje: "Referencia estacion_id=8: maestro estaciones_preparacion inexistente o dado de baja"},
 			apperror.KindValidation, "referencia_invalida", mensajeEstacionNoValida},
 		{&outbound.ErrReglaDatos{Mensaje: "Referencia sucursal_id=3: maestro sucursales inexistente o dado de baja"},

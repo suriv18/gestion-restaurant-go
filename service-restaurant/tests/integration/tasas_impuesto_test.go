@@ -106,6 +106,11 @@ func TestTasasPermisos(t *testing.T) {
 		esperar(t, call(t, "GET", ruta, "", nada), http.StatusForbidden, "sin_permiso")
 	}
 	esperar(t, post(t, "/api/v1/tasas-impuesto", cuerpoTasa(imp, "5", "2040-01-01", ""), nada), http.StatusForbidden, "sin_permiso")
+	// Un impuesto_id mal formado no se evalúa antes del permiso: 403 primero.
+	for _, malo := range []string{"abc", "+5", "007"} {
+		esperar(t, post(t, "/api/v1/tasas-impuesto", cuerpoTasa(malo, "5", "2040-01-01", ""), nada), http.StatusForbidden, "sin_permiso")
+		esperar(t, call(t, "GET", "/api/v1/tasas-impuesto?impuesto_id="+malo, "", nada), http.StatusForbidden, "sin_permiso")
+	}
 
 	// MESERO no tiene permisos de impuestos (solo CARTA_VER): no lee.
 	asegurarUsuario(t, "imp.mesero", "ImpMesero2026Clave", "MESERO", "PRINCIPAL")
@@ -276,7 +281,10 @@ func TestTasaAltaIdempotenciaYValidaciones(t *testing.T) {
 
 	// Impuesto: obligatorio, existente y activo.
 	esperar(t, post(t, "/api/v1/tasas-impuesto", `{"tasa":"18","vigente_desde":"2035-01-01"}`, tk), http.StatusUnprocessableEntity, "impuesto_id_invalido")
-	esperar(t, post(t, "/api/v1/tasas-impuesto", cuerpoTasa("abc", "18", "2035-01-01", ""), tk), http.StatusUnprocessableEntity, "impuesto_id_invalido")
+	for _, malo := range []string{"abc", "+5", "007", "0", "-1"} {
+		esperar(t, post(t, "/api/v1/tasas-impuesto", cuerpoTasa(malo, "18", "2035-01-01", ""), tk), http.StatusBadRequest, "impuesto_id_invalido")
+		esperar(t, call(t, "GET", "/api/v1/tasas-impuesto"+conLimite("?impuesto_id="+malo), "", tk), http.StatusBadRequest, "impuesto_id_invalido")
+	}
 	esperar(t, post(t, "/api/v1/tasas-impuesto", cuerpoTasa("999999999", "18", "2035-01-01", ""), tk), http.StatusUnprocessableEntity, "referencia_invalida")
 	inactivo := impuestoPropio(t, false)
 	esperar(t, post(t, "/api/v1/tasas-impuesto", cuerpoTasa(inactivo, "18", "2035-01-01", ""), tk), http.StatusUnprocessableEntity, "referencia_invalida")

@@ -43,25 +43,25 @@ Fuera: `unidades_medida`, `articulos_inventario` y recetas (I5). Un producto `RE
 - Las tasas no se dan de baja.
 Se comprueba dentro de la misma transacción, con la fila del padre bloqueada (`FOR UPDATE`) para que una carrera con un alta de hijo no deje huérfanos.
 
-**D5. Tasas.** `tasa` en 0–100 (`numeric(7,4)`), `vigente_desde` obligatoria, `vigente_hasta` opcional y mayor que la anterior. La exclusión `gist` impide solapes: el error `23P01` se traduce a 409 `vigencia_solapada`. No hay datos por defecto (regla del esquema). `impuesto_id` no se edita (se crea otra tasa). Un impuesto inactivo se rechaza por el trigger (`referencia_invalida`/regla de datos).
+**D5. Tasas.** `tasa` en 0–100 (`numeric(7,4)`), `vigente_desde` obligatoria, `vigente_hasta` opcional y mayor que la anterior. La exclusión `gist` impide solapes: el error `23P01` se traduce a 409 `vigencia_solapada`. No hay datos por defecto (regla del esquema). `impuesto_id` no se edita (se crea otra tasa). El caso de uso comprueba el impuesto (activo, con `FOR SHARE`) antes de insertar: inexistente o inactivo → 422 `referencia_invalida`. `tasa` admite 1–3 dígitos enteros (con ceros a la izquierda, p. ej. `007.5`) y hasta 4 decimales; mayor que 100 → 422 `tasa_invalida`. `impuesto_id` llega en cadena y se valida en el caso de uso tras el permiso: ausente → 422 `impuesto_id_invalido`, mal formado (`+5`, `007`, `abc`) → 400 `impuesto_id_invalido`; igual con el filtro `impuesto_id` del listado (siempre 403 primero para quien no tiene permiso).
 
 **D6. Productos.**
 - Tipos: `PREPARADO`, `REVENTA`, `ADICIONAL`, `SERVICIO`. `REVENTA` ⇔ `articulo_id` (CHECK; se valida antes en el caso de uso con 422 `articulo_requerido`/`articulo_no_permitido`).
 - `afectacion_igv` ∈ {`10`,`20`,`30`}; con `10` el `impuesto_id` es obligatorio (422 `impuesto_requerido`).
 - Precio: decimal con hasta 2 decimales, ≥ 0, máximo 99 999 999 999.99; `factor_consumo` > 0 con hasta 6 decimales. Los decimales viajan como cadena (contrato); se validan sin `float`.
 - `codigo` único (409 `codigo_duplicado`, aunque el producto esté dado de baja); `nombre` ≤ 180; `imagen_url` opcional ≤ 2000 caracteres, esquema `http`/`https`.
-- Categoría e impuesto deben estar activos (lo garantiza el trigger `a1_referencias_activas`; se traduce a 422 con mensaje curado).
+- Categoría e impuesto deben estar activos (lo garantiza el trigger `a1_referencias_activas`; se traduce a 422 con mensaje curado). Al restaurar un producto cuya categoría o impuesto sigue inactivo: 409 `referencia_inactiva`.
 - El PATCH acepta cualquier campo del alta; `descripcion`, `articulo_id`, `impuesto_id` e `imagen_url` admiten `null` para vaciar.
-- Listado: filtros `q` (nombre o inicio del código), `categoria_id`, `es_activo` (por defecto activos), `limit`, `cursor`, y `sucursal_id` opcional que añade el estado en esa sede (D7).
+- Listado: filtros `q` (contiene en el nombre o inicio del código; más de 150 caracteres se truncan), `categoria_id`, `es_activo` (`true` por defecto, `false` o la extensión `todos` sin filtro de estado), `limit`, `cursor`, y `sucursal_id` opcional que añade el estado en esa sede (D7).
 
 **D7. Disponibilidad por sede** (`PUT /productos/{id}/disponibilidad`).
 - Sin fila en `productos_sucursal` el producto **no se ofrece** en esa sede (así lo define `v_carta_disponible`). El `PUT` hace *upsert* por `(producto_id, sucursal_id)` y siempre devuelve la fila.
-- Cuerpo: `sucursal_id` y `disponible` (contrato) más, **como extensión del contrato**, `precio_venta` y `estacion_id` opcionales, ambos anulables (ausente = sin cambio; `null` = usar precio general / sin estación). La estación debe ser de la misma sede (FK compuesta → 422 `estacion_de_otra_sede`).
+- Cuerpo: `sucursal_id` y `disponible` (contrato) más, **como extensión del contrato**, `precio_venta` y `estacion_id` opcionales, ambos anulables (ausente = sin cambio; `null` = usar precio general / sin estación). La estación debe ser activa y de la misma sede (FK compuesta y trigger `a1_referencias_activas`): una estación de otra sede, inexistente o inactiva responde el MISMO 422 `referencia_invalida` con el mismo mensaje, para no revelar a un admin de una sede que existe una estación en otra (revisión final; antes era `estacion_de_otra_sede`).
 - Permisos: cambiar solo `disponible` pide `CARTA_DISPONIBILIDAD` **o** `CARTA_ADMINISTRAR` en esa sede; cambiar `precio_venta` o `estacion_id` pide `CARTA_ADMINISTRAR` en esa sede.
 - Producto o sede inactivos → 409 (`producto_inactivo`) / 404 (sede). Pausar no altera pedidos ya registrados (aceptación de RF-005; cuando existan los pedidos, I3).
-- `GET /productos?sucursal_id=` añade a cada ítem `en_sucursal`: `{disponible, precio_venta, estacion_id}` o `null` si no hay fila. Sin `sucursal_id` el ítem no trae el campo.
+- `GET /productos?sucursal_id=` añade a cada ítem `en_sucursal`: `{disponible, precio_sucursal, precio_efectivo, estacion_id}` (`precio_sucursal` anulable; `precio_efectivo` es el de la sede o, si no hay, el general del producto) o `null` si no hay fila activa en esa sede. Con `disponible=true|false` el listado filtra por filas activas habilitadas / pausadas (400 `disponible_requiere_sucursal` sin `sucursal_id`); los productos sin fila no salen con `false`. Sin `sucursal_id` el ítem no trae el campo.
 
-**D8. Listados.** Cursor por id ascendente, `limit` 1–100 (por defecto 25, como el resto de la API; el contrato dice 30 y se corrige en el contrato), `es_activo` opcional. Respuesta `{items, next_cursor}`.
+**D8. Listados.** Cursor por id ascendente, `limit` 1–100 (por defecto 25, como el resto de la API; el contrato dice 30 y se corrige en el contrato), `es_activo` opcional. Respuesta `{items, nextCursor}` (`nextCursor` es `null` en la última página). Sin `es_activo` (`true`/`false`) los listados no filtran por estado, salvo productos, que por defecto solo trae activos.
 
 **D9. Idempotencia y errores.** Igual que clientes: altas, bajas y restauraciones exigen `Idempotency-Key`; los PATCH y el `PUT` no. Cuerpos con campos desconocidos → 400. Errores en `application/problem+json` con códigos estables.
 
@@ -73,4 +73,4 @@ Se comprueba dentro de la misma transacción, con la fila del padre bloqueada (`
 ## 4. Riesgos
 - Pausar un plato no es lo mismo que darlo de baja: la baja del maestro lo retira de todas las sedes. Está en el contrato y se mantiene.
 - Una tasa editada después de usada en ventas (I3+) cambiaría el cálculo hacia atrás: hoy no hay ventas; antes de I3 hay que impedir editar tasas con uso (anotado para I3).
-- Sin pruebas de carga ni de la carrera baja-de-categoría vs alta-de-producto más allá de una prueba de concurrencia dirigida.
+- Carrera baja-de-categoría vs alta-de-producto (y baja de estación vs asignación): sin prueba automatizada ni de carga. Queda cubierta por el diseño de bloqueos: el caso de uso toma `FOR UPDATE` del padre y el trigger `a1_referencias_activas` toma `FOR SHARE` de las referencias al insertar el hijo, de modo que ambas operaciones se serializan; se verificó a mano en la revisión final.

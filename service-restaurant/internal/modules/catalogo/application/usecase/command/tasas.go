@@ -35,8 +35,13 @@ func (uc *CrearTasaImpuesto) Execute(ctx context.Context, c cmd.CrearTasaImpuest
 	if ae := mapper.Requiere(c.Actor, mensajeSinPermisoTasas, policy.ImpuestoAdministrar); ae != nil {
 		return rechazar[dtoresult.TasaImpuesto](ae)
 	}
-	if c.ImpuestoID <= 0 {
+	// Ausente es 422 (obligatorio); presente pero mal formado es 400, siempre después del permiso.
+	if c.ImpuestoID == "" {
 		return rechazar[dtoresult.TasaImpuesto](mapper.Validacion("impuesto_id_invalido", "impuesto_id es obligatorio"))
+	}
+	impuestoID, ae := mapper.IDCadena(c.ImpuestoID, "impuesto_id")
+	if ae != nil {
+		return rechazar[dtoresult.TasaImpuesto](ae)
 	}
 	tasa, ae := validarTasa(c.Tasa)
 	if ae != nil {
@@ -50,14 +55,14 @@ func (uc *CrearTasaImpuesto) Execute(ctx context.Context, c cmd.CrearTasaImpuest
 	if ae != nil {
 		return rechazar[dtoresult.TasaImpuesto](ae)
 	}
-	activo, err := uc.tasas.ImpuestoActivo(ctx, c.ImpuestoID)
+	activo, err := uc.tasas.ImpuestoActivo(ctx, impuestoID)
 	if err != nil {
 		return tecnico[dtoresult.TasaImpuesto]("comprobar impuesto", err)
 	}
 	if !activo {
 		return rechazar[dtoresult.TasaImpuesto](apperror.New(apperror.KindValidation, mapper.CodigoReferenciaInvalida, mensajeImpuestoNoValido))
 	}
-	t, err := uc.tasas.Crear(ctx, outbound.NuevaTasa{ImpuestoID: c.ImpuestoID, Tasa: tasa, VigenteDesde: desde, VigenteHasta: hasta, Fundamento: fundamento})
+	t, err := uc.tasas.Crear(ctx, outbound.NuevaTasa{ImpuestoID: impuestoID, Tasa: tasa, VigenteDesde: desde, VigenteHasta: hasta, Fundamento: fundamento})
 	if err != nil {
 		return deTasa(err, "crear tasa de impuesto")
 	}

@@ -81,8 +81,14 @@ func (uc *ListarTasasImpuesto) Execute(ctx context.Context, q qry.ListarTasasImp
 	if ae != nil {
 		return appresult.Fail[dtoresult.PaginaTasas](ae), nil
 	}
+	var impuestoID int64
+	if q.ImpuestoID != "" {
+		if impuestoID, ae = mapper.IDCadena(q.ImpuestoID, "impuesto_id"); ae != nil {
+			return appresult.Fail[dtoresult.PaginaTasas](ae), nil
+		}
+	}
 	n := tamanio(q.Limite)
-	items, err := uc.impuestos.ListarTasas(ctx, outbound.FiltroTasas{ImpuestoID: q.ImpuestoID, DespuesDeID: desde, Limite: n + 1})
+	items, err := uc.impuestos.ListarTasas(ctx, outbound.FiltroTasas{ImpuestoID: impuestoID, DespuesDeID: desde, Limite: n + 1})
 	if err != nil {
 		return appresult.Result[dtoresult.PaginaTasas]{}, fmt.Errorf("listar tasas de impuesto: %w", err)
 	}

@@ -230,10 +230,10 @@ func TestDisponibilidadEstacion(t *testing.T) {
 		t.Fatalf("null debe quitar la estación: %+v", d)
 	}
 
-	// De otra sede: 422 estacion_de_otra_sede, también al crear la fila (producto sin fila).
-	esperar(t, putDisp(t, tk, p.ID, cuerpoDisp(sedeID, true, `"estacion_id":"`+ajena.ID+`"`)), http.StatusUnprocessableEntity, "estacion_de_otra_sede")
+	// De otra sede: 422 referencia_invalida (igual que inexistente, para no revelar otras sedes), también al crear la fila (producto sin fila).
+	esperar(t, putDisp(t, tk, p.ID, cuerpoDisp(sedeID, true, `"estacion_id":"`+ajena.ID+`"`)), http.StatusUnprocessableEntity, "referencia_invalida")
 	p2 := productoNuevo(t)
-	esperar(t, putDisp(t, tk, p2.ID, cuerpoDisp(sedeID, true, `"estacion_id":"`+ajena.ID+`"`)), http.StatusUnprocessableEntity, "estacion_de_otra_sede")
+	esperar(t, putDisp(t, tk, p2.ID, cuerpoDisp(sedeID, true, `"estacion_id":"`+ajena.ID+`"`)), http.StatusUnprocessableEntity, "referencia_invalida")
 	if scalar(t, `SELECT count(*) FROM sch_restaurante.productos_sucursal WHERE producto_id=`+p2.ID) != 0 {
 		t.Fatal("un rechazo no debe dejar fila")
 	}

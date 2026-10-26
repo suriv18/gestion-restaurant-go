@@ -1743,8 +1743,8 @@ paths:
         in: query
         schema:
           type: string
-          maxLength: 100
-        description: Texto a buscar en el nombre.
+          maxLength: 150
+        description: Texto a buscar en el nombre (contiene). Más de 150 caracteres se truncan a 150.
       - name: es_activo
         in: query
         schema:
@@ -2172,8 +2172,8 @@ paths:
         in: query
         schema:
           type: string
-          maxLength: 80
-        description: Texto a buscar en el nombre.
+          maxLength: 150
+        description: Texto a buscar en el código o en el nombre (contiene). Más de 150 caracteres se truncan a 150.
       - name: es_activo
         in: query
         schema:
@@ -4024,7 +4024,7 @@ paths:
         Cambiar solo `disponible` pide CARTA_DISPONIBILIDAD o CARTA_ADMINISTRAR en la sede; `precio_venta` o
         `estacion_id` (opcionales y anulables: ausente = sin cambio, null = precio general / sin estación) piden
         CARTA_ADMINISTRAR (si no, 403 `sede_no_autorizada`). Producto dado de baja: 409 `producto_inactivo`; estación
-        de otra sede: 422 `estacion_de_otra_sede`. No altera pedidos ya registrados. No usa Idempotency-Key.
+        inexistente, inactiva o de otra sede: 422 `referencia_invalida` (mismo mensaje en los tres casos, para no revelar estaciones de otras sedes). No altera pedidos ya registrados. No usa Idempotency-Key.
       x-implementado: true
       x-permiso: CARTA_DISPONIBILIDAD | CARTA_ADMINISTRAR
       responses:
@@ -6719,8 +6719,8 @@ components:
           description: Identificador BIGINT serializado como cadena.
         tasa: &id088
           type: string
-          pattern: ^(100(\.0{1,4})?|[0-9]{1,2}(\.[0-9]{1,4})?)$
-          description: 'Porcentaje decimal exacto entre 0 y 100, sin signo, con hasta 4 decimales (numeric(7,4)). La respuesta lo normaliza a 4 decimales (por ejemplo "18.0000").'
+          pattern: ^[0-9]{1,3}(\.[0-9]{1,4})?$
+          description: 'Porcentaje decimal exacto entre 0 y 100, sin signo, 1 a 3 dígitos enteros (se admiten ceros a la izquierda, p. ej. "007.5") y hasta 4 decimales (numeric(7,4)); un valor superior a 100 se rechaza con 422 `tasa_invalida`. La respuesta lo normaliza a 4 decimales (por ejemplo "18.0000").'
         vigente_desde: &id089
           type: string
           format: date
@@ -7172,12 +7172,12 @@ components:
           - type: 'null'
         factor_consumo: &id015
           type: string
-          pattern: ^[0-9]{1,12}(\.[0-9]{1,6})?$
-          description: 'Decimal exacto mayor que cero, sin signo, con hasta 6 decimales (numeric(18,6)). La respuesta lo normaliza a 6 decimales.'
+          pattern: ^0*[0-9]{1,12}(\.[0-9]{1,6})?$
+          description: 'Decimal exacto mayor que cero, sin signo, hasta 12 dígitos enteros significativos (se admiten ceros a la izquierda) y hasta 6 decimales (numeric(18,6)). La respuesta lo normaliza a 6 decimales.'
         precio_venta: &id016
           type: string
-          pattern: ^[0-9]{1,11}(\.[0-9]{1,2})?$
-          description: 'Decimal exacto de 0 a 99999999999.99, sin signo, con hasta 2 decimales (numeric(14,2)). La respuesta lo normaliza a 2 decimales.'
+          pattern: ^0*[0-9]{1,11}(\.[0-9]{1,2})?$
+          description: 'Decimal exacto de 0 a 99999999999.99, sin signo, hasta 11 dígitos enteros significativos (se admiten ceros a la izquierda) y hasta 2 decimales (numeric(14,2)). La respuesta lo normaliza a 2 decimales.'
         afectacion_igv: &id017
           type: string
           enum:
@@ -7300,7 +7300,7 @@ components:
         precio_venta:
           anyOf:
           - type: string
-            pattern: ^[0-9]{1,11}(\.[0-9]{1,2})?$
+            pattern: ^0*[0-9]{1,11}(\.[0-9]{1,2})?$
             description: 'Decimal exacto de 0 a 99999999999.99, sin signo (numeric(14,2)).'
           - type: 'null'
         disponible:
@@ -10309,10 +10309,10 @@ components:
           description: Extensión del contrato. Ausente = sin cambio; null = usar el precio general del producto. Exige CARTA_ADMINISTRAR en la sede.
           anyOf:
           - type: string
-            pattern: ^[0-9]{1,11}(\.[0-9]{1,2})?$
+            pattern: ^0*[0-9]{1,11}(\.[0-9]{1,2})?$
           - type: 'null'
         estacion_id:
-          description: Extensión del contrato. Ausente = sin cambio; null = sin estación. Debe ser una estación activa de la misma sede (422 estacion_de_otra_sede). Exige CARTA_ADMINISTRAR en la sede.
+          description: Extensión del contrato. Ausente = sin cambio; null = sin estación. Debe ser una estación activa de la misma sede (422 referencia_invalida, igual si no existe, está inactiva o es de otra sede). Exige CARTA_ADMINISTRAR en la sede.
           anyOf:
           - $ref: '#/components/schemas/Id'
           - type: 'null'

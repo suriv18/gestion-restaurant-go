@@ -35,5 +35,6 @@ var ErrEstacionDuplicada = fmt.Errorf("estación duplicada: %w", ErrDuplicado)
 var ErrProductoDuplicado = fmt.Errorf("producto duplicado: %w", ErrDuplicado)
 
 // ErrEstacionOtraSede: la estación indicada existe pero pertenece a otra sede que la del
-// producto (FK compuesta (estacion_id, sucursal_id) de productos_sucursal).
+// producto (FK compuesta (estacion_id, sucursal_id) de productos_sucursal). El caso de uso la
+// responde igual que una estación inexistente o inactiva (referencia_invalida).
 var ErrEstacionOtraSede = fmt.Errorf("estación de otra sede: %w", ErrReferenciaInvalida)

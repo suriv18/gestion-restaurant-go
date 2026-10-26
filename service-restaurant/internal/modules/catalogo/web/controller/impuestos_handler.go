@@ -2,7 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"strconv"
 
 	"service-restaurant/internal/modules/catalogo/application/dto/command"
 	"service-restaurant/internal/modules/catalogo/application/dto/query"
@@ -10,7 +9,6 @@ import (
 	"service-restaurant/internal/modules/catalogo/web/dto/request"
 	webmapper "service-restaurant/internal/modules/catalogo/web/mapper"
 	webrequest "service-restaurant/internal/platform/web/request"
-	"service-restaurant/internal/shared/kernel/apperror"
 )
 
 // ImpuestosHandler: impuestos (solo lectura) y sus tasas vigentes (RES-RF-027).
@@ -78,13 +76,8 @@ func (h *ImpuestosHandler) ListarTasas(w http.ResponseWriter, r *http.Request) e
 	if err != nil {
 		return err
 	}
-	var impuestoID int64
-	if v := q.Get("impuesto_id"); v != "" {
-		if impuestoID, err = strconv.ParseInt(v, 10, 64); err != nil || impuestoID <= 0 {
-			return apperror.New(apperror.KindBadRequest, "impuesto_id_invalido", "impuesto_id no es un id válido")
-		}
-	}
-	res, err := h.listarTasas.Execute(r.Context(), query.ListarTasasImpuesto{Actor: actor, ImpuestoID: impuestoID, Limite: limite, Cursor: q.Get("cursor")})
+	// impuesto_id llega crudo: el caso de uso lo valida (400) después de autorizar.
+	res, err := h.listarTasas.Execute(r.Context(), query.ListarTasasImpuesto{Actor: actor, ImpuestoID: q.Get("impuesto_id"), Limite: limite, Cursor: q.Get("cursor")})
 	return responder(w, res, err, http.StatusOK, webmapper.ToTasasPagina)
 }
 
@@ -116,12 +109,10 @@ func (h *ImpuestosHandler) CrearTasa(w http.ResponseWriter, r *http.Request) err
 	if err != nil {
 		return err
 	}
-	impuestoID, perr := strconv.ParseInt(body.ImpuestoID, 10, 64)
-	if perr != nil || impuestoID <= 0 {
-		return apperror.New(apperror.KindValidation, "impuesto_id_invalido", "impuesto_id es obligatorio y debe ser un id válido")
-	}
+	// impuesto_id llega crudo: el caso de uso responde 422 si falta y 400 si está mal formado,
+	// siempre después del permiso.
 	res, err := h.crearTasa.Execute(r.Context(), command.CrearTasaImpuesto{
-		Intencion: in, Actor: actor, ImpuestoID: impuestoID, Tasa: body.Tasa,
+		Intencion: in, Actor: actor, ImpuestoID: body.ImpuestoID, Tasa: body.Tasa,
 		VigenteDesde: body.VigenteDesde, VigenteHasta: body.VigenteHasta, Fundamento: body.Fundamento})
 	return responder(w, res, err, http.StatusCreated, webmapper.ToTasaImpuesto)
 }

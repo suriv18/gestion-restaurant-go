@@ -6,7 +6,7 @@ import appctx "service-restaurant/internal/shared/application/context"
 type CrearTasaImpuesto struct {
 	Intencion
 	Actor        appctx.Actor
-	ImpuestoID   int64
+	ImpuestoID   string // id en cadena crudo: el caso de uso lo valida tras autorizar
 	Tasa         string
 	VigenteDesde string
 	VigenteHasta *string

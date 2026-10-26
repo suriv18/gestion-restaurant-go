@@ -15,10 +15,11 @@ type ObtenerImpuesto struct {
 	ID    int64
 }
 
-// ListarTasasImpuesto pagina por cursor (id ascendente); ImpuestoID 0 no filtra.
+// ListarTasasImpuesto pagina por cursor (id ascendente); ImpuestoID vacío no filtra; si viene,
+// llega crudo y el caso de uso lo valida tras autorizar.
 type ListarTasasImpuesto struct {
 	Actor      appctx.Actor
-	ImpuestoID int64
+	ImpuestoID string
 	Limite     int
 	Cursor     string
 }
