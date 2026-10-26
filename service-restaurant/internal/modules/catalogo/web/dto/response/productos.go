@@ -25,9 +25,36 @@ type Producto struct {
 	CreadoPor         string     `json:"creado_por"`
 	ActualizadoEn     time.Time  `json:"actualizado_en"`
 	ActualizadoPor    string     `json:"actualizado_por"`
+	// EnSucursal solo se emite si la consulta pidió sucursal_id: apunta a un puntero nulo (null)
+	// cuando el producto no tiene fila en esa sede; nil (campo omitido) si no se pidió sede.
+	EnSucursal **EnSucursal `json:"en_sucursal,omitempty"`
 }
 
 type ProductosPagina struct {
 	Items      []Producto `json:"items"`
 	NextCursor *string    `json:"nextCursor"`
+}
+
+// EnSucursal es el estado de un producto en la sede consultada. precio_sucursal es el precio propio
+// de la sede (null = usa el general); precio_efectivo es el que se cobra (el de la sede o el general).
+type EnSucursal struct {
+	Disponible     bool    `json:"disponible"`
+	PrecioSucursal *string `json:"precio_sucursal"`
+	PrecioEfectivo string  `json:"precio_efectivo"`
+	EstacionID     *string `json:"estacion_id"`
+}
+
+// ProductoSucursal es la fila de disponibilidad de un producto en una sede.
+type ProductoSucursal struct {
+	ID             string    `json:"id"`
+	ProductoID     string    `json:"producto_id"`
+	SucursalID     string    `json:"sucursal_id"`
+	EstacionID     *string   `json:"estacion_id"`
+	PrecioVenta    *string   `json:"precio_venta"`
+	Disponible     bool      `json:"disponible"`
+	EsActivo       bool      `json:"es_activo"`
+	CreadoEn       time.Time `json:"creado_en"`
+	CreadoPor      string    `json:"creado_por"`
+	ActualizadoEn  time.Time `json:"actualizado_en"`
+	ActualizadoPor string    `json:"actualizado_por"`
 }

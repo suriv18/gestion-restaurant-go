@@ -11,6 +11,10 @@ type FiltroProductos struct {
 	Activo      *bool
 	CategoriaID *int64
 	Texto       string
+	// SucursalID (opcional) añade el estado en esa sede; Disponible (solo con SucursalID) filtra por
+	// él: true = habilitados, false = pausados (fila activa con disponible=false).
+	SucursalID  *int64
+	Disponible  *bool
 	DespuesDeID int64
 	Limite      int
 }
@@ -18,7 +22,7 @@ type FiltroProductos struct {
 // ProductoReader lee productos sin bloquear filas.
 type ProductoReader interface {
 	ListarProductos(ctx context.Context, f FiltroProductos) ([]dtoresult.Producto, error)
-	ObtenerProducto(ctx context.Context, id int64) (dtoresult.Producto, bool, error)
+	ObtenerProducto(ctx context.Context, id int64, sucursalID *int64) (dtoresult.Producto, bool, error)
 }
 
 // NuevoProducto trae los valores ya validados y normalizados (decimales con su escala).

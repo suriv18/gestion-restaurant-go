@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"service-restaurant/internal/modules/catalogo/application/dto/command"
 	"service-restaurant/internal/modules/catalogo/application/dto/query"
@@ -15,16 +16,17 @@ import (
 
 // ProductosHandler: productos de la carta, maestro global (RES-RF-005, RES-RF-030).
 type ProductosHandler struct {
-	listar  inbound.ListarProductos
-	obtener inbound.ObtenerProducto
-	crear   inbound.CrearProducto
-	editar  inbound.EditarProducto
-	estado  inbound.CambiarEstadoProducto
+	listar   inbound.ListarProductos
+	obtener  inbound.ObtenerProducto
+	crear    inbound.CrearProducto
+	editar   inbound.EditarProducto
+	estado   inbound.CambiarEstadoProducto
+	disponib inbound.CambiarDisponibilidad
 }
 
 func NewProductosHandler(l inbound.ListarProductos, o inbound.ObtenerProducto, c inbound.CrearProducto,
-	e inbound.EditarProducto, s inbound.CambiarEstadoProducto) *ProductosHandler {
-	return &ProductosHandler{l, o, c, e, s}
+	e inbound.EditarProducto, s inbound.CambiarEstadoProducto, d inbound.CambiarDisponibilidad) *ProductosHandler {
+	return &ProductosHandler{l, o, c, e, s, d}
 }
 
 // idOpcional convierte un id opcional en cadena; nil se queda en nil.
@@ -61,7 +63,35 @@ func activoProductos(valores map[string][]string) (activo *bool, todos bool, err
 	return activo, false, err
 }
 
-// Listar: GET /productos?q=&categoria_id=&es_activo=&limit=&cursor=
+// sedeOpcional lee sucursal_id de la consulta (ausente = nil); mal formado es 400.
+func sedeOpcional(q url.Values) (*int64, error) {
+	v := q.Get("sucursal_id")
+	if v == "" {
+		return nil, nil
+	}
+	n, err := idCadena(v, "sucursal_id")
+	if err != nil {
+		return nil, err
+	}
+	return &n, nil
+}
+
+// disponibleDe lee el filtro opcional disponible ("true" o "false").
+func disponibleDe(q url.Values) (*bool, error) {
+	switch q.Get("disponible") {
+	case "":
+		return nil, nil
+	case "true":
+		t := true
+		return &t, nil
+	case "false":
+		f := false
+		return &f, nil
+	}
+	return nil, apperror.New(apperror.KindBadRequest, "disponible_invalido", "disponible debe ser true o false")
+}
+
+// Listar: GET /productos?q=&categoria_id=&es_activo=&sucursal_id=&disponible=&limit=&cursor=
 func (h *ProductosHandler) Listar(w http.ResponseWriter, r *http.Request) error {
 	actor, err := actorDe(r)
 	if err != nil {
@@ -87,12 +117,20 @@ func (h *ProductosHandler) Listar(w http.ResponseWriter, r *http.Request) error 
 		}
 		categoria = &n
 	}
+	sede, err := sedeOpcional(q)
+	if err != nil {
+		return err
+	}
+	disponible, err := disponibleDe(q)
+	if err != nil {
+		return err
+	}
 	res, err := h.listar.Execute(r.Context(), query.ListarProductos{
-		Actor: actor, Activo: activo, Todos: todos, CategoriaID: categoria, Texto: q.Get("q"), Limite: limite, Cursor: q.Get("cursor")})
+		Actor: actor, Activo: activo, Todos: todos, CategoriaID: categoria, Texto: q.Get("q"), SucursalID: sede, Disponible: disponible, Limite: limite, Cursor: q.Get("cursor")})
 	return responder(w, res, err, http.StatusOK, webmapper.ToProductosPagina)
 }
 
-// Obtener: GET /productos/{id}
+// Obtener: GET /productos/{id}?sucursal_id=
 func (h *ProductosHandler) Obtener(w http.ResponseWriter, r *http.Request) error {
 	actor, err := actorDe(r)
 	if err != nil {
@@ -102,7 +140,15 @@ func (h *ProductosHandler) Obtener(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
-	res, err := h.obtener.Execute(r.Context(), query.ObtenerProducto{Actor: actor, ID: id})
+	q, err := consulta(r)
+	if err != nil {
+		return err
+	}
+	sede, err := sedeOpcional(q)
+	if err != nil {
+		return err
+	}
+	res, err := h.obtener.Execute(r.Context(), query.ObtenerProducto{Actor: actor, ID: id, SucursalID: sede})
 	return responder(w, res, err, http.StatusOK, webmapper.ToProducto)
 }
 
@@ -219,4 +265,36 @@ func (h *ProductosHandler) Restauracion(w http.ResponseWriter, r *http.Request) 
 	}
 	res, err := h.estado.Execute(r.Context(), command.CambiarEstadoProducto{Intencion: in, Actor: actor, ID: id, Activo: true})
 	return responder(w, res, err, http.StatusOK, webmapper.ToProducto)
+}
+
+// Disponibilidad: PUT /productos/{id}/disponibilidad. Idempotente por naturaleza: no lleva
+// Idempotency-Key. Hace upsert por (producto, sucursal) y devuelve siempre la fila.
+func (h *ProductosHandler) Disponibilidad(w http.ResponseWriter, r *http.Request) error {
+	actor, err := actorDe(r)
+	if err != nil {
+		return err
+	}
+	id, err := pathID(r)
+	if err != nil {
+		return err
+	}
+	var body request.Disponibilidad
+	if err := webrequest.DecodeJSON(r, &body); err != nil {
+		return err
+	}
+	// sucursal_id ausente llega como 0 al caso de uso (422 sucursal_requerida); mal formado es 400.
+	var sede int64
+	if body.SucursalID != "" {
+		if sede, err = idCadena(body.SucursalID, "sucursal_id"); err != nil {
+			return err
+		}
+	}
+	estacion, err := campoID(body.EstacionID, "estacion_id")
+	if err != nil {
+		return err
+	}
+	res, err := h.disponib.Execute(r.Context(), command.CambiarDisponibilidad{
+		Actor: actor, ProductoID: id, SucursalID: sede, Disponible: body.Disponible,
+		Precio: campo(body.PrecioVenta.Presente, body.PrecioVenta.Valor), Estacion: estacion})
+	return responder(w, res, err, http.StatusOK, webmapper.ToProductoSucursal)
 }

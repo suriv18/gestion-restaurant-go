@@ -13,6 +13,8 @@ const (
 const (
 	CartaVer         = "CARTA_VER"
 	CartaAdministrar = "CARTA_ADMINISTRAR"
+	// CartaDisponibilidad pausa o reactiva un producto en una sede (no toca precio ni estación).
+	CartaDisponibilidad = "CARTA_DISPONIBILIDAD"
 )
 
 // Permisos de impuestos y tasas (migración 00010). CartaAdministrar también habilita la lectura

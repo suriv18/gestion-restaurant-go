@@ -22,6 +22,8 @@ const (
 	restriccionNombreCategoria    = "categorias_nombre_key"
 	restriccionCodigoEstacion     = "estaciones_preparacion_sucursal_id_codigo_key"
 	restriccionCodigoProducto     = "productos_codigo_key"
+	// FK compuesta (estacion_id, sucursal_id): la estación debe ser de la misma sede.
+	restriccionEstacionSede = "productos_sucursal_estacion_id_sucursal_id_fkey"
 )
 
 // Translate convierte los errores de PostgreSQL conocidos en los errores de puerto que los
@@ -49,6 +51,9 @@ func Translate(err error) error {
 	case "23P01": // exclusion_violation: vigencias de una tasa solapadas
 		return outbound.ErrVigenciaSolapada
 	case "23503": // foreign_key_violation
+		if pg.ConstraintName == restriccionEstacionSede {
+			return outbound.ErrEstacionOtraSede
+		}
 		return fmt.Errorf("%w (%s)", outbound.ErrReferenciaInvalida, pg.ConstraintName)
 	case "23514": // check_violation
 		return &outbound.ErrReglaDatos{Mensaje: "el valor no cumple una restricción de datos"}

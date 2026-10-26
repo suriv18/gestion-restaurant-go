@@ -10,11 +10,16 @@ type ListarProductos struct {
 	Todos       bool
 	CategoriaID *int64
 	Texto       string
-	Limite      int
-	Cursor      string
+	// SucursalID añade a cada ítem su estado en esa sede (en_sucursal); Disponible lo filtra
+	// (solo con SucursalID): true = habilitados, false = pausados (fila con disponible=false).
+	SucursalID *int64
+	Disponible *bool
+	Limite     int
+	Cursor     string
 }
 
 type ObtenerProducto struct {
-	Actor appctx.Actor
-	ID    int64
+	Actor      appctx.Actor
+	ID         int64
+	SucursalID *int64 // opcional: añade en_sucursal
 }

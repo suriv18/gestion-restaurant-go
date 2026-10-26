@@ -23,6 +23,6 @@ var _ outbound.ProductoReader = (*ProductoLectorAdapter)(nil)
 func (a *ProductoLectorAdapter) ListarProductos(ctx context.Context, f outbound.FiltroProductos) ([]dtoresult.Producto, error) {
 	return a.repo.ListarProductos(ctx, f)
 }
-func (a *ProductoLectorAdapter) ObtenerProducto(ctx context.Context, id int64) (dtoresult.Producto, bool, error) {
-	return a.repo.ObtenerProducto(ctx, id)
+func (a *ProductoLectorAdapter) ObtenerProducto(ctx context.Context, id int64, sucursalID *int64) (dtoresult.Producto, bool, error) {
+	return a.repo.ObtenerProducto(ctx, id, sucursalID)
 }

@@ -33,7 +33,13 @@ func armarProductos(db *sql.DB, logger *slog.Logger) *controller.ProductosHandle
 		},
 		meta: func(c cmd.CambiarEstadoProducto) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
 
+	disponibilidad := escritura[cmd.CambiarDisponibilidad, dtoresult.ProductoSucursal]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.CambiarDisponibilidad, dtoresult.ProductoSucursal] {
+			return command.NewCambiarDisponibilidad(writeadapter.NewDisponibilidadWriteAdapter(q))
+		},
+		meta: func(c cmd.CambiarDisponibilidad) (int64, cmd.Intencion) { return c.Actor.UserID, cmd.Intencion{} }}
+
 	lector := readadapter.NewProductoLectorAdapter(db)
 	return controller.NewProductosHandler(uquery.NewListarProductos(lector), uquery.NewObtenerProducto(lector),
-		inbound.CrearProducto(crear), inbound.EditarProducto(editar), inbound.CambiarEstadoProducto(estado))
+		inbound.CrearProducto(crear), inbound.EditarProducto(editar), inbound.CambiarEstadoProducto(estado), inbound.CambiarDisponibilidad(disponibilidad))
 }

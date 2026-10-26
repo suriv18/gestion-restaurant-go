@@ -33,3 +33,7 @@ var ErrEstacionDuplicada = fmt.Errorf("estación duplicada: %w", ErrDuplicado)
 
 // ErrProductoDuplicado distingue la colisión del código de producto (único también tras la baja).
 var ErrProductoDuplicado = fmt.Errorf("producto duplicado: %w", ErrDuplicado)
+
+// ErrEstacionOtraSede: la estación indicada existe pero pertenece a otra sede que la del
+// producto (FK compuesta (estacion_id, sucursal_id) de productos_sucursal).
+var ErrEstacionOtraSede = fmt.Errorf("estación de otra sede: %w", ErrReferenciaInvalida)

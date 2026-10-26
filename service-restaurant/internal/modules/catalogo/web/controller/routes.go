@@ -63,4 +63,5 @@ func RegisterRoutes(mux *http.ServeMux, h Handlers, protect func(http.Handler) h
 	ruta("PATCH /productos/{id}", h.Productos.Editar)
 	ruta("POST /productos/{id}/baja", h.Productos.Baja)
 	ruta("POST /productos/{id}/restauracion", h.Productos.Restauracion)
+	ruta("PUT /productos/{id}/disponibilidad", h.Productos.Disponibilidad)
 }

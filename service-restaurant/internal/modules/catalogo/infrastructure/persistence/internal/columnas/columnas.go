@@ -115,14 +115,41 @@ const Producto = `id, categoria_id, codigo, nombre, descripcion, tipo, articulo_
 	creado_en, creado_por, actualizado_en, actualizado_por`
 
 // ScanProducto lee una fila con las columnas de Producto.
-func ScanProducto(s Fila) (dtoresult.Producto, error) {
+func ScanProducto(s Fila) (dtoresult.Producto, error) { return scanProducto(s) }
+
+// ProductoEnSede son las columnas que el LEFT JOIN a productos_sucursal añade a Producto (en este
+// orden): ps_id (NULL = sin fila activa en la sede), disponible, precio de la sede y estación.
+const ProductoEnSede = `ps.ps_id, ps.disponible, ps.ps_precio::text, ps.ps_estacion`
+
+// ScanProductoEnSede lee Producto seguido de ProductoEnSede y completa EnSucursal.
+func ScanProductoEnSede(s Fila) (dtoresult.Producto, error) {
+	var psID, estacion sql.NullInt64
+	var disp sql.NullBool
+	var precio sql.NullString
+	p, err := scanProducto(s, &psID, &disp, &precio, &estacion)
+	if err != nil {
+		return p, err
+	}
+	p.ConSede = true
+	if psID.Valid {
+		e := dtoresult.EnSucursal{Disponible: disp.Bool, PrecioSucursal: textoNulo(precio), PrecioEfectivo: p.PrecioVenta, EstacionID: enteroNulo(estacion)}
+		if e.PrecioSucursal != nil {
+			e.PrecioEfectivo = *e.PrecioSucursal
+		}
+		p.EnSucursal = &e
+	}
+	return p, nil
+}
+
+func scanProducto(s Fila, extra ...any) (dtoresult.Producto, error) {
 	var p dtoresult.Producto
 	var desc, imagen, motivo sql.NullString
 	var articulo, impuesto, elimPor sql.NullInt64
 	var elimEn sql.NullTime
-	err := s.Scan(&p.ID, &p.CategoriaID, &p.Codigo, &p.Nombre, &desc, &p.Tipo, &articulo, &p.FactorConsumo, &p.PrecioVenta,
+	dest := append([]any{&p.ID, &p.CategoriaID, &p.Codigo, &p.Nombre, &desc, &p.Tipo, &articulo, &p.FactorConsumo, &p.PrecioVenta,
 		&p.AfectacionIGV, &impuesto, &imagen, &p.EsActivo, &motivo, &elimEn, &elimPor,
-		&p.CreadoEn, &p.CreadoPor, &p.ActualizadoEn, &p.ActualizadoPor)
+		&p.CreadoEn, &p.CreadoPor, &p.ActualizadoEn, &p.ActualizadoPor}, extra...)
+	err := s.Scan(dest...)
 	p.Descripcion, p.ImagenURL = textoNulo(desc), textoNulo(imagen)
 	p.ArticuloID, p.ImpuestoID = enteroNulo(articulo), enteroNulo(impuesto)
 	p.Baja = baja(motivo, elimEn, elimPor)
@@ -145,4 +172,20 @@ func ScanEstacion(s Fila) (dtoresult.Estacion, error) {
 	var e dtoresult.Estacion
 	err := s.Scan(&e.ID, &e.SucursalID, &e.Codigo, &e.Nombre, &e.EsActivo, &e.CreadoEn, &e.CreadoPor, &e.ActualizadoEn, &e.ActualizadoPor)
 	return e, err
+}
+
+// ProductoSucursal: fila de productos_sucursal (disponibilidad por sede). El precio se lee como
+// texto para no pasar por float.
+const ProductoSucursal = `id, producto_id, sucursal_id, estacion_id, precio_venta::text, disponible, es_activo,
+	creado_en, creado_por, actualizado_en, actualizado_por`
+
+// ScanProductoSucursal lee una fila con las columnas de ProductoSucursal.
+func ScanProductoSucursal(s Fila) (dtoresult.ProductoSucursal, error) {
+	var p dtoresult.ProductoSucursal
+	var estacion sql.NullInt64
+	var precio sql.NullString
+	err := s.Scan(&p.ID, &p.ProductoID, &p.SucursalID, &estacion, &precio, &p.Disponible, &p.EsActivo,
+		&p.CreadoEn, &p.CreadoPor, &p.ActualizadoEn, &p.ActualizadoPor)
+	p.EstacionID, p.PrecioVenta = enteroNulo(estacion), textoNulo(precio)
+	return p, err
 }
