@@ -38,6 +38,8 @@ func Translate(err error) error {
 			return outbound.ErrCategoriaDuplicada
 		}
 		return fmt.Errorf("%w (%s)", outbound.ErrDuplicado, pg.ConstraintName)
+	case "23P01": // exclusion_violation: vigencias de una tasa solapadas
+		return outbound.ErrVigenciaSolapada
 	case "23503": // foreign_key_violation
 		return fmt.Errorf("%w (%s)", outbound.ErrReferenciaInvalida, pg.ConstraintName)
 	case "23514": // check_violation

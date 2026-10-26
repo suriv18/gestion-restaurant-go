@@ -20,6 +20,9 @@ const (
 	CodigoCategoriaDuplicada           = "categoria_duplicada"
 	CodigoCategoriaInactiva            = "categoria_inactiva"
 	CodigoCategoriaConProductosActivos = "categoria_con_productos_activos"
+
+	CodigoVigenciaInvalida = "vigencia_invalida"
+	CodigoVigenciaSolapada = "vigencia_solapada"
 )
 
 // rechazar devuelve un rechazo esperado (no un error técnico).

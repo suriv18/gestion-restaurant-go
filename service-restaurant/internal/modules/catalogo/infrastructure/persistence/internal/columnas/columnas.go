@@ -79,3 +79,31 @@ func ScanProveedor(s Fila) (dtoresult.Proveedor, error) {
 	p.Baja = baja(motivo, elimEn, elimPor)
 	return p, err
 }
+
+// Impuesto y TasaImpuesto: la tasa y las fechas se leen como texto (numeric(7,4)::text y
+// date::text) para no pasar por float ni por zona horaria.
+const (
+	Impuesto = `id, codigo, nombre, descripcion, es_activo, creado_en, creado_por, actualizado_en, actualizado_por`
+
+	TasaImpuesto = `id, impuesto_id, tasa::text, vigente_desde::text, vigente_hasta::text, fundamento,
+	creado_en, creado_por, actualizado_en, actualizado_por`
+)
+
+// ScanImpuesto lee una fila con las columnas de Impuesto.
+func ScanImpuesto(s Fila) (dtoresult.Impuesto, error) {
+	var i dtoresult.Impuesto
+	var desc sql.NullString
+	err := s.Scan(&i.ID, &i.Codigo, &i.Nombre, &desc, &i.EsActivo, &i.CreadoEn, &i.CreadoPor, &i.ActualizadoEn, &i.ActualizadoPor)
+	i.Descripcion = textoNulo(desc)
+	return i, err
+}
+
+// ScanTasaImpuesto lee una fila con las columnas de TasaImpuesto.
+func ScanTasaImpuesto(s Fila) (dtoresult.TasaImpuesto, error) {
+	var t dtoresult.TasaImpuesto
+	var hasta, fund sql.NullString
+	err := s.Scan(&t.ID, &t.ImpuestoID, &t.Tasa, &t.VigenteDesde, &hasta, &fund,
+		&t.CreadoEn, &t.CreadoPor, &t.ActualizadoEn, &t.ActualizadoPor)
+	t.VigenteHasta, t.Fundamento = textoNulo(hasta), textoNulo(fund)
+	return t, err
+}

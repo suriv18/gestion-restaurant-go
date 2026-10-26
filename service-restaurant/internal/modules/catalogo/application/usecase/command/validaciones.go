@@ -96,6 +96,8 @@ func mensajeDe(campo string) string {
 		return "la dirección admite hasta 500 caracteres"
 	case "contacto_nombre":
 		return "el nombre de contacto admite hasta 150 caracteres"
+	case "fundamento":
+		return "el fundamento admite hasta 2000 caracteres"
 	case "descripcion":
 		return "la descripción admite hasta 1000 caracteres"
 	}

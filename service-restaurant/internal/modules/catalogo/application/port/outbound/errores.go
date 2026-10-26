@@ -22,3 +22,7 @@ var ErrCategoriaDuplicada = fmt.Errorf("categoría duplicada: %w", ErrDuplicado)
 type ErrReglaDatos struct{ Mensaje string }
 
 func (e *ErrReglaDatos) Error() string { return "regla de datos: " + e.Mensaje }
+
+// ErrVigenciaSolapada señala que la vigencia de una tasa se cruza con otra del mismo impuesto
+// (restricción de exclusión, SQLSTATE 23P01).
+var ErrVigenciaSolapada = errors.New("vigencia de tasa solapada")

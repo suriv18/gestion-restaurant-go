@@ -14,3 +14,10 @@ const (
 	CartaVer         = "CARTA_VER"
 	CartaAdministrar = "CARTA_ADMINISTRAR"
 )
+
+// Permisos de impuestos y tasas (migración 00010). CartaAdministrar también habilita la lectura
+// de impuestos y tasas, que necesita el formulario de productos.
+const (
+	ImpuestoVer         = "IMPUESTO_VER"
+	ImpuestoAdministrar = "IMPUESTO_ADMINISTRAR"
+)
