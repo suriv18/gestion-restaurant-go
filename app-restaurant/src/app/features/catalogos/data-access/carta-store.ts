@@ -6,6 +6,7 @@ import { describeProblem } from '../../../core/http/problem';
 import { rechazo } from '../../../shared/forms/rechazo';
 import { cambiosDe, opcional, texto } from '../../../shared/forms/valores';
 import type { FieldProblem } from '../../../shared/ui/form-dialog';
+import { ConfiguracionApi } from '../../configuracion/data-access/configuracion-api';
 import { CategoriasApi } from './categorias-api';
 import {
   Categoria,
@@ -33,6 +34,8 @@ export const PERMISOS_CARTA = {
   estacionAdministrar: 'ESTACION_ADMINISTRAR',
   impuestoVer: 'IMPUESTO_VER',
   impuestoAdministrar: 'IMPUESTO_ADMINISTRAR',
+  sucursalVer: 'SUCURSAL_VER',
+  sucursalAdministrar: 'SUCURSAL_ADMINISTRAR',
 } as const;
 
 export interface CartaNotice {
@@ -132,6 +135,7 @@ export class CartaStore {
   private readonly productosApi = inject(ProductosApi);
   private readonly estacionesApi = inject(EstacionesApi);
   private readonly impuestosApi = inject(ImpuestosApi);
+  private readonly sucursalesApi = inject(ConfiguracionApi);
   private readonly auth = inject(AuthSession);
 
   /** Carga inicial (categorías + primera página de productos). */
@@ -175,10 +179,20 @@ export class CartaStore {
       this.tiene(PERMISOS_CARTA.impuestoAdministrar) ||
       this.tiene(PERMISOS_CARTA.cartaAdministrar),
   );
+  readonly puedeVerSedes = computed(
+    () => this.tiene(PERMISOS_CARTA.sucursalVer) || this.tiene(PERMISOS_CARTA.sucursalAdministrar),
+  );
   readonly sinAcceso = computed(() => !this.puedeVerCarta());
 
   /** Sedes de la sesión (ids); el servidor responde 404 si una no es accesible. */
   readonly sedes = computed<readonly string[]>(() => this.auth.user()?.branches ?? []);
+  /** Nombres de las sedes (id -> nombre), solo si el actor puede leer `/sucursales`. */
+  private readonly nombresSede = signal<Record<string, string>>({});
+
+  /** Nombre de la sede para mostrar; sin permiso de sedes (o si falló la lectura) queda «Sede {id}». */
+  nombreSede(id: string): string {
+    return this.nombresSede()[id] ?? `Sede ${id}`;
+  }
 
   /** Categorías ordenadas por `orden_visualizacion` y nombre. */
   readonly categoriasOrdenadas = computed(() =>
@@ -217,7 +231,7 @@ export class CartaStore {
       this.status.set('error');
       return;
     }
-    await Promise.all([this.cargarImpuestos(), this.cargarEstaciones()]);
+    await Promise.all([this.cargarImpuestos(), this.cargarEstaciones(), this.cargarNombresSedes()]);
     this.status.set('ready');
   }
 
@@ -508,6 +522,20 @@ export class CartaStore {
         'error',
         `${ok} Pero no pudimos actualizar la lista de categorías: recarga la página para verla al día.`,
       );
+    }
+  }
+
+  /** Mejora cosmética: si no se puede leer, el selector sigue mostrando «Sede {id}». */
+  private async cargarNombresSedes(): Promise<void> {
+    if (!this.puedeVerSedes()) {
+      this.nombresSede.set({});
+      return;
+    }
+    try {
+      const sedes = await collect((c) => firstValueFrom(this.sucursalesApi.sucursales(c)));
+      this.nombresSede.set(Object.fromEntries(sedes.map((s) => [s.id, s.nombre])));
+    } catch {
+      this.nombresSede.set({});
     }
   }
 

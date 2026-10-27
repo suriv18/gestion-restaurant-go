@@ -20,6 +20,8 @@ import type {
   ZonaNueva,
 } from '../configuracion.models';
 import { ConfiguracionApi } from './configuracion-api';
+import { ESTACION_ADMINISTRAR, ESTACION_VER } from './estaciones-store';
+import { CARTA_ADMINISTRAR, IMPUESTO_ADMINISTRAR, IMPUESTO_VER } from './tasas-store';
 
 export const NEGOCIO_VER = 'NEGOCIO_VER';
 export const NEGOCIO_ADMINISTRAR = 'NEGOCIO_ADMINISTRAR';
@@ -93,8 +95,21 @@ export class ConfiguracionStore {
   readonly puedeEditarSedes = computed(() => this.tiene(SUCURSAL_ADMINISTRAR));
   readonly puedeVerSalon = computed(() => this.tiene(MESA_VER) || this.tiene(MESA_ADMINISTRAR));
   readonly puedeEditarSalon = computed(() => this.tiene(MESA_ADMINISTRAR));
+  // Estaciones y tasas tienen su propio store; aquí solo se decide si la sección aparece.
+  readonly puedeVerEstaciones = computed(
+    () => this.tiene(ESTACION_VER) || this.tiene(ESTACION_ADMINISTRAR),
+  );
+  readonly puedeVerTasas = computed(
+    () =>
+      this.tiene(IMPUESTO_VER) || this.tiene(IMPUESTO_ADMINISTRAR) || this.tiene(CARTA_ADMINISTRAR),
+  );
   readonly sinAcceso = computed(
-    () => !this.puedeVerNegocio() && !this.puedeVerSedes() && !this.puedeVerSalon(),
+    () =>
+      !this.puedeVerNegocio() &&
+      !this.puedeVerSedes() &&
+      !this.puedeVerSalon() &&
+      !this.puedeVerEstaciones() &&
+      !this.puedeVerTasas(),
   );
 
   /** Sedes elegibles: con permiso de sedes, las activas con su nombre; si no, las que aparecen en los datos. */
@@ -109,7 +124,9 @@ export class ConfiguracionStore {
       ...this.zonas().map((z) => z.sucursal_id),
       ...this.mesas().map((m) => m.sucursal_id),
     ]);
-    return [...ids]
+    // Sin zonas ni mesas (sede nueva, o solo permisos de estaciones) valen las sedes de la sesión.
+    const conocidas = ids.size > 0 ? [...ids] : (this.auth.user()?.branches ?? []);
+    return [...conocidas]
       .sort((a, b) => Number(a) - Number(b))
       .map((id) => ({ id, nombre: `Sede ${id}` }));
   });

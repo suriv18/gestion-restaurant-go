@@ -77,3 +77,26 @@ export function compararFechas(a: string, b: string): number {
 export function vigenteEn(desde: string, hasta: string | null, hoy: string): boolean {
   return compararFechas(desde, hoy) <= 0 && (hasta === null || compararFechas(hoy, hasta) < 0);
 }
+
+/** `2026-01-05` -> `05/01/2026`, por texto. Lo que no es una fecha ISO se devuelve igual. */
+export function formatearFecha(iso: string): string {
+  const m = FECHA.exec(iso.trim());
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
+}
+
+/** «desde 01/01/2026 – hasta 01/01/2027» o «desde 01/01/2026 (vigente)» si no tiene fin. */
+export function formatearVigencia(desde: string, hasta: string | null): string {
+  return hasta === null
+    ? `desde ${formatearFecha(desde)} (vigente)`
+    : `desde ${formatearFecha(desde)} – hasta ${formatearFecha(hasta)}`;
+}
+
+/** Fecha de hoy en Lima (AAAA-MM-DD), la zona horaria del negocio; no depende del reloj del navegador. */
+export function hoyLima(ahora: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Lima',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(ahora);
+}

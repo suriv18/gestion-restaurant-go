@@ -6,6 +6,7 @@ import { CartaStore, ValoresCategoria, ValoresProducto } from './carta-store';
 import { Categoria, Estacion, Impuesto, Producto } from './carta.models';
 import { CategoriasApi } from './categorias-api';
 import { EstacionesApi } from './estaciones-api';
+import { ConfiguracionApi } from '../../configuracion/data-access/configuracion-api';
 import { ImpuestosApi } from './impuestos-api';
 import { ProductosApi } from './productos-api';
 
@@ -105,6 +106,7 @@ describe('Estado de la Carta', () => {
   };
   const estaciones = { listar: vi.fn() };
   const impuestos = { impuestos: vi.fn() };
+  const sucursales = { sucursales: vi.fn() };
   let permisos: string[];
   let sedes: string[];
 
@@ -116,6 +118,7 @@ describe('Estado de la Carta', () => {
         { provide: ProductosApi, useValue: productos },
         { provide: EstacionesApi, useValue: estaciones },
         { provide: ImpuestosApi, useValue: impuestos },
+        { provide: ConfiguracionApi, useValue: sucursales },
         {
           provide: AuthSession,
           useValue: {
@@ -131,7 +134,7 @@ describe('Estado de la Carta', () => {
   beforeEach(() => {
     permisos = [...TODOS];
     sedes = ['7', '8'];
-    for (const api of [categorias, productos, estaciones, impuestos]) {
+    for (const api of [categorias, productos, estaciones, impuestos, sucursales]) {
       Object.values(api).forEach((f) => f.mockReset());
     }
     categorias.listar.mockReturnValue(
@@ -231,6 +234,37 @@ describe('Estado de la Carta', () => {
       const store = setup();
       await store.load();
       expect(productos.listar).toHaveBeenCalledWith({ es_activo: 'true' });
+    });
+  });
+
+  describe('nombres de sede', () => {
+    const sede = (id: string, nombre: string) => ({ id, nombre, es_activo: true });
+
+    it('con permiso de sedes muestra el nombre; las que no vienen quedan como «Sede {id}»', async () => {
+      permisos = [...TODOS, 'SUCURSAL_VER'];
+      sucursales.sucursales.mockReturnValue(
+        of({ items: [sede('7', 'Miraflores')], nextCursor: null }),
+      );
+      const store = setup();
+      await store.load();
+      expect(store.nombreSede('7')).toBe('Miraflores');
+      expect(store.nombreSede('8')).toBe('Sede 8');
+    });
+
+    it('sin permiso de sedes no llama a /sucursales y deja «Sede {id}»', async () => {
+      const store = setup();
+      await store.load();
+      expect(sucursales.sucursales).not.toHaveBeenCalled();
+      expect(store.nombreSede('7')).toBe('Sede 7');
+    });
+
+    it('si falla la lectura de sedes la carta carga igual con «Sede {id}»', async () => {
+      permisos = [...TODOS, 'SUCURSAL_ADMINISTRAR'];
+      sucursales.sucursales.mockReturnValue(problem(500, 'error', 'boom'));
+      const store = setup();
+      await store.load();
+      expect(store.status()).toBe('ready');
+      expect(store.nombreSede('7')).toBe('Sede 7');
     });
   });
 

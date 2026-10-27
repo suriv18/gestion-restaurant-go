@@ -2,7 +2,10 @@ import {
   compararFechas,
   factorValido,
   fechaValida,
+  formatearFecha,
   formatearSoles,
+  formatearVigencia,
+  hoyLima,
   formatearTasa,
   normalizarDecimal,
   precioValido,
@@ -75,5 +78,23 @@ describe('Utilidades de la carta', () => {
     expect(vigenteEn('2026-01-01', '2026-10-25', '2026-10-25')).toBe(false);
     expect(vigenteEn('2026-01-01', '2026-10-26', '2026-10-25')).toBe(true);
     expect(vigenteEn('2026-11-01', null, '2026-10-25')).toBe(false);
+  });
+
+  it('formatea fechas ISO como dd/mm/aaaa sin pasar por Date', () => {
+    expect(formatearFecha('2026-01-05')).toBe('05/01/2026');
+    expect(formatearFecha('no es fecha')).toBe('no es fecha');
+  });
+
+  it('formatea la vigencia [desde, hasta)', () => {
+    expect(formatearVigencia('2026-01-01', '2027-01-01')).toBe(
+      'desde 01/01/2026 – hasta 01/01/2027',
+    );
+    expect(formatearVigencia('2026-01-01', null)).toBe('desde 01/01/2026 (vigente)');
+  });
+
+  it('calcula la fecha de hoy en Lima (UTC-5), no la del navegador ni la UTC', () => {
+    expect(hoyLima(new Date('2026-10-26T02:00:00Z'))).toBe('2026-10-25');
+    expect(hoyLima(new Date('2026-10-26T05:00:00Z'))).toBe('2026-10-26');
+    expect(hoyLima(new Date('2026-01-01T04:59:59Z'))).toBe('2025-12-31');
   });
 });

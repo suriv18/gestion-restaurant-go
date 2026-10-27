@@ -62,6 +62,7 @@ function setup(o: Opciones = {}) {
       { id: '5', sucursal_id: '1', codigo: 'COC', nombre: 'Cocina caliente', es_activo: true },
     ]),
     sedes: signal(['1', '2']),
+    nombreSede: (id: string) => (id === '2' ? 'Miraflores' : `Sede ${id}`),
     listaStatus: signal(o.listaStatus ?? 'ready'),
     listaError: signal('Sin conexión'),
     cargandoMas: signal(false),
@@ -301,6 +302,14 @@ describe('Sección Productos: filtros', () => {
     expect(store.cambiarFiltros).toHaveBeenNthCalledWith(1, { categoriaId: '2' });
     expect(store.cambiarFiltros).toHaveBeenNthCalledWith(2, { estado: 'bajas' });
     expect(store.cambiarFiltros).toHaveBeenNthCalledWith(3, { sucursalId: '2' });
+  });
+
+  it('el selector muestra el nombre de la sede que da el store', () => {
+    const { el } = setup();
+    const opciones = [...el.querySelectorAll('select[aria-label="Sede"] option')].map((o) =>
+      o.textContent?.trim(),
+    );
+    expect(opciones).toEqual(['Todas las sedes', 'Sede 1', 'Miraflores']);
   });
 
   it('«Todas las categorías» y «Todas las sedes» envían null', () => {

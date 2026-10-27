@@ -342,7 +342,7 @@ export class ProductosSection {
   }
 
   nombreSede(id: string): string {
-    return `Sede ${id}`;
+    return this.store.nombreSede(id);
   }
 
   valor(evento: Event): string {
