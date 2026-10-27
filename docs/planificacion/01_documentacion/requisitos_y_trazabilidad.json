@@ -875,7 +875,7 @@
     "incremento": "I2",
     "aceptacion": "Los 10 maestros registran motivo, usuario y fecha de baja. Las otras 16 tablas se desactivan sin esos campos; auditoría conserva actor y cambios. Reactivar conserva ID; DELETE no está permitido.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "PARCIAL",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -884,7 +884,8 @@
     ],
     "add": [
       "ADD-05"
-    ]
+    ],
+    "situacion_backend": "Parcial en I2: las bajas y restauraciones de sucursales, usuarios, empleados, clientes, proveedores, productos y mesas (maestros con motivo, usuario y fecha) y de categorías, estaciones, zonas y roles (desactivación simple) cumplen los criterios de backend, fijados por la prueba de integración TestBajasContratoComun, y los de interfaz según la matriz de auditoría (docs/superpowers/specs/2026-10-26-i2-rebanada4-matriz-bajas-formularios.md). Las celdas de interfaz verificadas por inspección del código se marcan «cumple · inspección», distinto de «cumple · prueba» (excepción aceptada). Faltan los maestros de inventario y caja (artículos, almacenes y cajas, I4 e I5). RES-CP-030 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-031",
@@ -1060,7 +1061,7 @@
     "incremento": "I2",
     "aceptacion": "Error de campo conserva datos; baja de maestro principal pide motivo; desactivación simple no lo exige; doble clic no duplica el comando.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "PARCIAL",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -1069,6 +1070,6 @@
     "add": [
       "ADD-08"
     ],
-    "situacion_backend": "Parcial en I2: errores por campo en negocio, sucursales, zonas y mesas; pendiente la interfaz."
+    "situacion_backend": "Parcial en I2: formularios con errores por campo que conservan lo escrito, foco en el campo con error, una Idempotency-Key por intento y doble envío ignorado, en las pantallas de Configuración, Carta, Clientes y proveedores, Empleados y Equipo y accesos (ver la matriz de auditoría). Faltan las pantallas de I3 a I5. RES-CP-036 sigue NO_EJECUTADA."
   }
 ]

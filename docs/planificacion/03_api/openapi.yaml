@@ -407,7 +407,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -458,7 +458,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '201':
@@ -489,7 +489,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -517,7 +517,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -554,7 +554,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -593,7 +593,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -629,7 +629,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -680,7 +680,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '201':
@@ -711,7 +711,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -739,7 +739,7 @@ paths:
       tags:
       - Catálogos
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -776,7 +776,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':
@@ -815,7 +815,7 @@ paths:
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional. Reactiva el mismo ID; solo los diez maestros principales limpian
         marcadores de baja.
-      x-implementado: false
+      x-implementado: true
       x-permiso: Permiso fino pendiente de migración en el catálogo
       responses:
         '200':

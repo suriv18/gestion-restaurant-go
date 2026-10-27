@@ -59,7 +59,7 @@
       "ADR-06",
       "ADR-07"
     ],
-    "avance": "Backend de I2 hecho en tres rebanadas: 1 (negocio, sucursales, zonas y mesas; contrato, ADR 005 y expediente), 2 (clientes, proveedores y empleados, con su frontend) y 3 (carta: categorías, estaciones, impuestos y tasas, productos y disponibilidad por sede; contrato y expediente). Falta el frontend de la carta y de impuestos y tasas; los casos de aceptación siguen NO_EJECUTADA."
+    "avance": "Cuatro rebanadas de I2 hechas, con backend y frontend: 1 (negocio, sucursales, zonas y mesas), 2 (clientes, proveedores y empleados), 3 (carta: categorías, estaciones, impuestos y tasas, productos y disponibilidad por sede) y 4 (auditoría de bajas y formularios: RES-RF-030 y RES-RF-036, con su matriz y las pruebas que la fijan). Los casos de aceptación siguen NO_EJECUTADA; RES-RF-030 y RES-RF-036 quedan PARCIAL hasta que lleguen los maestros y las pantallas de I3 a I5."
   },
   {
     "id": "I3",

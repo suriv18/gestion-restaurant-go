@@ -36,3 +36,8 @@ Fecha: 2026-10-25
 - backlog_incrementos.json: el avance de I2 recoge las tres rebanadas.
 - Los clientes, proveedores y empleados (rebanada 2) siguen con x-implementado
   false en el contrato: pendiente de marcar.
+- I2 rebanada 4: auditoría de bajas y formularios. RES-RF-030 y RES-RF-036 pasan de PENDIENTE a PARCIAL
+  (matriz y prueba de contrato en el repositorio); los casos RES-CP-030 y RES-CP-036 siguen NO_EJECUTADA.
+  Los clientes y proveedores (12 operaciones) pasan a x-implementado true y los empleados entran al contrato
+  (6 operaciones; 119 rutas y 163 operaciones). La baja de roles rechaza cuerpos desconocidos. El avance de I2
+  recoge las cuatro rebanadas.
