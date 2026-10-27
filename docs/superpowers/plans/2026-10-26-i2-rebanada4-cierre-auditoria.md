@@ -578,6 +578,156 @@ git commit -m "I2 rebanada 4: decisiones sobre los huecos de la matriz"
 
 ---
 
+### Decisiones tomadas en la Task 5 (usuario, 2026-10-26)
+
+- **H-1 (roles):** corregir ahora → Task 5a.
+- **H-2 (contrato de empleados):** añadir al contrato ahora → Task 5b.
+- **D2 y las celdas de interfaz verificadas por inspección:** se acepta como **excepción etiquetada**: `cumple · inspección` es un estado explícito y distinto de `cumple · prueba`, y así se dice en el expediente.
+- **Criterio F (sedes, zonas, mesas y usuarios sin interruptor «Incluir bajas»):** se lee como «las bajas no se ocultan y se pueden restaurar» → cumple, queda como nota, sin hueco.
+
+### Task 5a: Corregir H-1 (baja de roles rechaza cuerpos desconocidos) y registrar las decisiones
+
+**Files:**
+- Modify: `service-restaurant/internal/modules/identidad/web/controller/roles_handler.go` (función `cambiarEstado`)
+- Modify: `service-restaurant/internal/modules/identidad/web/dto/request/administracion.go` (comentario de `Confirmacion`)
+- Modify: `docs/superpowers/specs/2026-10-26-i2-rebanada4-matriz-bajas-formularios.md`
+
+**Interfaces:**
+- Consumes: las subpruebas `TestBajasContratoComun/roles/motivo` y `TestBajasContratoComun/roles/campo_de_auditoria` (Task 1), que hoy fallan; `leerCuerpoOpcionalVacio(r *http.Request, dst any) error` (acepta ausencia de cuerpo o `{}` y rechaza campos desconocidos con 400); `request.Confirmacion` (struct vacío).
+- Produces: `POST /roles/{id}/baja` responde 400 con cualquier campo en el cuerpo; sin cuerpo o con `{}` sigue dando 200.
+
+- [ ] **Step 1: Ver el rojo**
+
+Run (desde `service-restaurant/`): `go test -count=1 -run 'TestBajasContratoComun/roles' ./tests/integration/... 2>&1 | tail -20`
+Expected: FAIL en `roles/motivo` y `roles/campo_de_auditoria` (responde 200, quería 400); el resto de subpruebas de `roles` pasan.
+
+- [ ] **Step 2: Corregir el handler**
+
+En `roles_handler.go`, dentro de `cambiarEstado`, cambiar:
+
+```go
+	accion := "baja"
+	if activo {
+		accion = "restauracion"
+		var c request.Confirmacion
+		if err := leerCuerpoOpcionalVacio(r, &c); err != nil {
+			return err
+		}
+	}
+```
+por:
+```go
+	accion := "baja"
+	if activo {
+		accion = "restauracion"
+	}
+	// Ni la baja ni la restauración de un rol llevan datos: se acepta sin cuerpo o con «{}» y se
+	// rechaza cualquier campo (el actor sale de la sesión, no del cuerpo).
+	var c request.Confirmacion
+	if err := leerCuerpoOpcionalVacio(r, &c); err != nil {
+		return err
+	}
+```
+En `administracion.go`, cambiar el comentario `// Confirmacion es el cuerpo (vacío) de las restauraciones.` por `// Confirmacion es el cuerpo (vacío) de las restauraciones y de las bajas sin motivo.`
+
+- [ ] **Step 3: Ver el verde y que no hay regresión**
+
+Run: `go test -count=1 -run 'TestBajasContratoComun/roles' ./tests/integration/... 2>&1 | tail -10`
+Expected: PASS (las 7 subpruebas de `roles`).
+Run: `go test -count=1 -run 'TestRoles|TestAdministracion' ./tests/integration/... 2>&1 | tail -10 && go vet ./... && go test ./internal/modules/identidad/... 2>&1 | tail -10`
+Expected: todo `ok`.
+
+- [ ] **Step 4: Comprobar si `permisos` tiene el mismo patrón**
+
+Leer `permisos_handler.go` (`cambiarEstado`, línea ~102). Si solo lee el cuerpo en la rama de restauración (como hacía roles), **no corregirlo**: añadir a la matriz una entrada `H-3 · permisos · baja acepta cuerpo desconocido · mismo patrón que H-1 · arreglo: igual que H-1 · requiere decisión de producto: no · Decisión: diferir (permisos no tiene pantalla de baja en I2)`. Si ya rechaza cuerpos, no añadir nada.
+
+- [ ] **Step 5: Registrar las decisiones y el cierre de H-1 en la matriz**
+
+En la matriz:
+1. Bajo `H-1` añadir `Decisión: corregir · 2026-10-26 · corregido en <sha del commit de este paso, escribirlo tras commitear>`.
+2. Bajo `H-2` añadir `Decisión: añadir al contrato · 2026-10-26 · se resuelve en la Task 5b`.
+3. Cambiar en la tabla de backend, para `roles`, las celdas de la columna «Motivo, usuario y fecha» y «Actor de sesión» de `hueco · H-1` a `cumple · TestBajasContratoComun/roles/baja y roles/motivo` y `cumple · TestBajasContratoComun/roles/campo_de_auditoria` respectivamente.
+4. Añadir una sección `## Decisiones (2026-10-26)` antes de `## Huecos` con estas cuatro viñetas: H-1 corregir; H-2 añadir al contrato; «D2: las celdas de interfaz verificadas por inspección de código se aceptan como `cumple · inspección`, estado explícito y distinto de `cumple · prueba`»; «Criterio F: se lee como "las bajas no se ocultan y se pueden restaurar"; sedes, zonas, mesas y usuarios cumplen sin interruptor».
+5. Comprobar: `grep -c "| — |"` = 0.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add service-restaurant/internal/modules/identidad/web/controller/roles_handler.go service-restaurant/internal/modules/identidad/web/dto/request/administracion.go docs/superpowers/specs/2026-10-26-i2-rebanada4-matriz-bajas-formularios.md
+git commit -m "I2 rebanada 4: la baja de roles rechaza cuerpos desconocidos (H-1) y se registran las decisiones"
+```
+(con la línea `Co-Authored-By`). Después, escribir el SHA corto de este commit en la línea «corregido en» de H-1 y hacer un commit `git commit -am` aparte: `I2 rebanada 4: referencia del commit de H-1 en la matriz`.
+
+### Task 5b: Añadir los empleados al contrato (H-2)
+
+**Files:**
+- Modify: `docs/planificacion/03_api/openapi.yaml`
+- Modify: `docs/planificacion/MANIFIESTO.json`, `docs/planificacion/00_LEEME.txt`, `docs/planificacion/06_calidad/validacion_entrega.json` (conteos)
+- Modify: `docs/planificacion/SHA256SUMS.txt`
+- Modify: `docs/superpowers/specs/2026-10-26-i2-rebanada4-matriz-bajas-formularios.md` (cierre de H-2)
+
+**Interfaces:**
+- Consumes: el backend ya sirve `GET /empleados`, `POST /empleados`, `GET /empleados/{id}`, `PATCH /empleados/{id}`, `POST /empleados/{id}/baja` (cuerpo `{"motivo": …}`) y `POST /empleados/{id}/restauracion` (rutas en `service-restaurant/internal/modules/identidad/web/controller/admin_routes.go:40-45`; handler en `empleados_handler.go`; DTO en `…/web/dto/request/` y `…/web/dto/response/`; permisos `EMPLEADO_VER` y `EMPLEADO_ADMINISTRAR`). El contrato ya define el schema `Empleados` (componentes, ~línea 6283), pero ninguna ruta lo usa.
+- Produces: el contrato con 4 rutas nuevas (`/empleados`, `/empleados/{id}`, `/empleados/{id}/baja`, `/empleados/{id}/restauracion`) y 6 operaciones nuevas con `x-implementado: true`; conteos nuevos: **119 rutas y 163 operaciones** (hoy 115 y 157).
+
+- [ ] **Step 1: Leer el backend de empleados y los bloques análogos del contrato**
+
+Leer `empleados_handler.go`, los DTO de empleados (request y response) y el mapeo de errores; anotar los campos del alta (`tipo_documento`, `numero_documento`, `nombres`, `apellidos`, y los demás que existan, con cuáles son obligatorios), los del PATCH, los filtros del listado y los permisos por operación. Leer en `openapi.yaml` los bloques `/clientes`, `/clientes/{id}`, `/clientes/{id}/baja` y `/clientes/{id}/restauracion` (para copiar su estructura: `operationId`, `tags`, `description`, `parameters` con `$ref` a `IdempotencyKey`, respuestas con los anclas `*id001`…`*id007`, `requestBody`) y los schemas `ClientesAlta`, `ClientesEdicion`, `ClientesLista` y `Empleados`.
+
+- [ ] **Step 2: Escribir el contrato de empleados**
+
+Añadir al contrato, justo después del último bloque de `/proveedores/...` (o donde mantenga el orden del archivo):
+- `/empleados` (`get` listar con los filtros reales, `post` crear con `Idempotency-Key`), `/empleados/{id}` (`get`, `patch`), `/empleados/{id}/baja` (`post`, cuerpo `Motivo`) y `/empleados/{id}/restauracion` (`post`).
+- Cada operación con `x-implementado: true`, `x-permiso` igual al que exige el servidor (`EMPLEADO_VER` para `get`, `EMPLEADO_ADMINISTRAR` para el resto), `tags` de la sección que use el contrato para identidad, `operationId` único continuando la numeración (`operacion_NNN` con NNN = mayor existente + 1, +2, …) y las mismas respuestas de error (`400, 401, 403, 404, 409, 422, 503`) que las rutas análogas.
+- Los schemas `EmpleadosAlta`, `EmpleadosEdicion` y `EmpleadosLista` en `components/schemas` si no existen, con los campos reales del backend y la misma forma que sus equivalentes de clientes; reutilizar `Empleados` para las respuestas.
+No renombrar ni reordenar nada existente.
+
+- [ ] **Step 3: Validar el contrato**
+
+Run (desde la raíz del repositorio; usa `js-yaml`, que ya está en `app-restaurant/node_modules`):
+
+```bash
+node -e '
+const yaml=require("./app-restaurant/node_modules/js-yaml");const fs=require("fs");
+const d=yaml.load(fs.readFileSync("docs/planificacion/03_api/openapi.yaml","utf8"));
+const metodos=["get","post","put","patch","delete"];
+let ops=0;const ids=new Set();const repetidos=[];
+for(const [p,item] of Object.entries(d.paths)){for(const m of metodos){const o=item[m];if(!o)continue;ops++;if(ids.has(o.operationId))repetidos.push(o.operationId);ids.add(o.operationId)}}
+const sinResolver=[];
+(function rec(x){if(x&&typeof x==="object"){if(typeof x.$ref==="string"){const r=x.$ref.replace(/^#\//,"").split("/");let c=d;for(const k of r)c=c&&c[k];if(c===undefined)sinResolver.push(x.$ref)}for(const v of Object.values(x))rec(v)}})(d);
+console.log("rutas",Object.keys(d.paths).length,"operaciones",ops,"repetidos",repetidos,"refs sin resolver",sinResolver);
+const emp=Object.entries(d.paths).filter(([p])=>p.startsWith("/empleados")).map(([p,i])=>metodos.filter(m=>i[m]).map(m=>m.toUpperCase()+" "+p+" "+i[m]["x-implementado"]));
+console.log(emp.flat().join("\n"))'
+```
+Expected: `rutas 119 operaciones 163 repetidos [] refs sin resolver []` y 6 líneas de empleados, todas terminadas en `true`. Si algún conteo difiere, corregir el contrato (no los números).
+
+- [ ] **Step 4: Contrastar con el router**
+
+Run: `grep -n 'ruta("[A-Z]* /empleados' service-restaurant/internal/modules/identidad/web/controller/admin_routes.go`
+Expected: exactamente las 6 operaciones que el contrato define (mismo método y ruta). Si el router sirve otra, o falta una, corregir el contrato.
+
+- [ ] **Step 5: Actualizar los conteos y los checksums**
+
+- `MANIFIESTO.json`: `"rutas_api_propuestas": 119` y `"operaciones_api_propuestas": 163` (editando solo esas dos líneas).
+- `00_LEEME.txt`: la línea `03_api: contrato OpenAPI 3.1.1 propuesto: 115 rutas y 157 operaciones.` pasa a `119 rutas y 163 operaciones`.
+- `06_calidad/validacion_entrega.json`: en el campo `detalle` que menciona `115 rutas y 157 operaciones`, añadir tras esa frase `, y 119 rutas y 163 operaciones tras añadir los empleados en la rebanada 4`; conservar el resto del texto. El archivo es `JSON.stringify(x, null, 2) + "\n"`: editarlo con `JSON.parse` → modificar → `JSON.stringify`.
+- Recalcular en `SHA256SUMS.txt` las líneas de los archivos tocados que figuren en él (`03_api/openapi.yaml`, `06_calidad/validacion_entrega.json`, `00_LEEME.txt`, y `MANIFIESTO.json` si figura), con el mismo método que en las rebanadas anteriores (`crypto.createHash('sha256')` sobre el contenido; una línea `<hash>  <ruta>`).
+- Verificar: `cd docs/planificacion && sha256sum -c SHA256SUMS.txt 2>&1 | grep -v ": OK"` sin salida.
+
+- [ ] **Step 6: Cerrar H-2 en la matriz**
+
+En la matriz, bajo `H-2` añadir `Resuelto: 6 operaciones de empleados añadidas al contrato (119 rutas, 163 operaciones) · <sha>`; en la fila `empleados` de la tabla de backend no hay columna de contrato, no se cambia. Comprobar `grep -c "| — |"` = 0.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add docs/planificacion docs/superpowers/specs/2026-10-26-i2-rebanada4-matriz-bajas-formularios.md
+git commit -m "I2 rebanada 4: los empleados entran al contrato (H-2)"
+```
+(con la línea `Co-Authored-By`).
+
+---
+
 ### Task 6: Cierre del expediente
 
 **Files:**
@@ -598,7 +748,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 
 const SIT_030 =
-  'Parcial en I2: las bajas y restauraciones de sucursales, usuarios, empleados, clientes, proveedores, productos y mesas (maestros con motivo, usuario y fecha) y de categorías, estaciones, zonas y roles (desactivación simple) cumplen los criterios de backend, fijados por la prueba de integración TestBajasContratoComun, y los de interfaz según la matriz de auditoría (docs/superpowers/specs/2026-10-26-i2-rebanada4-matriz-bajas-formularios.md). Faltan los maestros de inventario y caja (artículos, almacenes y cajas, I4 e I5). RES-CP-030 sigue NO_EJECUTADA.';
+  'Parcial en I2: las bajas y restauraciones de sucursales, usuarios, empleados, clientes, proveedores, productos y mesas (maestros con motivo, usuario y fecha) y de categorías, estaciones, zonas y roles (desactivación simple) cumplen los criterios de backend, fijados por la prueba de integración TestBajasContratoComun, y los de interfaz según la matriz de auditoría (docs/superpowers/specs/2026-10-26-i2-rebanada4-matriz-bajas-formularios.md). Las celdas de interfaz verificadas por inspección del código se marcan «cumple · inspección», distinto de «cumple · prueba» (excepción aceptada). Faltan los maestros de inventario y caja (artículos, almacenes y cajas, I4 e I5). RES-CP-030 sigue NO_EJECUTADA.';
 const SIT_036 =
   'Parcial en I2: formularios con errores por campo que conservan lo escrito, foco en el campo con error, una Idempotency-Key por intento y doble envío ignorado, en las pantallas de Configuración, Carta, Clientes y proveedores, Empleados y Equipo y accesos (ver la matriz de auditoría). Faltan las pantallas de I3 a I5. RES-CP-036 sigue NO_EJECUTADA.';
 const AVANCE =
@@ -645,7 +795,7 @@ if (!i2) throw new Error('I2 no existe en el backlog');
 i2.avance = AVANCE; // el campo «estado» no se toca: lo decide el usuario
 guardarJson(fBack, back);
 
-// 4. openapi.yaml: x-implementado de clientes y proveedores (empleados no está en el contrato)
+// 4. openapi.yaml: x-implementado de clientes y proveedores (los empleados ya entraron con x-implementado true en la Task 5b)
 const fApi = '03_api/openapi.yaml';
 let ruta = '';
 let cambiadas = 0;
@@ -668,8 +818,9 @@ if (!cam.endsWith('\n')) cam += '\n';
 cam +=
   '- I2 rebanada 4: auditoría de bajas y formularios. RES-RF-030 y RES-RF-036 pasan de PENDIENTE a PARCIAL\n' +
   '  (matriz y prueba de contrato en el repositorio); los casos RES-CP-030 y RES-CP-036 siguen NO_EJECUTADA.\n' +
-  '  Los clientes y proveedores (12 operaciones) pasan a x-implementado true; los empleados no están en el\n' +
-  '  contrato (hueco registrado en la matriz). El avance de I2 recoge las cuatro rebanadas.\n';
+  '  Los clientes y proveedores (12 operaciones) pasan a x-implementado true y los empleados entran al contrato\n' +
+  '  (6 operaciones; 119 rutas y 163 operaciones). La baja de roles rechaza cuerpos desconocidos. El avance de I2\n' +
+  '  recoge las cuatro rebanadas.\n';
 fs.writeFileSync(fCam, cam);
 
 // 6. SHA256SUMS.txt
