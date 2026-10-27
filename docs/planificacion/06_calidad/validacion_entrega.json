@@ -20,7 +20,7 @@
     {
       "elemento": "Contrato OpenAPI 3.1.1, versión 0.2.0",
       "resultado": "CORRECTO",
-      "detalle": "Contrato 1.2 (validado con openapi-spec-validator): 112 rutas, 153 operaciones; el contrato de la versión documental 1.3 tuvo 113 rutas y 155 operaciones al cerrar la rebanada 1 y tiene 115 rutas y 157 operaciones, y 119 rutas y 163 operaciones tras añadir los empleados en la rebanada 4 tras la rebanada 3; no se revalidó con esa herramienta en este paso. Validación 1.2: referencias internas, operationId únicos y 49 schemas contrastados con la política de campos. No hay backend desplegado."
+      "detalle": "Contrato 1.2 (validado con openapi-spec-validator): 112 rutas, 153 operaciones; el contrato de la versión documental 1.3 tuvo 113 rutas y 155 operaciones al cerrar la rebanada 1 y tiene 115 rutas y 157 operaciones tras la rebanada 3 y 119 rutas y 163 operaciones tras añadir los empleados en la rebanada 4; no se revalidó con esa herramienta en este paso. Validación 1.2: referencias internas, operationId únicos y 49 schemas contrastados con la política de campos. No hay backend desplegado."
     },
     {
       "elemento": "Documentación Word 1.2",
