@@ -31,7 +31,7 @@ Fecha: 2026-10-25
   valor «todos»; GET /tasas-impuesto sin sucursal_id y con impuesto_id; filtros
   q, es_activo, categoria_id y disponible; Disponibilidad con precio_venta y
   estacion_id opcionales y anulables; Productos con en_sucursal.
-- RES-RF-005 y RES-RF-027 pasan a IMPLEMENTADO en backend (frontend pendiente) y
+- RES-RF-005 y RES-RF-027 pasan a IMPLEMENTADO en backend (frontend hecho en la rebanada 3: Carta, estaciones y tasas) y
   RES-RF-004, de la rebanada 2, también; los casos de prueba siguen NO_EJECUTADA.
 - backlog_incrementos.json: el avance de I2 recoge las tres rebanadas.
 - Los clientes, proveedores y empleados (rebanada 2) siguen con x-implementado

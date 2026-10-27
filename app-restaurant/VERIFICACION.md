@@ -1,16 +1,17 @@
 # Verificación local
 
-Fecha: 22 de octubre de 2026, America/Lima. Windows, Node 24.14.1, npm 11.14.0.
+Fecha: 26 de octubre de 2026, America/Lima. Windows, Node 24.14.1, npm 11.14.0.
 
 | Comprobación | Resultado |
 | --- | --- |
 | Angular ESLint (TypeScript y plantillas accesibles) | Sin errores ni advertencias |
 | Prettier | Todos los archivos comprobados cumplen formato |
-| Vitest / Angular CLI | **231 pruebas aprobadas, 26 archivos spec** (incluye sesión, interceptores, guards, login, estado de Equipo y accesos, de Clientes y proveedores y de Empleados, estado y secciones de Configuración y el diálogo asíncrono) |
-| Build de producción | Aprobado; entrada 334.21 kB, transferencia estimada 89.18 kB, dentro del presupuesto de 500 kB |
-| Playwright | **183 pruebas aprobadas**, 0 fallos; 24 omitidas (las del API real, que son opt-in) |
+| Vitest / Angular CLI | **420 pruebas aprobadas, 37 archivos spec** (incluye sesión, interceptores, guards, login, estado de Equipo y accesos, de Clientes y proveedores y de Empleados, estado y secciones de Configuración, de la Carta, de estaciones y de tasas, y el diálogo asíncrono) |
+| Build de producción | Aprobado; entrada 335.03 kB, transferencia estimada 89.34 kB, dentro del presupuesto de 500 kB |
+| Playwright | **267 pruebas aprobadas**, 0 fallos; 39 omitidas (las del API real, que son opt-in) |
 | Integración con el API real | `e2e/login.real-api.spec.ts` y `e2e/equipo.real-api.spec.ts` aprobados contra el stack de Docker: login y cierre que revoca el token; alta de una persona, duplicado rechazado con el mensaje del servidor, cambio de rol, baja (la persona recibe 401 al entrar), restauración, y 403 real para quien no administra |
 | Integración de Configuración con el API real | `e2e/configuracion.real-api.spec.ts` aprobado contra un stack temporal (Postgres 18 limpio con las migraciones 00001-00009, API y front en otros puertos): sede con su aviso de éxito, código repetido, zona, mesa, baja con motivo y restauración |
+| Integración de la Carta, estaciones y tasas con el API real | `e2e/carta.real-api.spec.ts` aprobado (5 pruebas) contra un stack temporal nuevo (Postgres 18 limpio con las migraciones hasta la 00010, API reconstruida y front en otros puertos, ya desmontado): categoría (alta y edición), producto (alta, código repetido rechazado dentro del diálogo, habilitar y pausar en la sede, precio de sede, baja con motivo y restauración), categoría con productos activos que no se puede desactivar, estación (alta, código repetido, edición, baja y restauración) y listado de impuestos. **No se crearon tasas contra el API real** (no se pueden borrar): el alta y la edición de tasas, incluido el rechazo `vigencia_solapada`, solo están verificados con la API simulada |
 | Integración de Clientes, proveedores y Empleados con el API real | `e2e/directorio.real-api.spec.ts` aprobado contra el mismo stack temporal: alta, documento repetido (también tras la baja), edición parcial, baja con motivo y restauración de un cliente, un proveedor (RUC inválido rechazado bajo su campo) y un empleado. `e2e/equipo.real-api.spec.ts` actualizado y aprobado con el alta conjunta de usuario y empleado (la tarjeta muestra el nombre real) |
 | Rutas | Login y las 14 pantallas de operación (y Empleados) cargan sin errores JavaScript y sin desbordamiento horizontal en los tres tamaños |
 

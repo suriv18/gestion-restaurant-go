@@ -1,5 +1,4 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthSession } from '../../../core/auth/auth-session';
@@ -37,6 +36,7 @@ const api = {
 };
 
 let permisos: string[];
+let branches: string[] = [];
 
 const audit = {
   creado_en: '2026-10-21T10:00:00Z',
@@ -112,7 +112,10 @@ function setup(): ConfiguracionStore {
       { provide: ConfiguracionApi, useValue: api },
       {
         provide: AuthSession,
-        useValue: { hasPermission: (p: string) => permisos.includes(p), user: signal({ id: '2' }) },
+        useValue: {
+          hasPermission: (p: string) => permisos.includes(p),
+          user: () => ({ id: '2', branches }),
+        },
       },
     ],
   });
@@ -122,6 +125,7 @@ function setup(): ConfiguracionStore {
 describe('Estado de Configuración', () => {
   beforeEach(() => {
     permisos = TODOS;
+    branches = [];
     Object.values(api).forEach((f) => f.mockReset());
     api.negocio.mockReturnValue(of(negocio()));
     api.sucursales.mockReturnValue(lista([sede('1'), sede('2', { es_activo: false })]));
@@ -150,6 +154,54 @@ describe('Estado de Configuración', () => {
     expect(store.mesas()).toHaveLength(1);
     expect(store.sedesSalon()).toEqual([{ id: '1', nombre: 'Sede 1' }]);
     expect(store.puedeEditarSalon()).toBe(false);
+  });
+
+  describe('estaciones y tasas', () => {
+    it.each([
+      [['ESTACION_VER'], true, false],
+      [['ESTACION_ADMINISTRAR'], true, false],
+      [['IMPUESTO_VER'], false, true],
+      [['IMPUESTO_ADMINISTRAR'], false, true],
+      [['CARTA_ADMINISTRAR'], false, true],
+      [['CARTA_VER'], false, false],
+      [['CARTA_DISPONIBILIDAD'], false, false],
+    ])('permisos %j: estaciones=%s, tasas=%s', (p, estaciones, tasas) => {
+      permisos = p;
+      const store = setup();
+      expect(store.puedeVerEstaciones()).toBe(estaciones);
+      expect(store.puedeVerTasas()).toBe(tasas);
+    });
+
+    it.each([['ESTACION_VER'], ['IMPUESTO_VER'], ['CARTA_ADMINISTRAR']])(
+      'solo %s ya no es «sin acceso» y no pide nada a la API de Configuración',
+      async (p) => {
+        permisos = [p];
+        const store = setup();
+        expect(store.sinAcceso()).toBe(false);
+        await store.load();
+        expect(store.status()).toBe('ready');
+        expect(Object.values(api).every((f) => f.mock.calls.length === 0)).toBe(true);
+      },
+    );
+
+    it('solo con permisos de la carta (ver) sigue sin acceso a Configuración', () => {
+      permisos = ['CARTA_VER', 'CARTA_DISPONIBILIDAD'];
+      expect(setup().sinAcceso()).toBe(true);
+    });
+
+    it('quien solo ve estaciones (sin sedes ni salón) elige entre las sedes de su sesión', async () => {
+      permisos = ['ESTACION_VER'];
+      branches = ['8', '3'];
+      const store = setup();
+      await store.load();
+      expect(store.sedesSalon()).toEqual([
+        { id: '3', nombre: 'Sede 3' },
+        { id: '8', nombre: 'Sede 8' },
+      ]);
+      expect(store.sedeActual()).toBe('3');
+      store.elegirSede('8');
+      expect(store.sedeActual()).toBe('8');
+    });
   });
 
   it('sin ningún permiso no llama a la API', async () => {

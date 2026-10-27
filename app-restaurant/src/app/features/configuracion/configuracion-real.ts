@@ -1,14 +1,25 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { PageHeader } from '../../shared/ui/page-header';
 import { ConfiguracionStore } from './data-access/configuracion-store';
+import { EstacionesStore } from './data-access/estaciones-store';
+import { TasasStore } from './data-access/tasas-store';
+import { EstacionesSection } from './estaciones-section';
 import { NegocioSection } from './negocio-section';
 import { SalonSection } from './salon-section';
 import { SedesSection } from './sedes-section';
+import { TasasSection } from './tasas-section';
 
 @Component({
   selector: 'app-configuracion-real',
-  imports: [PageHeader, NegocioSection, SedesSection, SalonSection],
-  providers: [ConfiguracionStore],
+  imports: [
+    PageHeader,
+    NegocioSection,
+    SedesSection,
+    SalonSection,
+    EstacionesSection,
+    TasasSection,
+  ],
+  providers: [ConfiguracionStore, EstacionesStore, TasasStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header
@@ -42,6 +53,12 @@ import { SedesSection } from './sedes-section';
       }
       @if (store.puedeVerSalon()) {
         <app-salon-section />
+      }
+      @if (store.puedeVerEstaciones()) {
+        <app-estaciones-section />
+      }
+      @if (store.puedeVerTasas()) {
+        <app-tasas-section />
       }
     }
   `,

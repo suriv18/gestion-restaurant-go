@@ -337,3 +337,52 @@ td {
     width: 100%;
   }
 }
+
+/* Carta: filtros y acciones de la tabla de productos */
+.filtros-carta select {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+@media (max-width: 1100px) {
+  .tabla-carta .inline-actions {
+    flex-wrap: nowrap;
+  }
+}
+.tabla-carta td small {
+  display: block;
+}
+
+/* Configuración: impuestos y su historial de tasas */
+.impuesto-bloque {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.impuesto-bloque h3 {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.tasa-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.tasa-fila strong {
+  font-size: 14px;
+  margin-right: 8px;
+}
+.tasa-fila p {
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
