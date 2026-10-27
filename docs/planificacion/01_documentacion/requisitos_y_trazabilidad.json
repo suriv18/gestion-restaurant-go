@@ -148,7 +148,7 @@
       "ADD-05",
       "ADD-06"
     ],
-    "situacion_backend": "Backend implementado en I2 (rebanada 3: categorías, estaciones, productos y disponibilidad por sede; suite de integración del repositorio en verde). Falta el frontend de la carta y la parte del criterio de aceptación sobre pedidos nuevos, que solo se verifica con el módulo de pedidos (I3); RES-CP-005 sigue NO_EJECUTADA."
+    "situacion_backend": "Backend implementado en I2 (rebanada 3: categorías, estaciones, productos y disponibilidad por sede; suite de integración del repositorio en verde). Frontend hecho (Carta con productos, categorías y disponibilidad por sede; pruebas unitarias y E2E simulados en verde, y E2E contra la API real aprobado en un stack temporal). La parte del criterio de aceptación sobre pedidos nuevos solo se verifica con el módulo de pedidos (I3); RES-CP-005 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-006",
@@ -796,7 +796,7 @@
       "ADD-06",
       "ADD-09"
     ],
-    "situacion_backend": "Backend implementado en I2 (rebanada 3: impuestos de solo lectura y tasas con vigencias sin solape, 409 vigencia_solapada; suite de integración del repositorio en verde). Falta el frontend; RES-CP-027 sigue NO_EJECUTADA."
+    "situacion_backend": "Backend implementado en I2 (rebanada 3: impuestos de solo lectura y tasas con vigencias sin solape, 409 vigencia_solapada; suite de integración del repositorio en verde). Frontend hecho (sección Impuestos y tasas de Configuración; alta y edición de tasas verificadas en E2E simulado, y contra la API real solo el listado: no se crearon tasas porque no se pueden borrar). RES-CP-027 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-028",
