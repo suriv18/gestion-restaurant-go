@@ -82,6 +82,48 @@ test('crea una persona: alta con clave de idempotencia y asignación de rol y se
   expect(stored).not.toContain('ClaveSegura2026');
 });
 
+test('con permiso de empleados, el alta guarda también los datos personales y muestra el nombre real', async ({
+  page,
+}) => {
+  const { team } = await openTeam(page, ({ auth }) => {
+    auth.session = {
+      ...auth.session,
+      permisos: [...auth.session.permisos, 'EMPLEADO_ADMINISTRAR'],
+    };
+  });
+  await page.getByRole('button', { name: 'Nueva persona' }).click();
+  await dialog(page).locator('#field-nombres').fill(' Julia ');
+  await dialog(page).locator('#field-apellidos').fill('Paredes Soto');
+  await dialog(page).locator('#field-numero_documento').fill('40000003');
+  await dialog(page).locator('#field-cargo').fill('Cocinera');
+  await dialog(page).locator('#field-username').fill('julia');
+  await dialog(page).locator('#field-password').fill('ClaveSegura2026');
+  await dialog(page).getByRole('button', { name: 'Crear acceso' }).click();
+
+  await expect(dialog(page)).toHaveCount(0);
+  // La tarjeta muestra el nombre real, con el cargo y el usuario debajo.
+  await expect(card(page, 'Julia Paredes Soto')).toContainText('Cocinera · julia');
+  const post = team.calls.find((c) => c.method === 'POST' && c.path === '/usuarios')!;
+  expect(post.body).toEqual({
+    username: 'julia',
+    password: 'ClaveSegura2026',
+    empleado: {
+      nombres: 'Julia',
+      apellidos: 'Paredes Soto',
+      tipo_documento: 'DNI',
+      numero_documento: '40000003',
+      cargo: 'Cocinera',
+    },
+  });
+});
+
+test('sin permiso de empleados el formulario no pide datos personales', async ({ page }) => {
+  await openTeam(page);
+  await page.getByRole('button', { name: 'Nueva persona' }).click();
+  await expect(dialog(page).locator('#field-nombres')).toHaveCount(0);
+  await expect(dialog(page).locator('#field-username')).toBeVisible();
+});
+
 test('un rechazo del servidor aparece dentro del diálogo, conserva los datos y se puede corregir', async ({
   page,
 }) => {

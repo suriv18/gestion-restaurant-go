@@ -3,10 +3,26 @@ import { firstValueFrom } from 'rxjs';
 import { AuthSession } from '../../../core/auth/auth-session';
 import { collect } from '../../../core/http/collect';
 import { describeProblem } from '../../../core/http/problem';
+import { rechazo } from '../../../shared/forms/rechazo';
+import { opcional, texto } from '../../../shared/forms/valores';
+import type { FieldProblem } from '../../../shared/ui/form-dialog';
 import { AccesosApi } from './accesos-api';
-import { Rol, SucursalRef, UsuarioEquipo } from './accesos.models';
+import { DatosEmpleado, Rol, SucursalRef, UsuarioEquipo } from './accesos.models';
 
 export const ADMIN_PERMISSION = 'USUARIO_ADMINISTRAR';
+export const EMPLOYEE_PERMISSION = 'EMPLEADO_ADMINISTRAR';
+
+/** Campo del formulario al que pertenece cada rechazo de los datos del empleado. */
+const CAMPO_POR_CODIGO: Record<string, string> = {
+  nombres_invalido: 'nombres',
+  apellidos_invalido: 'apellidos',
+  documento_invalido: 'numero_documento',
+  documento_duplicado: 'numero_documento',
+  cargo_invalido: 'cargo',
+};
+
+/** Datos personales tal como salen del formulario (texto sin normalizar). */
+export type DatosPersona = Partial<Record<keyof DatosEmpleado, string>>;
 
 export interface Notice {
   kind: 'ok' | 'error';
@@ -34,6 +50,8 @@ export class EquipoStore {
   readonly busyId = signal<string | null>(null);
 
   readonly canAdminister = computed(() => this.auth.hasPermission(ADMIN_PERMISSION));
+  /** Con este permiso el alta guarda también los datos personales (el empleado de la persona). */
+  readonly canAdministerEmployees = computed(() => this.auth.hasPermission(EMPLOYEE_PERMISSION));
   readonly activeRoles = computed(() => this.roles().filter((r) => r.es_activo));
   readonly currentUserId = computed(() => this.auth.user()?.id ?? null);
 
@@ -63,19 +81,31 @@ export class EquipoStore {
 
   /** Alta de una persona y asignación de su rol y sede. Reintentable con la misma clave. */
   async invite(
-    v: { username: string; email: string; password: string; roleId: string; branchId: string },
+    v: {
+      username: string;
+      email: string;
+      password: string;
+      roleId: string;
+      branchId: string;
+      empleado?: DatosPersona;
+    },
     key: string,
-  ): Promise<string | undefined> {
+  ): Promise<string | FieldProblem | undefined> {
     let created: { id: string };
     try {
       created = await firstValueFrom(
         this.api.crearUsuario(
-          { username: v.username.trim(), email: v.email.trim() || undefined, password: v.password },
+          {
+            username: v.username.trim(),
+            email: v.email.trim() || undefined,
+            password: v.password,
+            empleado: v.empleado && datosEmpleado(v.empleado),
+          },
           key,
         ),
       );
     } catch (error) {
-      return describeProblem(error);
+      return rechazo(error, CAMPO_POR_CODIGO);
     }
     try {
       await firstValueFrom(this.api.asignar(created.id, [v.roleId], [v.branchId]));
@@ -146,4 +176,16 @@ export class EquipoStore {
   private say(kind: Notice['kind'], text: string): void {
     this.notice.set({ kind, text });
   }
+}
+
+/** Normaliza los datos personales del formulario; el teléfono y el cargo vacíos no se envían. */
+function datosEmpleado(d: DatosPersona): DatosEmpleado {
+  return {
+    nombres: texto(d.nombres ?? ''),
+    apellidos: texto(d.apellidos ?? ''),
+    tipo_documento: texto(d.tipo_documento ?? ''),
+    numero_documento: texto(d.numero_documento ?? ''),
+    telefono: opcional(d.telefono ?? '') ?? undefined,
+    cargo: opcional(d.cargo ?? '') ?? undefined,
+  };
 }

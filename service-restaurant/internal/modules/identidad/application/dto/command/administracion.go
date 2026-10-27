@@ -73,6 +73,8 @@ type CrearUsuario struct {
 	Username string
 	Password string
 	Email    *string
+	// Empleado, si viene, crea al empleado de esta persona en la misma transacción.
+	Empleado *DatosEmpleado
 }
 
 // AsignarAccesos reemplaza el conjunto de roles y sedes del usuario.

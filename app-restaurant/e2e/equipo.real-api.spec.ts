@@ -24,8 +24,13 @@ test('administra una persona de extremo a extremo contra el servidor real', asyn
   page,
   request,
 }) => {
-  const username = `e2e.${Date.now()}`;
+  const stamp = Date.now();
+  const username = `e2e.${stamp}`;
   const password = 'E2eClaveSegura2026';
+  // Con EMPLEADO_ADMINISTRAR (el administrador la tiene), el alta guarda también los datos
+  // personales y la tarjeta muestra el nombre real en lugar del usuario.
+  const nombre = `Persona E2e ${stamp}`;
+  const dni = String(stamp).slice(-8);
 
   await page.goto('/login');
   await page.getByRole('textbox', { name: 'Usuario' }).fill(admin!);
@@ -38,13 +43,16 @@ test('administra una persona de extremo a extremo contra el servidor real', asyn
 
   // Alta.
   await page.getByRole('button', { name: 'Nueva persona' }).click();
+  await dialog(page).locator('#field-nombres').fill('Persona');
+  await dialog(page).locator('#field-apellidos').fill(`E2e ${stamp}`);
+  await dialog(page).locator('#field-numero_documento').fill(dni);
   await dialog(page).locator('#field-username').fill(username);
   await dialog(page).locator('#field-password').fill(password);
   await dialog(page).locator('#field-role').selectOption({ label: 'Cajero' });
   await dialog(page).getByRole('button', { name: 'Crear acceso' }).click();
   await expect(dialog(page)).toHaveCount(0);
-  await expect(card(page, username)).toContainText('Cajero');
-  await expect(card(page, username)).toContainText('Activo');
+  await expect(card(page, nombre)).toContainText('Cajero');
+  await expect(card(page, nombre)).toContainText('Activo');
 
   // La nueva persona ya puede entrar (lo comprueba el servidor real).
   const login = () => request.post('/api/v1/auth/login', { data: { username, password } });
@@ -52,6 +60,11 @@ test('administra una persona de extremo a extremo contra el servidor real', asyn
 
   // Un usuario repetido se rechaza dentro del diálogo, con el mensaje del servidor.
   await page.getByRole('button', { name: 'Nueva persona' }).click();
+  await dialog(page).locator('#field-nombres').fill('Otra');
+  await dialog(page).locator('#field-apellidos').fill('Persona');
+  await dialog(page)
+    .locator('#field-numero_documento')
+    .fill(String(stamp + 1).slice(-8));
   await dialog(page).locator('#field-username').fill(username.toUpperCase());
   await dialog(page).locator('#field-password').fill(password);
   await dialog(page).getByRole('button', { name: 'Crear acceso' }).click();
@@ -59,22 +72,22 @@ test('administra una persona de extremo a extremo contra el servidor real', asyn
   await page.keyboard.press('Escape');
 
   // Cambio de rol.
-  await card(page, username).getByRole('button', { name: 'Cambiar rol' }).click();
+  await card(page, nombre).getByRole('button', { name: 'Cambiar rol' }).click();
   await dialog(page).locator('#field-role').selectOption({ label: 'Cocina' });
   await dialog(page).getByRole('button', { name: 'Guardar' }).click();
-  await expect(card(page, username)).toContainText('Cocina');
+  await expect(card(page, nombre)).toContainText('Cocina');
 
   // Baja: queda registrada con su motivo y la persona deja de poder entrar.
-  await card(page, username).getByRole('button', { name: 'Dar de baja' }).click();
+  await card(page, nombre).getByRole('button', { name: 'Dar de baja' }).click();
   await dialog(page).locator('#field-reason').fill('prueba e2e');
   await dialog(page).getByRole('button', { name: 'Confirmar baja' }).click();
-  await expect(card(page, username)).toContainText('De baja');
-  await expect(card(page, username)).toContainText('Motivo de la baja: prueba e2e');
+  await expect(card(page, nombre)).toContainText('De baja');
+  await expect(card(page, nombre)).toContainText('Motivo de la baja: prueba e2e');
   expect((await login()).status()).toBe(401);
 
   // Restauración: vuelve a poder entrar.
-  await card(page, username).getByRole('button', { name: 'Restaurar' }).click();
-  await expect(card(page, username)).toContainText('Activo');
+  await card(page, nombre).getByRole('button', { name: 'Restaurar' }).click();
+  await expect(card(page, nombre)).toContainText('Activo');
   expect((await login()).status()).toBe(200);
 });
 

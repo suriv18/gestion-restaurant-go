@@ -71,6 +71,7 @@ type SucursalResumen struct {
 type UsuarioConAccesos struct {
 	UsuarioAdmin
 	MotivoBaja *string
+	Empleado   *EmpleadoResumen
 	Roles      []RolResumen
 	Sucursales []SucursalResumen
 }

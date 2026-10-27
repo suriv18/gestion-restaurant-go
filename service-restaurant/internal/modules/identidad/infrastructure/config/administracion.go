@@ -18,9 +18,10 @@ import (
 
 // administracion agrupa los casos de uso de RES-RF-033 ya decorados.
 type administracion struct {
-	roles    *controller.RolesHandler
-	permisos *controller.PermisosHandler
-	usuarios *controller.UsuariosHandler
+	roles     *controller.RolesHandler
+	permisos  *controller.PermisosHandler
+	usuarios  *controller.UsuariosHandler
+	empleados *controller.EmpleadosHandler
 }
 
 func armarAdministracion(db *sql.DB, logger *slog.Logger, hasher outbound.PasswordHasher, clock outbound.Clock) *administracion {
@@ -61,7 +62,7 @@ func armarAdministracion(db *sql.DB, logger *slog.Logger, hasher outbound.Passwo
 
 	crearUsuario := escritura[cmd.CrearUsuario, dtoresult.UsuarioAdmin]{db: db, logger: logger, status: http.StatusCreated,
 		build: func(q txQuerier) ejecutor[cmd.CrearUsuario, dtoresult.UsuarioAdmin] {
-			return command.NewCrearUsuario(writeadapter.NewAccesosWriteAdapter(q), hasher)
+			return command.NewCrearUsuario(writeadapter.NewAccesosWriteAdapter(q), hasher, writeadapter.NewEmpleadoWriteAdapter(q))
 		},
 		meta: func(c cmd.CrearUsuario) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
 	asignar := escritura[cmd.AsignarAccesos, dtoresult.UsuarioAdmin]{db: db, logger: logger, status: http.StatusOK,
@@ -89,5 +90,29 @@ func armarAdministracion(db *sql.DB, logger *slog.Logger, hasher outbound.Passwo
 		usuarios: controller.NewUsuariosHandler(
 			inbound.CrearUsuario(crearUsuario), inbound.AsignarAccesos(asignar), inbound.CambiarEstadoUsuario(estadoUsuario),
 			uquery.NewListarUsuarios(equipo), uquery.NewListarSucursalesAsignables(equipo)),
+		empleados: armarEmpleados(db, logger),
 	}
+}
+
+// armarEmpleados compone los casos de uso de empleados, ya decorados con transacción e idempotencia.
+func armarEmpleados(db *sql.DB, logger *slog.Logger) *controller.EmpleadosHandler {
+	crear := escritura[cmd.CrearEmpleado, dtoresult.Empleado]{db: db, logger: logger, status: http.StatusCreated,
+		build: func(q txQuerier) ejecutor[cmd.CrearEmpleado, dtoresult.Empleado] {
+			return command.NewCrearEmpleado(writeadapter.NewEmpleadoWriteAdapter(q))
+		},
+		meta: func(c cmd.CrearEmpleado) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
+	editar := escritura[cmd.EditarEmpleado, dtoresult.Empleado]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.EditarEmpleado, dtoresult.Empleado] {
+			return command.NewEditarEmpleado(writeadapter.NewEmpleadoWriteAdapter(q))
+		},
+		meta: func(c cmd.EditarEmpleado) (int64, cmd.Intencion) { return c.Actor.UserID, cmd.Intencion{} }}
+	estado := escritura[cmd.CambiarEstadoEmpleado, dtoresult.Empleado]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.CambiarEstadoEmpleado, dtoresult.Empleado] {
+			return command.NewCambiarEstadoEmpleado(writeadapter.NewEmpleadoWriteAdapter(q))
+		},
+		meta: func(c cmd.CambiarEstadoEmpleado) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
+
+	lector := readadapter.NewEmpleadoReadAdapter(db)
+	return controller.NewEmpleadosHandler(uquery.NewListarEmpleados(lector), uquery.NewObtenerEmpleado(lector),
+		inbound.CrearEmpleado(crear), inbound.EditarEmpleado(editar), inbound.CambiarEstadoEmpleado(estado))
 }

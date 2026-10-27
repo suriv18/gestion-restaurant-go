@@ -6,12 +6,13 @@ Fecha: 22 de octubre de 2026, America/Lima. Windows, Node 24.14.1, npm 11.14.0.
 | --- | --- |
 | Angular ESLint (TypeScript y plantillas accesibles) | Sin errores ni advertencias |
 | Prettier | Todos los archivos comprobados cumplen formato |
-| Vitest / Angular CLI | **194 pruebas aprobadas, 24 archivos spec** (incluye sesión, interceptores, guards, login, estado de Equipo y accesos, estado y secciones de Configuración y el diálogo asíncrono) |
-| Build de producción | Aprobado; entrada 334.09 kB, transferencia estimada 89.15 kB, dentro del presupuesto de 500 kB |
-| Playwright | **141 pruebas aprobadas**, 0 fallos; 15 omitidas (las del API real, que son opt-in) |
+| Vitest / Angular CLI | **231 pruebas aprobadas, 26 archivos spec** (incluye sesión, interceptores, guards, login, estado de Equipo y accesos, de Clientes y proveedores y de Empleados, estado y secciones de Configuración y el diálogo asíncrono) |
+| Build de producción | Aprobado; entrada 334.21 kB, transferencia estimada 89.18 kB, dentro del presupuesto de 500 kB |
+| Playwright | **183 pruebas aprobadas**, 0 fallos; 24 omitidas (las del API real, que son opt-in) |
 | Integración con el API real | `e2e/login.real-api.spec.ts` y `e2e/equipo.real-api.spec.ts` aprobados contra el stack de Docker: login y cierre que revoca el token; alta de una persona, duplicado rechazado con el mensaje del servidor, cambio de rol, baja (la persona recibe 401 al entrar), restauración, y 403 real para quien no administra |
-| Integración de Configuración con el API real | `e2e/configuracion.real-api.spec.ts` escrita (sede con su aviso de éxito —sin esperar verla en el listado, porque el backend no se la asigna a quien la crea—, código repetido, zona, mesa, baja con motivo y restauración); **no se ha ejecutado contra el API real**: requiere `E2E_API_USER` y `E2E_API_PASSWORD`. Sin ellas queda omitida (verificado) |
-| Rutas | Login y las 14 pantallas de operación cargan sin errores JavaScript y sin desbordamiento horizontal en los tres tamaños |
+| Integración de Configuración con el API real | `e2e/configuracion.real-api.spec.ts` aprobado contra un stack temporal (Postgres 18 limpio con las migraciones 00001-00009, API y front en otros puertos): sede con su aviso de éxito, código repetido, zona, mesa, baja con motivo y restauración |
+| Integración de Clientes, proveedores y Empleados con el API real | `e2e/directorio.real-api.spec.ts` aprobado contra el mismo stack temporal: alta, documento repetido (también tras la baja), edición parcial, baja con motivo y restauración de un cliente, un proveedor (RUC inválido rechazado bajo su campo) y un empleado. `e2e/equipo.real-api.spec.ts` actualizado y aprobado con el alta conjunta de usuario y empleado (la tarjeta muestra el nombre real) |
+| Rutas | Login y las 14 pantallas de operación (y Empleados) cargan sin errores JavaScript y sin desbordamiento horizontal en los tres tamaños |
 
 ## Entornos E2E
 

@@ -2,7 +2,7 @@
 
 ## Módulos
 
-Módulos hoy: **`identidad`** (implementado en I1: acceso, autorización y administración de accesos; en I2, negocio y sucursales), **`atencion`** (zonas y mesas, implementado en I2) y `catalogo`, **esqueleto de ejemplo sustituible** de la plantilla (archivos con solo `package`). Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
+Módulos hoy: **`identidad`** (implementado en I1: acceso, autorización y administración de accesos; en I2, negocio y sucursales), **`atencion`** (zonas y mesas, implementado en I2) y `catalogo` (clientes y proveedores, implementados en I2 rebanada 2; el resto de sus carpetas, como `producto_*`, sigue siendo el **esqueleto de ejemplo sustituible** de la plantilla, con archivos de solo `package`). Los empleados viven en `identidad`. Los módulos de negocio previstos por el expediente (ADR-01) y su incremento son:
 
 | Módulo (ADR-01) | Tablas (migración) | Incremento |
 |---|---|---|

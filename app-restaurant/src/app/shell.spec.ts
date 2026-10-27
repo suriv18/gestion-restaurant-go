@@ -9,11 +9,11 @@ describe('Shell de Mesa', () => {
       providers: [provideRouter([])],
     }).compileComponents();
   });
-  it('expone las 14 áreas y el modo demostración', async () => {
+  it('expone las 15 áreas y el modo demostración', async () => {
     const fixture = TestBed.createComponent(Shell);
     await fixture.whenStable();
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelectorAll('nav a')).toHaveLength(14);
+    expect(root.querySelectorAll('nav a')).toHaveLength(15);
     expect(root.textContent).toContain('Modo demostración');
     expect(root.querySelector('a.skip-link')?.getAttribute('href')).toBe('#main');
   });

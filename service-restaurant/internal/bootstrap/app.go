@@ -9,6 +9,7 @@ import (
 	"time"
 
 	atencion "service-restaurant/internal/modules/atencion/infrastructure/config"
+	catalogo "service-restaurant/internal/modules/catalogo/infrastructure/config"
 	identidad "service-restaurant/internal/modules/identidad/infrastructure/config"
 	"service-restaurant/internal/platform/config"
 	"service-restaurant/internal/platform/database"
@@ -20,6 +21,7 @@ type App struct {
 	db        *sql.DB
 	identidad *identidad.Module
 	atencion  *atencion.Module
+	catalogo  *catalogo.Module
 	server    *http.Server
 }
 
@@ -47,7 +49,12 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*App, err
 		_ = db.Close()
 		return nil, err
 	}
-	a := &App{cfg: cfg, logger: logger, db: db, identidad: mod, atencion: atn}
+	cat, err := catalogo.New(catalogo.Deps{DB: db, Logger: logger})
+	if err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	a := &App{cfg: cfg, logger: logger, db: db, identidad: mod, atencion: atn, catalogo: cat}
 	a.server = &http.Server{
 		Addr:              cfg.Addr,
 		Handler:           a.router(),

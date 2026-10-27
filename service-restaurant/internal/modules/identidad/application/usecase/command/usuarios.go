@@ -20,19 +20,34 @@ const (
 	maxMotivo = 2000
 )
 
-// CrearUsuario da de alta un usuario humano. La contraseña solo se usa para derivar su hash.
+// CrearUsuario da de alta un usuario humano. La contraseña solo se usa para derivar su hash. Si el
+// comando trae datos de empleado, crea al empleado vinculado en la misma transacción: si uno falla,
+// no se guarda ninguno.
 type CrearUsuario struct {
-	accesos outbound.AccesosStore
-	hasher  outbound.PasswordHasher
+	accesos   outbound.AccesosStore
+	hasher    outbound.PasswordHasher
+	empleados outbound.EmpleadoStore
 }
 
-func NewCrearUsuario(a outbound.AccesosStore, h outbound.PasswordHasher) *CrearUsuario {
-	return &CrearUsuario{a, h}
+func NewCrearUsuario(a outbound.AccesosStore, h outbound.PasswordHasher, e outbound.EmpleadoStore) *CrearUsuario {
+	return &CrearUsuario{a, h, e}
 }
 
 func (uc *CrearUsuario) Execute(ctx context.Context, c cmd.CrearUsuario) (appresult.Result[dtoresult.UsuarioAdmin], error) {
 	if ae := mapper.RequiereAdministrar(c.Actor); ae != nil {
 		return rechazar[dtoresult.UsuarioAdmin](ae)
+	}
+	// El empleado se valida antes de derivar el hash (argon2id es costoso).
+	var nuevoEmpleado *outbound.NuevoEmpleado
+	if c.Empleado != nil {
+		if ae := mapper.Requiere(c.Actor, mensajeSinPermisoEmpleados, policy.EmpleadoAdministrar); ae != nil {
+			return rechazar[dtoresult.UsuarioAdmin](ae)
+		}
+		n, ae := validarDatosEmpleado(*c.Empleado)
+		if ae != nil {
+			return rechazar[dtoresult.UsuarioAdmin](ae)
+		}
+		nuevoEmpleado = &n
 	}
 	username, err := vo.NewUsername(c.Username)
 	if err != nil {
@@ -55,6 +70,12 @@ func (uc *CrearUsuario) Execute(ctx context.Context, c cmd.CrearUsuario) (appres
 	u, err := uc.accesos.CrearUsuario(ctx, username.String(), email, hash)
 	if err != nil {
 		return deAlmacen[dtoresult.UsuarioAdmin]("crear usuario", err)
+	}
+	if nuevoEmpleado != nil {
+		nuevoEmpleado.UsuarioID = &u.ID
+		if _, err := uc.empleados.Crear(ctx, *nuevoEmpleado); err != nil {
+			return deEmpleado[dtoresult.UsuarioAdmin]("crear empleado del usuario", err)
+		}
 	}
 	return appresult.Ok(u), nil
 }
