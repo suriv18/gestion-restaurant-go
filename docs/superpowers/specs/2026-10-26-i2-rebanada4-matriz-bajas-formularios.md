@@ -58,7 +58,7 @@ Listados antes de corregir nada; los huecos se decidieron en la Task 5; H-1 y H-
   Decisión: corregir · 2026-10-26 · corregido en 1b3c7ed
 - **H-2** · empleados · contrato · el backend sirve `GET/POST /empleados`, `GET/PATCH /empleados/{id}` y sus `baja`/`restauracion`, pero `openapi.yaml` no los define (no hay `x-implementado` que marcar) · añadir las 6 operaciones al contrato y actualizar los conteos de rutas y operaciones del expediente · requiere decisión de producto: sí (cambia el contrato y los conteos).
   Decisión: añadir al contrato · 2026-10-26 · se resuelve en la Task 5b
-  Resuelto: 6 operaciones de empleados añadidas al contrato (119 rutas, 163 operaciones) · SHA_PENDIENTE
+  Resuelto: 6 operaciones de empleados añadidas al contrato (119 rutas, 163 operaciones) · d68dad2
 - **H-3** · permisos · `motivo` y `campo_de_auditoria` (backend) · `POST /permisos/{id}/baja` solo lee el cuerpo en la restauración, así que acepta un cuerpo desconocido en la baja · mismo patrón que H-1 · arreglo: igual que H-1 · requiere decisión de producto: no.
   Propuesta: diferir (permisos no tiene pantalla de baja en I2) · pendiente de confirmar por el usuario
 
