@@ -844,6 +844,222 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Confirmacion'
+  /empleados:
+    get:
+      operationId: operacion_158
+      summary: Listar empleados
+      tags:
+      - Catálogos
+      description: >-
+        Lista paginada por cursor del personal operativo. Sin `es_activo` lista activos y bajas; `q` busca por nombres, apellidos o documento. Exige EMPLEADO_VER o EMPLEADO_ADMINISTRAR.
+      x-implementado: true
+      x-permiso: EMPLEADO_VER | EMPLEADO_ADMINISTRAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmpleadosLista'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 30
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 150
+      - name: es_activo
+        in: query
+        schema:
+          type: boolean
+        description: Sin valor lista activos y bajas.
+    post:
+      operationId: operacion_159
+      summary: Crear empleados
+      tags:
+      - Catálogos
+      description: >-
+        Alta de un empleado, con o sin usuario vinculado (`usuario_id` ausente = sin acceso). `fecha_ingreso` ausente = hoy. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: EMPLEADO_ADMINISTRAR
+      responses:
+        '201':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleados'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpleadosAlta'
+  /empleados/{id}:
+    get:
+      operationId: operacion_160
+      summary: Consultar empleados
+      tags:
+      - Catálogos
+      description: >-
+        Consulta un empleado por id. Exige EMPLEADO_VER o EMPLEADO_ADMINISTRAR.
+      x-implementado: true
+      x-permiso: EMPLEADO_VER | EMPLEADO_ADMINISTRAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleados'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+    patch:
+      operationId: operacion_161
+      summary: Editar empleados
+      tags:
+      - Catálogos
+      description: >-
+        Modifica solo los campos enviados de un empleado activo; uno dado de baja responde 409 `empleado_inactivo`. `usuario_id` null desvincula al usuario y `fecha_cese` null borra el cese.
+      x-implementado: true
+      x-permiso: EMPLEADO_ADMINISTRAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleados'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpleadosEdicion'
+  /empleados/{id}/baja:
+    post:
+      operationId: operacion_162
+      summary: Dar de baja empleados
+      tags:
+      - Catálogos
+      description: >-
+        Baja con `motivo` obligatorio. Ya dado de baja: 409 `ya_dado_de_baja`. Exige Idempotency-Key.
+      x-implementado: true
+      x-permiso: EMPLEADO_ADMINISTRAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleados'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Motivo'
+  /empleados/{id}/restauracion:
+    post:
+      operationId: operacion_163
+      summary: Restaurar empleados
+      tags:
+      - Catálogos
+      description: >-
+        Reactiva el mismo ID. Ya activo: 409 `ya_activo`. Exige Idempotency-Key; el cuerpo es opcional y vacío.
+      x-implementado: true
+      x-permiso: EMPLEADO_ADMINISTRAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleados'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Confirmacion'
   /articulos:
     get:
       operationId: operacion_023
@@ -10477,6 +10693,98 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Clientes'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+    EmpleadosAlta:
+      type: object
+      additionalProperties: false
+      required:
+      - tipo_documento
+      - numero_documento
+      - nombres
+      - apellidos
+      properties:
+        tipo_documento:
+          type: string
+          maxLength: 10
+        numero_documento:
+          type: string
+          maxLength: 20
+        nombres:
+          type: string
+          maxLength: 120
+        apellidos:
+          type: string
+          maxLength: 120
+        telefono:
+          anyOf:
+          - type: string
+            maxLength: 30
+          - type: 'null'
+        cargo:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        fecha_ingreso:
+          type: string
+          format: date
+        usuario_id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          description: Identificador BIGINT serializado como cadena.
+    EmpleadosEdicion:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        tipo_documento:
+          type: string
+          maxLength: 10
+        numero_documento:
+          type: string
+          maxLength: 20
+        nombres:
+          type: string
+          maxLength: 120
+        apellidos:
+          type: string
+          maxLength: 120
+        telefono:
+          anyOf:
+          - type: string
+            maxLength: 30
+          - type: 'null'
+        cargo:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        fecha_ingreso:
+          type: string
+          format: date
+        fecha_cese:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+        usuario_id:
+          anyOf:
+          - type: string
+            pattern: ^[1-9][0-9]*$
+            description: Identificador BIGINT serializado como cadena.
+          - type: 'null'
+    EmpleadosLista:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Empleados'
         nextCursor:
           type:
           - string

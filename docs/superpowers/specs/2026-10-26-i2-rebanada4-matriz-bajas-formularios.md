@@ -2,7 +2,7 @@
 
 Requisitos: RES-RF-030 y RES-RF-036. Spec: `2026-10-26-i2-rebanada4-cierre-auditoria-design.md`.
 Fecha de la auditoría: 2026-10-26. Evidencia de backend: `TestBajasContratoComun/<entidad>/<criterio>` (`service-restaurant/tests/integration/bajas_contrato_test.go`).
-Resultado del backend: 11 entidades x 7 criterios = 77 celdas; 75 pasan y 2 fallan (ambas de `roles`). Detalle en `.superpowers/sdd/r4-task-1-report.md` y `.superpowers/sdd/r4-huecos-backend.txt`.
+Resultado del backend: 11 entidades x 7 criterios = 77 celdas; 75 pasan y 2 fallan (ambas de `roles`); es el estado inicial de la auditoría: las 2 celdas de `roles` se corrigieron en el commit 1b3c7ed (ahora 77/77). Detalle en `.superpowers/sdd/r4-task-1-report.md` y `.superpowers/sdd/r4-huecos-backend.txt`.
 Evidencia de frontend: pruebas unitarias y E2E citadas; donde la evidencia es una ubicación de código hallada con grep se indica `inspección` (D2: no se afirma ninguna prueba que no se haya encontrado).
 
 ## Backend
@@ -52,13 +52,14 @@ Rutas relativas a `app-restaurant/src/app/`. El doble envío (C) y el error de c
 
 ## Huecos
 
-Listados antes de corregir nada; ninguno se arregla en esta rebanada hasta decidirlo (Task 5).
+Listados antes de corregir nada; los huecos se decidieron en la Task 5; H-1 y H-2 están resueltos, H-3 sigue diferido.
 
 - **H-1** · roles · `motivo` y `campo_de_auditoria` (backend) · `POST /roles/{id}/baja` acepta un cuerpo desconocido (`{"motivo":"x"}` y `{"eliminado_por":"1"}`) y responde 200 en vez de 400, ejecutando la baja; los campos se ignoran en lugar de rechazarse (`baja`, `restauracion`, `auditoria`, `delete` e `Idempotency-Key` sí pasan) · rechazar con 400 los cuerpos con campos desconocidos en la baja de roles, como hacen las otras 10 entidades con baja auditadas en la tabla de backend · requiere decisión de producto: no (alinea roles con el contrato común).
   Decisión: corregir · 2026-10-26 · corregido en 1b3c7ed
 - **H-2** · empleados · contrato · el backend sirve `GET/POST /empleados`, `GET/PATCH /empleados/{id}` y sus `baja`/`restauracion`, pero `openapi.yaml` no los define (no hay `x-implementado` que marcar) · añadir las 6 operaciones al contrato y actualizar los conteos de rutas y operaciones del expediente · requiere decisión de producto: sí (cambia el contrato y los conteos).
   Decisión: añadir al contrato · 2026-10-26 · se resuelve en la Task 5b
+  Resuelto: 6 operaciones de empleados añadidas al contrato (119 rutas, 163 operaciones) · SHA_PENDIENTE
 - **H-3** · permisos · `motivo` y `campo_de_auditoria` (backend) · `POST /permisos/{id}/baja` solo lee el cuerpo en la restauración, así que acepta un cuerpo desconocido en la baja · mismo patrón que H-1 · arreglo: igual que H-1 · requiere decisión de producto: no.
-  Decisión: diferir (permisos no tiene pantalla de baja en I2)
+  Propuesta: diferir (permisos no tiene pantalla de baja en I2) · pendiente de confirmar por el usuario
 
 Frontend: sin huecos. Notas, no huecos: (a) usuarios llama `reason` a la clave del campo del motivo (etiqueta «Motivo»), por eso el grep de A no lo lista; (b) sucursales, zonas, mesas y usuarios no tienen interruptor «Incluir bajas»: muestran siempre las bajas; sucursales, zonas y usuarios con la marca «De baja» (`sedes-section.ts:40`, `salon-section.ts:51`, `team-access.ts:76`) y las mesas atenuadas (`salon-section.ts:88`) con su motivo (`:94-95`) y el botón «Restaurar» (`:133-137`); (c) usuarios gobierna E con `canAdminister()`, fuera del patrón del grep de E; (d) el grep de F no detecta «Incluir bajas» en `contactos-real.ts` porque el texto se parte en dos líneas.
