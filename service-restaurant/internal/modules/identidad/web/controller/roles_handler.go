@@ -120,10 +120,12 @@ func (h *RolesHandler) cambiarEstado(w http.ResponseWriter, r *http.Request, act
 	accion := "baja"
 	if activo {
 		accion = "restauracion"
-		var c request.Confirmacion
-		if err := leerCuerpoOpcionalVacio(r, &c); err != nil {
-			return err
-		}
+	}
+	// Ni la baja ni la restauración de un rol llevan datos: se acepta sin cuerpo o con «{}» y se
+	// rechaza cualquier campo (el actor sale de la sesión, no del cuerpo).
+	var c request.Confirmacion
+	if err := leerCuerpoOpcionalVacio(r, &c); err != nil {
+		return err
 	}
 	in, err := intencion(r, fmt.Sprintf("POST /roles/%d/%s", id, accion), nil)
 	if err != nil {

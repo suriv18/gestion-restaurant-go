@@ -73,5 +73,5 @@ type Motivo struct {
 	Motivo string `json:"motivo"`
 }
 
-// Confirmacion es el cuerpo (vacío) de las restauraciones.
+// Confirmacion es el cuerpo (vacío) de las restauraciones y de las bajas sin motivo.
 type Confirmacion struct{}

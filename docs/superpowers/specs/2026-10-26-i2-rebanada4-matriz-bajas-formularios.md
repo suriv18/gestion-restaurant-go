@@ -19,7 +19,7 @@ Evidencia de frontend: pruebas unitarias y E2E citadas; donde la evidencia es un
 | categorias | simple | cumple · `categorias/baja` y `categorias/motivo` | cumple · `categorias/campo_de_auditoria` | cumple · `categorias/sin_idempotency_key` | cumple · `categorias/restauracion` | cumple · `categorias/delete` | cumple · `categorias/auditoria` |
 | estaciones_preparacion | simple | cumple · `estaciones/baja` y `estaciones/motivo` | cumple · `estaciones/campo_de_auditoria` | cumple · `estaciones/sin_idempotency_key` | cumple · `estaciones/restauracion` | cumple · `estaciones/delete` | cumple · `estaciones/auditoria` |
 | zonas | simple | cumple · `zonas/baja` y `zonas/motivo` | cumple · `zonas/campo_de_auditoria` | cumple · `zonas/sin_idempotency_key` | cumple · `zonas/restauracion` | cumple · `zonas/delete` | cumple · `zonas/auditoria` |
-| roles | simple | hueco · H-1 | hueco · H-1 | cumple · `roles/sin_idempotency_key` | cumple · `roles/restauracion` | cumple · `roles/delete` | cumple · `roles/auditoria` |
+| roles | simple | cumple · `roles/baja` y `roles/motivo` | cumple · `roles/campo_de_auditoria` | cumple · `roles/sin_idempotency_key` | cumple · `roles/restauracion` | cumple · `roles/delete` | cumple · `roles/auditoria` |
 | negocio | sin baja | n/a · singleton: solo se edita | n/a | n/a | n/a | n/a | n/a |
 | tasas_impuesto | sin baja | n/a · se editan sus vigencias; no se dan de baja | n/a | n/a | n/a | n/a | n/a |
 
@@ -43,11 +43,22 @@ Rutas relativas a `app-restaurant/src/app/`. El doble envío (C) y el error de c
 | zonas | cumple · inspección: `bajaZona` en `features/configuracion/salon-section.ts:219-227` sin campo de motivo (desactivación simple) | cumple · `newIdempotencyKey()` en `features/configuracion/salon-section.ts:220` (inspección); cumple · prueba `ignora un segundo envío mientras el primero sigue en curso` (`shared/ui/form-dialog.spec.ts`:201) | cumple · pruebas `muestra el error de campo bajo el campo y conserva lo escrito` (:57), `lleva el foco al campo con el error del servidor` (:70), `lleva el foco al primer campo inválido antes de enviar` (:80) de `shared/ui/form-dialog.spec.ts`; E2E `un código duplicado del servidor aparece en el campo y el diálogo sigue abierto` (`app-restaurant/e2e/carta.spec.ts`) | cumple · inspección: `features/configuracion/salon-section.ts:33, 54` (`puedeEditarSalon`) | cumple · inspección: `features/configuracion/salon-section.ts:51` (se listan todas y la baja lleva la marca «De baja»; sin interruptor de filtro) | cumple · inspección: `features/configuracion/configuracion-real.ts:42` (`store.sinAcceso()` muestra «No tienes permiso…»); spec `configuracion-real.spec.ts` («sin ningún permiso muestra el aviso y ninguna sección») |
 | roles | n/a · sin pantalla de baja (`features` no tiene baja de roles; `team-access.ts` solo los lista para asignar) | n/a · sin pantalla de baja | n/a · sin pantalla de baja | n/a · sin pantalla de baja | n/a · sin pantalla de baja | n/a · sin pantalla de baja |
 
+## Decisiones (2026-10-26)
+
+- H-1: corregir.
+- H-2: añadir al contrato.
+- D2: las celdas de interfaz verificadas por inspección de código se aceptan como `cumple · inspección`, estado explícito y distinto de `cumple · prueba`.
+- Criterio F: se lee como «las bajas no se ocultan y se pueden restaurar»; sedes, zonas, mesas y usuarios cumplen sin interruptor.
+
 ## Huecos
 
 Listados antes de corregir nada; ninguno se arregla en esta rebanada hasta decidirlo (Task 5).
 
 - **H-1** · roles · `motivo` y `campo_de_auditoria` (backend) · `POST /roles/{id}/baja` acepta un cuerpo desconocido (`{"motivo":"x"}` y `{"eliminado_por":"1"}`) y responde 200 en vez de 400, ejecutando la baja; los campos se ignoran en lugar de rechazarse (`baja`, `restauracion`, `auditoria`, `delete` e `Idempotency-Key` sí pasan) · rechazar con 400 los cuerpos con campos desconocidos en la baja de roles, como hacen las otras 10 entidades con baja auditadas en la tabla de backend · requiere decisión de producto: no (alinea roles con el contrato común).
+  Decisión: corregir · 2026-10-26 · corregido en SHA_PENDIENTE
 - **H-2** · empleados · contrato · el backend sirve `GET/POST /empleados`, `GET/PATCH /empleados/{id}` y sus `baja`/`restauracion`, pero `openapi.yaml` no los define (no hay `x-implementado` que marcar) · añadir las 6 operaciones al contrato y actualizar los conteos de rutas y operaciones del expediente · requiere decisión de producto: sí (cambia el contrato y los conteos).
+  Decisión: añadir al contrato · 2026-10-26 · se resuelve en la Task 5b
+- **H-3** · permisos · `motivo` y `campo_de_auditoria` (backend) · `POST /permisos/{id}/baja` solo lee el cuerpo en la restauración, así que acepta un cuerpo desconocido en la baja · mismo patrón que H-1 · arreglo: igual que H-1 · requiere decisión de producto: no.
+  Decisión: diferir (permisos no tiene pantalla de baja en I2)
 
 Frontend: sin huecos. Notas, no huecos: (a) usuarios llama `reason` a la clave del campo del motivo (etiqueta «Motivo»), por eso el grep de A no lo lista; (b) sucursales, zonas, mesas y usuarios no tienen interruptor «Incluir bajas»: muestran siempre las bajas; sucursales, zonas y usuarios con la marca «De baja» (`sedes-section.ts:40`, `salon-section.ts:51`, `team-access.ts:76`) y las mesas atenuadas (`salon-section.ts:88`) con su motivo (`:94-95`) y el botón «Restaurar» (`:133-137`); (c) usuarios gobierna E con `canAdminister()`, fuera del patrón del grep de E; (d) el grep de F no detecta «Incluir bajas» en `contactos-real.ts` porque el texto se parte en dos líneas.
