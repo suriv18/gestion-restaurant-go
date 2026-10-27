@@ -55,7 +55,7 @@ Rutas relativas a `app-restaurant/src/app/`. El doble envío (C) y el error de c
 Listados antes de corregir nada; ninguno se arregla en esta rebanada hasta decidirlo (Task 5).
 
 - **H-1** · roles · `motivo` y `campo_de_auditoria` (backend) · `POST /roles/{id}/baja` acepta un cuerpo desconocido (`{"motivo":"x"}` y `{"eliminado_por":"1"}`) y responde 200 en vez de 400, ejecutando la baja; los campos se ignoran en lugar de rechazarse (`baja`, `restauracion`, `auditoria`, `delete` e `Idempotency-Key` sí pasan) · rechazar con 400 los cuerpos con campos desconocidos en la baja de roles, como hacen las otras 10 entidades con baja auditadas en la tabla de backend · requiere decisión de producto: no (alinea roles con el contrato común).
-  Decisión: corregir · 2026-10-26 · corregido en SHA_PENDIENTE
+  Decisión: corregir · 2026-10-26 · corregido en 1b3c7ed
 - **H-2** · empleados · contrato · el backend sirve `GET/POST /empleados`, `GET/PATCH /empleados/{id}` y sus `baja`/`restauracion`, pero `openapi.yaml` no los define (no hay `x-implementado` que marcar) · añadir las 6 operaciones al contrato y actualizar los conteos de rutas y operaciones del expediente · requiere decisión de producto: sí (cambia el contrato y los conteos).
   Decisión: añadir al contrato · 2026-10-26 · se resuelve en la Task 5b
 - **H-3** · permisos · `motivo` y `campo_de_auditoria` (backend) · `POST /permisos/{id}/baja` solo lee el cuerpo en la restauración, así que acepta un cuerpo desconocido en la baja · mismo patrón que H-1 · arreglo: igual que H-1 · requiere decisión de producto: no.
