@@ -67,6 +67,25 @@ describe('Formulario de operación', () => {
     expect(close).not.toHaveBeenCalled();
   });
 
+  it('lleva el foco al campo con el error del servidor', async () => {
+    commit.mockResolvedValue({ field: 'email', message: 'Ese correo ya existe.' });
+    const fixture = TestBed.createComponent(FormDialog);
+    fixture.detectChanges();
+    fixture.componentInstance.form.setValue({ name: 'Ana', email: 'ana@example.com' });
+    await fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('#field-email'));
+  });
+
+  it('lleva el foco al primer campo inválido antes de enviar', async () => {
+    const fixture = TestBed.createComponent(FormDialog);
+    fixture.detectChanges();
+    await fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(commit).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('#field-name'));
+  });
+
   it('borra el error del campo al editarlo', async () => {
     commit.mockResolvedValue({ field: 'name', message: 'Ese nombre ya existe.' });
     const fixture = TestBed.createComponent(FormDialog);

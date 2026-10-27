@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, signal } from '@angular/core';
 import { DIALOG_DATA, Dialog, DialogRef } from '@angular/cdk/dialog';
 import { FormControl, FormRecord, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Injectable } from '@angular/core';
@@ -138,6 +138,7 @@ export interface FormDialogData {
 export class FormDialog {
   readonly data = inject<FormDialogData>(DIALOG_DATA);
   readonly ref = inject(DialogRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly error = signal('');
   readonly busy = signal(false);
   readonly form = new FormRecord<FormControl<string>>(
@@ -178,11 +179,18 @@ export class FormDialog {
   flagged(key: string): boolean {
     return this.invalid(key) || !!this.fieldErrors()[key];
   }
+  /** Lleva el foco al control del campo (RF-036: el error debe poder encontrarse con el teclado). */
+  private focusField(key: string): void {
+    this.host.nativeElement.querySelector<HTMLElement>(`[id="field-${key}"]`)?.focus();
+  }
+
   async submit(): Promise<void> {
     if (this.busy()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.error.set('Completa los campos indicados antes de continuar.');
+      const primero = this.data.fields.find((f) => this.form.controls[f.key].invalid);
+      if (primero) this.focusField(primero.key);
       return;
     }
     this.busy.set(true);
@@ -200,6 +208,7 @@ export class FormDialog {
         if (Object.hasOwn(this.form.controls, outcome.field)) {
           this.fieldErrors.set({ [outcome.field]: outcome.message });
           this.form.controls[outcome.field].markAsTouched();
+          this.focusField(outcome.field);
         } else {
           this.error.set(outcome.message);
         }

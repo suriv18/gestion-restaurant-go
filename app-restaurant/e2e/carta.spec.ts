@@ -194,6 +194,7 @@ test.describe('Carta con la API simulada', () => {
     await dialogo(page).getByRole('button', { name: 'Guardar producto' }).click();
     await expect(dialogo(page).getByText('Ya existe un producto con ese código.')).toBeVisible();
     await expect(dialogo(page).getByLabel('Nombre del producto')).toHaveValue('Otro ceviche');
+    await expect(dialogo(page).getByLabel('Código', { exact: true })).toBeFocused();
   });
 
   test('edita enviando solo el campo que cambió', async ({ page }) => {
