@@ -16,6 +16,17 @@ const (
 	CodigoYaActiva           = "ya_activa"
 	CodigoClienteInactivo    = "cliente_inactivo"
 	CodigoProveedorInactivo  = "proveedor_inactivo"
+
+	CodigoCategoriaDuplicada           = "categoria_duplicada"
+	CodigoCategoriaInactiva            = "categoria_inactiva"
+	CodigoCategoriaConProductosActivos = "categoria_con_productos_activos"
+
+	CodigoEstacionDuplicada = "estacion_duplicada"
+	CodigoEstacionInactiva  = "estacion_inactiva"
+	CodigoEstacionEnUso     = "estacion_en_uso"
+
+	CodigoVigenciaInvalida = "vigencia_invalida"
+	CodigoVigenciaSolapada = "vigencia_solapada"
 )
 
 // rechazar devuelve un rechazo esperado (no un error técnico).

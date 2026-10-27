@@ -31,6 +31,11 @@ func NoEncontrado(que string) *apperror.AppError {
 	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrado")
 }
 
+// NoEncontrada es el equivalente femenino ("categoría no encontrada").
+func NoEncontrada(que string) *apperror.AppError {
+	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrada")
+}
+
 func Validacion(code, msg string) *apperror.AppError {
 	return apperror.New(apperror.KindValidation, code, msg)
 }
@@ -69,6 +74,17 @@ func DeAlmacen(err error) *apperror.AppError {
 // EncodeCursor: el cursor es el último id entregado, opaco para el cliente.
 func EncodeCursor(id int64) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(strconv.FormatInt(id, 10)))
+}
+
+// IDCadena convierte un id recibido en cadena (contrato) a int64 positivo en decimal canónico
+// (sin "+" ni ceros a la izquierda). Los casos de uso lo llaman después de autorizar, para que un
+// id mal formado no se evalúe antes del permiso. Mal formado es 400 <campo>_invalido.
+func IDCadena(valor, campo string) (int64, *apperror.AppError) {
+	n, err := strconv.ParseInt(valor, 10, 64)
+	if err != nil || n <= 0 || strconv.FormatInt(n, 10) != valor {
+		return 0, apperror.New(apperror.KindBadRequest, campo+"_invalido", campo+" debe ser un entero positivo en cadena")
+	}
+	return n, nil
 }
 
 // DecodeCursor acepta solo el id en decimal canónico (sin "+" ni ceros a la izquierda): así cada

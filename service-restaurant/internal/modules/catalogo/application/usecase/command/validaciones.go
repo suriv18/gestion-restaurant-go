@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"strings"
 
 	cmd "service-restaurant/internal/modules/catalogo/application/dto/command"
@@ -15,15 +16,27 @@ const (
 	maxContacto  = 150
 	maxDireccion = 500
 	maxMotivo    = 2000
+
+	maxNombreCategoria = 100
+	maxDescripcion     = 1000
+	maxOrden           = 9999
+
+	maxCodigoEstacion = 20
+	maxNombreEstacion = 80
 )
 
 // Validaciones de campos compartidas por el alta y la edición: cada una devuelve el valor ya
 // normalizado o el rechazo de validación (422) con el código y el mensaje del campo.
 
 func validarNombre(raw, campo string) (string, *apperror.AppError) {
-	n, err := vo.TextoUnaLinea(raw, maxNombre)
+	return validarNombreHasta(raw, campo, maxNombre)
+}
+
+// validarNombreHasta es validarNombre con un máximo propio del maestro.
+func validarNombreHasta(raw, campo string, max int) (string, *apperror.AppError) {
+	n, err := vo.TextoUnaLinea(raw, max)
 	if err != nil {
-		return "", mapper.Validacion(campo+"_invalido", "el nombre es obligatorio (máximo 250 caracteres)")
+		return "", mapper.Validacion(campo+"_invalido", fmt.Sprintf("el nombre es obligatorio (máximo %d caracteres)", max))
 	}
 	return n, nil
 }
@@ -58,11 +71,23 @@ func texto(max int, multilinea bool) formato {
 }
 
 var (
-	fmtTelefono  formato = vo.NewTelefono
-	fmtEmail     formato = vo.NewEmail
-	fmtDireccion         = texto(maxDireccion, true)
-	fmtContacto          = texto(maxContacto, false)
+	fmtTelefono    formato = vo.NewTelefono
+	fmtEmail       formato = vo.NewEmail
+	fmtDireccion           = texto(maxDireccion, true)
+	fmtContacto            = texto(maxContacto, false)
+	fmtDescripcion         = texto(maxDescripcion, true)
 )
+
+// validarOrden comprueba orden_visualizacion (0..9999); nil equivale a 0.
+func validarOrden(o *int) (int, *apperror.AppError) {
+	if o == nil {
+		return 0, nil
+	}
+	if *o < 0 || *o > maxOrden {
+		return 0, mapper.Validacion("orden_invalido", fmt.Sprintf("orden_visualizacion debe estar entre 0 y %d", maxOrden))
+	}
+	return *o, nil
+}
 
 func mensajeDe(campo string) string {
 	switch campo {
@@ -74,6 +99,10 @@ func mensajeDe(campo string) string {
 		return "la dirección admite hasta 500 caracteres"
 	case "contacto_nombre":
 		return "el nombre de contacto admite hasta 150 caracteres"
+	case "fundamento":
+		return "el fundamento admite hasta 2000 caracteres"
+	case "descripcion":
+		return "la descripción admite hasta 1000 caracteres"
 	}
 	return "valor inválido"
 }
@@ -105,3 +134,13 @@ func campoOpcional(c cmd.Campo[string], campo string, f formato) (outbound.Campo
 
 // vacio indica que el texto opcional no trae valor.
 func vacio(p *string) bool { return p == nil || strings.TrimSpace(*p) == "" }
+
+// validarCodigoEstacion normaliza a mayúsculas y comprueba el formato del código de estación.
+func validarCodigoEstacion(raw string) (string, *apperror.AppError) {
+	c, err := vo.NewCodigoEstacion(raw)
+	if err != nil {
+		return "", mapper.Validacion("codigo_invalido",
+			fmt.Sprintf("el código admite letras (se pasa a mayúsculas), dígitos, _ y - (1 a %d caracteres)", maxCodigoEstacion))
+	}
+	return c, nil
+}

@@ -96,7 +96,7 @@ func TestWriteWithSystemActorSucceedsAndIsAudited(t *testing.T) {
 	}
 	var n int
 	if err := tx.QueryRowContext(ctx,
-		`SELECT count(*) FROM auditoria_eventos WHERE tabla='categorias' AND accion='INSERT'`).Scan(&n); err != nil {
+		`SELECT count(*) FROM auditoria_eventos WHERE tabla='categorias' AND accion='INSERT' AND transaccion = txid_current()`).Scan(&n); err != nil {
 		t.Fatal(err)
 	}
 	if n != 1 {

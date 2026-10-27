@@ -17,3 +17,22 @@ Fecha: 2026-10-21
 - El SQL V4 y sus totales (49 tablas; 664 columnas) no cambian.
 - Los banners «Expediente 1.2» y el campo version de cada documento individual no se actualizan: la versión documental del paquete es la de MANIFIESTO.json (1.3); los documentos editados conservan su propia numeración.
 - backlog_incrementos.html no muestra estado/avance de incrementos, por lo que solo se actualizó backlog_incrementos.json.
+
+Rebanada 3 de I2 (carta)
+Fecha: 2026-10-25
+
+- El contrato OpenAPI marca como implementadas las operaciones de categorías,
+  estaciones, tasas de impuesto, productos y PUT /productos/{id}/disponibilidad,
+  con sus permisos reales (CARTA_*, ESTACION_*, IMPUESTO_*; migración 00010), y
+  añade GET /impuestos y GET /impuestos/{id}. Total: 115 rutas y 157 operaciones.
+- Correcciones del contrato: limit por defecto 25; TasasImpuestoEdicion sin
+  impuesto_id; EstacionesPreparacionEdicion sin sucursal_id; decimales sin signo
+  (tasa 0-100 con 4 decimales, precio 2, factor 6); es_activo de productos con
+  valor «todos»; GET /tasas-impuesto sin sucursal_id y con impuesto_id; filtros
+  q, es_activo, categoria_id y disponible; Disponibilidad con precio_venta y
+  estacion_id opcionales y anulables; Productos con en_sucursal.
+- RES-RF-005 y RES-RF-027 pasan a IMPLEMENTADO en backend (frontend pendiente) y
+  RES-RF-004, de la rebanada 2, también; los casos de prueba siguen NO_EJECUTADA.
+- backlog_incrementos.json: el avance de I2 recoge las tres rebanadas.
+- Los clientes, proveedores y empleados (rebanada 2) siguen con x-implementado
+  false en el contrato: pendiente de marcar.

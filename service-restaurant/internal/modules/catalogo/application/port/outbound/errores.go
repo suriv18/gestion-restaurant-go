@@ -15,7 +15,26 @@ var (
 // sigue vigente tras la baja: un documento dado de baja no se libera.
 var ErrDocumentoDuplicado = fmt.Errorf("documento duplicado: %w", ErrDuplicado)
 
+// ErrCategoriaDuplicada distingue la colisión del nombre de categoría (único también tras la baja).
+var ErrCategoriaDuplicada = fmt.Errorf("categoría duplicada: %w", ErrDuplicado)
+
 // ErrReglaDatos señala una regla de integridad de la base (triggers de la V4).
 type ErrReglaDatos struct{ Mensaje string }
 
 func (e *ErrReglaDatos) Error() string { return "regla de datos: " + e.Mensaje }
+
+// ErrVigenciaSolapada señala que la vigencia de una tasa se cruza con otra del mismo impuesto
+// (restricción de exclusión, SQLSTATE 23P01).
+var ErrVigenciaSolapada = errors.New("vigencia de tasa solapada")
+
+// ErrEstacionDuplicada distingue la colisión de (sucursal, código) de estación (único también
+// tras la baja).
+var ErrEstacionDuplicada = fmt.Errorf("estación duplicada: %w", ErrDuplicado)
+
+// ErrProductoDuplicado distingue la colisión del código de producto (único también tras la baja).
+var ErrProductoDuplicado = fmt.Errorf("producto duplicado: %w", ErrDuplicado)
+
+// ErrEstacionOtraSede: la estación indicada existe pero pertenece a otra sede que la del
+// producto (FK compuesta (estacion_id, sucursal_id) de productos_sucursal). El caso de uso la
+// responde igual que una estación inexistente o inactiva (referencia_invalida).
+var ErrEstacionOtraSede = fmt.Errorf("estación de otra sede: %w", ErrReferenciaInvalida)
