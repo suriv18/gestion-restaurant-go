@@ -16,18 +16,20 @@ type Deps struct {
 
 // Module es el módulo atencion ya ensamblado.
 type Module struct {
-	deps  Deps
-	zonas *controller.ZonasHandler
-	mesas *controller.MesasHandler
+	deps    Deps
+	zonas   *controller.ZonasHandler
+	mesas   *controller.MesasHandler
+	pedidos *controller.PedidosHandler
 }
 
 // New ensambla el módulo.
 func New(d Deps) (*Module, error) {
-	return &Module{deps: d, zonas: armarZonas(d.DB, d.Logger), mesas: armarMesas(d.DB, d.Logger)}, nil
+	return &Module{deps: d, zonas: armarZonas(d.DB, d.Logger), mesas: armarMesas(d.DB, d.Logger),
+		pedidos: armarPedidos(d.DB, d.Logger)}, nil
 }
 
 // RegisterRoutes monta las rutas del módulo sobre mux (relativas a /api/v1). protect exige un
 // actor autenticado; lo aporta el módulo identidad a través del bootstrap.
 func (m *Module) RegisterRoutes(mux *http.ServeMux, protect func(http.Handler) http.Handler) {
-	controller.RegisterRoutes(mux, m.zonas, m.mesas, protect, m.deps.Logger)
+	controller.RegisterRoutes(mux, m.zonas, m.mesas, m.pedidos, protect, m.deps.Logger)
 }
