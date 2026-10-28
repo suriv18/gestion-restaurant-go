@@ -77,6 +77,16 @@ func TestAgregarDetalleConDescuentoAutorizado(t *testing.T) {
 	}
 }
 
+func TestAgregarDetalleDescuentoCeroNoExigePermiso(t *testing.T) {
+	f := fakeConsumo()
+	c := agregarBase()
+	c.DescuentoMonto = texto("0.00")
+	res, err := NewAgregarDetalle(f).Execute(context.Background(), c)
+	if err != nil || !res.IsOk() {
+		t.Fatalf("un descuento en cero no exige permiso: %v %+v", err, res.Err())
+	}
+}
+
 func TestAgregarAdicionalConPadre(t *testing.T) {
 	f := fakeConsumo()
 	f.producto.Tipo = "ADICIONAL"
@@ -196,6 +206,16 @@ func TestEditarDetalle(t *testing.T) {
 	if res, err := NewEditarDetalle(f).Execute(context.Background(), c); err != nil || !res.IsOk() ||
 		f.cambios.DescuentoTotal == nil || *f.cambios.DescuentoTotal != "5.00" {
 		t.Fatalf("descuento: %v %+v %+v", err, res.Err(), f.cambios)
+	}
+}
+
+func TestEditarDetalleQuitarDescuentoNoExigePermiso(t *testing.T) {
+	f := fakeEdicion()
+	c := editarBase()
+	c.Cantidad, c.DescuentoMonto = nil, texto("0")
+	res, err := NewEditarDetalle(f).Execute(context.Background(), c)
+	if err != nil || !res.IsOk() || f.cambios.DescuentoTotal == nil || *f.cambios.DescuentoTotal != "0" {
+		t.Fatalf("quitar el descuento no exige permiso: %v %+v %+v", err, res.Err(), f.cambios)
 	}
 }
 

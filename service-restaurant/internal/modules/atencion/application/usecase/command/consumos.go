@@ -9,6 +9,7 @@ import (
 	"service-restaurant/internal/modules/atencion/application/port/outbound"
 	"service-restaurant/internal/modules/atencion/domain/policy"
 	"service-restaurant/internal/modules/atencion/domain/vo"
+	appctx "service-restaurant/internal/shared/application/context"
 	"service-restaurant/internal/shared/kernel/apperror"
 	appresult "service-restaurant/internal/shared/kernel/result"
 )
@@ -38,6 +39,25 @@ func cuentaCerrada() *apperror.AppError {
 	return apperror.New(apperror.KindConflict, "cuenta_cerrada", "la cuenta ya no está abierta")
 }
 
+// pedidoEditable bloquea el pedido y comprueba que el actor pueda editarlo en su sede y que siga
+// abierto. El rechazo esperado va en el segundo retorno; el fallo técnico, en el tercero.
+func pedidoEditable(ctx context.Context, store outbound.PedidoStore, actor appctx.Actor, pedidoID int64) (outbound.PedidoRef, *apperror.AppError, error) {
+	ped, found, err := store.BloquearPedido(ctx, pedidoID)
+	if err != nil {
+		return outbound.PedidoRef{}, nil, err
+	}
+	if !found {
+		return outbound.PedidoRef{}, mapper.NoEncontradoM("pedido"), nil
+	}
+	if ae := mapper.AutorizarPedidos(actor, ped.SucursalID, policy.PedidoEditar, mapper.NoEncontradoM("pedido")); ae != nil {
+		return outbound.PedidoRef{}, ae, nil
+	}
+	if ped.Cerrado {
+		return outbound.PedidoRef{}, pedidoCerrado(), nil
+	}
+	return ped, nil, nil
+}
+
 // AgregarDetalle agrega una línea a una cuenta abierta fijando descripción, precio y tasa desde
 // la carta en este instante (RES-RF-010).
 type AgregarDetalle struct{ pedidos outbound.PedidoStore }
@@ -61,18 +81,12 @@ func (uc *AgregarDetalle) Execute(ctx context.Context, c cmd.AgregarDetalle) (ap
 		return rechazar[dtoresult.Linea](ae)
 	}
 
-	ped, found, err := uc.pedidos.BloquearPedido(ctx, c.PedidoID)
+	ped, ae, err := pedidoEditable(ctx, uc.pedidos, c.Actor, c.PedidoID)
 	if err != nil {
 		return tecnico[dtoresult.Linea]("buscar pedido", err)
 	}
-	if !found {
-		return rechazar[dtoresult.Linea](mapper.NoEncontradoM("pedido"))
-	}
-	if ae := mapper.AutorizarPedidos(c.Actor, ped.SucursalID, policy.PedidoEditar, mapper.NoEncontradoM("pedido")); ae != nil {
+	if ae != nil {
 		return rechazar[dtoresult.Linea](ae)
-	}
-	if ped.Cerrado {
-		return rechazar[dtoresult.Linea](pedidoCerrado())
 	}
 	if !descuento.EsCero() && !c.Actor.Can(policy.DescuentoAutorizar, ped.SucursalID) {
 		return rechazar[dtoresult.Linea](sinPermisoDescuento())
@@ -195,20 +209,14 @@ func (uc *EditarDetalle) Execute(ctx context.Context, c cmd.EditarDetalle) (appr
 		cambios.Instrucciones = outbound.CampoOpcional{Presente: true, Valor: v}
 	}
 
-	ped, found, err := uc.pedidos.BloquearPedido(ctx, c.PedidoID)
+	ped, ae, err := pedidoEditable(ctx, uc.pedidos, c.Actor, c.PedidoID)
 	if err != nil {
 		return tecnico[dtoresult.Linea]("buscar pedido", err)
 	}
-	if !found {
-		return rechazar[dtoresult.Linea](mapper.NoEncontradoM("pedido"))
-	}
-	if ae := mapper.AutorizarPedidos(c.Actor, ped.SucursalID, policy.PedidoEditar, mapper.NoEncontradoM("pedido")); ae != nil {
+	if ae != nil {
 		return rechazar[dtoresult.Linea](ae)
 	}
-	if ped.Cerrado {
-		return rechazar[dtoresult.Linea](pedidoCerrado())
-	}
-	if nuevoDescuento != nil && !c.Actor.Can(policy.DescuentoAutorizar, ped.SucursalID) {
+	if nuevoDescuento != nil && !nuevoDescuento.EsCero() && !c.Actor.Can(policy.DescuentoAutorizar, ped.SucursalID) {
 		return rechazar[dtoresult.Linea](sinPermisoDescuento())
 	}
 
