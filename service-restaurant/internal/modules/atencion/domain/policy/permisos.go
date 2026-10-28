@@ -7,3 +7,11 @@ const (
 	MesaVer         = "MESA_VER"
 	MesaAdministrar = "MESA_ADMINISTRAR"
 )
+
+// Permisos de pedidos (migración 00011; PEDIDO_CREAR y DESCUENTO_AUTORIZAR existen desde 00001).
+const (
+	PedidoVer          = "PEDIDO_VER"
+	PedidoCrear        = "PEDIDO_CREAR"
+	PedidoEditar       = "PEDIDO_EDITAR"
+	DescuentoAutorizar = "DESCUENTO_AUTORIZAR"
+)

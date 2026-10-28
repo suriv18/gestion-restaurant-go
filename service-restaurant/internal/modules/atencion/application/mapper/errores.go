@@ -33,6 +33,11 @@ func NoEncontrado(que string) *apperror.AppError {
 	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrada")
 }
 
+// NoEncontradoM es como NoEncontrado para sustantivos masculinos ("pedido", "producto").
+func NoEncontradoM(que string) *apperror.AppError {
+	return apperror.New(apperror.KindNotFound, CodigoNoEncontrado, que+" no encontrado")
+}
+
 func Validacion(code, msg string) *apperror.AppError {
 	return apperror.New(apperror.KindValidation, code, msg)
 }
