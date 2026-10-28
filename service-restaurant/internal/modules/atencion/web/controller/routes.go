@@ -7,9 +7,9 @@ import (
 	"service-restaurant/internal/platform/web/handler"
 )
 
-// RegisterRoutes monta zonas y mesas (todas exigen autenticación; el permiso fino lo verifica
-// cada caso de uso).
-func RegisterRoutes(mux *http.ServeMux, zonas *ZonasHandler, mesas *MesasHandler,
+// RegisterRoutes monta zonas, mesas y pedidos (todas exigen autenticación; el permiso fino lo
+// verifica cada caso de uso).
+func RegisterRoutes(mux *http.ServeMux, zonas *ZonasHandler, mesas *MesasHandler, pedidos *PedidosHandler,
 	protect func(http.Handler) http.Handler, logger *slog.Logger) {
 	ruta := func(patron string, e handler.Endpoint) { mux.Handle(patron, protect(handler.Adapt(logger, e))) }
 
@@ -26,4 +26,10 @@ func RegisterRoutes(mux *http.ServeMux, zonas *ZonasHandler, mesas *MesasHandler
 	ruta("PATCH /mesas/{id}", mesas.Editar)
 	ruta("POST /mesas/{id}/baja", mesas.Baja)
 	ruta("POST /mesas/{id}/restauracion", mesas.Restauracion)
+
+	ruta("GET /pedidos", pedidos.Listar)
+	ruta("POST /pedidos", pedidos.Abrir)
+	ruta("GET /pedidos/{id}", pedidos.Obtener)
+	ruta("POST /pedidos/{id}/detalles", pedidos.AgregarDetalle)
+	ruta("PATCH /pedidos/{id}/detalles/{detalle_id}", pedidos.EditarDetalle)
 }

@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -73,5 +74,30 @@ func TestLeerCuerpoOpcionalVacio(t *testing.T) {
 				t.Fatalf("error %v, quería %s", err, c.code)
 			}
 		})
+	}
+}
+
+func TestEnumDe(t *testing.T) {
+	q := url.Values{"estado": {"REGISTRADO"}, "tipo": {"MOSTRADOR"}}
+	if v, err := enumDe(q, "estado", "REGISTRADO", "LISTO"); err != nil || v != "REGISTRADO" {
+		t.Fatalf("valor válido: %q %v", v, err)
+	}
+	if v, err := enumDe(url.Values{}, "estado", "REGISTRADO"); err != nil || v != "" {
+		t.Fatalf("ausente no filtra: %q %v", v, err)
+	}
+	if _, err := enumDe(q, "tipo", "SALON", "LLEVAR"); err == nil {
+		t.Fatal("un valor fuera del conjunto debe rechazarse")
+	}
+}
+
+func TestPathIDDe(t *testing.T) {
+	r := httptest.NewRequest("GET", "/x", nil)
+	r.SetPathValue("detalle_id", "12")
+	if id, err := pathIDDe(r, "detalle_id"); err != nil || id != 12 {
+		t.Fatalf("pathIDDe = %d, %v", id, err)
+	}
+	r.SetPathValue("detalle_id", "0")
+	if _, err := pathIDDe(r, "detalle_id"); err == nil {
+		t.Fatal("el id debe ser positivo")
 	}
 }

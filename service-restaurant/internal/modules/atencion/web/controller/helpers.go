@@ -47,13 +47,30 @@ func actorDe(r *http.Request) (appctx.Actor, error) {
 	return a, nil
 }
 
-// pathID lee el id numérico positivo de la ruta.
-func pathID(r *http.Request) (int64, error) {
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+// pathID lee el id numérico positivo de la ruta ({id}).
+func pathID(r *http.Request) (int64, error) { return pathIDDe(r, "id") }
+
+// pathIDDe lee un id numérico positivo de un segmento nombrado de la ruta.
+func pathIDDe(r *http.Request, nombre string) (int64, error) {
+	id, err := strconv.ParseInt(r.PathValue(nombre), 10, 64)
 	if err != nil || id <= 0 {
-		return 0, apperror.New(apperror.KindBadRequest, "id_invalido", "el id de la ruta no es válido")
+		return 0, apperror.New(apperror.KindBadRequest, nombre+"_invalido", "el id de la ruta no es válido")
 	}
 	return id, nil
+}
+
+// enumDe lee un filtro opcional que debe pertenecer a un conjunto cerrado; ausente → "".
+func enumDe(q url.Values, campo string, validos ...string) (string, error) {
+	v := q.Get(campo)
+	if v == "" {
+		return "", nil
+	}
+	for _, ok := range validos {
+		if v == ok {
+			return v, nil
+		}
+	}
+	return "", apperror.New(apperror.KindBadRequest, campo+"_invalido", campo+" no es un valor válido")
 }
 
 // idCadena convierte un id en cadena (contrato) a int64 positivo. Solo acepta el decimal canónico:
