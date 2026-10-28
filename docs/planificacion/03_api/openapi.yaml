@@ -4343,8 +4343,8 @@ paths:
       tags:
       - Atención
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-implementado: true
+      x-permiso: PEDIDO_VER
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -4376,6 +4376,28 @@ paths:
         in: query
         schema:
           type: string
+      - name: estado
+        in: query
+        schema:
+          type: string
+          enum:
+          - REGISTRADO
+          - PREPARACION
+          - LISTO
+          - ENTREGADO
+          - CANCELADO
+      - name: tipo
+        in: query
+        schema:
+          type: string
+          enum:
+          - SALON
+          - LLEVAR
+          - DELIVERY
+      - name: mesa_id
+        in: query
+        schema:
+          $ref: '#/components/schemas/Id'
     post:
       operationId: operacion_113
       summary: Abrir pedido y cuenta inicial
@@ -4384,7 +4406,7 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      x-implementado: true
       x-permiso: PEDIDO_CREAR
       responses:
         '201':
@@ -4392,7 +4414,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pedidos'
+                $ref: '#/components/schemas/PedidoDetalle'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -4415,15 +4437,15 @@ paths:
       tags:
       - Atención
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
-      x-permiso: Permiso fino pendiente de migración en el catálogo
+      x-implementado: true
+      x-permiso: PEDIDO_VER
       responses:
         '200':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pedidos'
+                $ref: '#/components/schemas/PedidoDetalle'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -4446,8 +4468,8 @@ paths:
       description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
         Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
         en V4 se requiere diseño y migración adicional.
-      x-implementado: false
-      x-permiso: PEDIDO_CREAR
+      x-implementado: true
+      x-permiso: PEDIDO_EDITAR
       responses:
         '201':
           description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
@@ -4475,6 +4497,47 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ConsumoAlta'
+  /pedidos/{id}/detalles/{detalle_id}:
+    patch:
+      operationId: operacion_164
+      summary: Editar consumo
+      tags:
+      - Atención
+      description: Cambia la cantidad, las instrucciones o el descuento de una línea activa de una cuenta abierta mientras no
+        se haya enviado a cocina. Un descuento distinto de 0 exige DESCUENTO_AUTORIZAR y no puede superar el importe de la línea.
+      x-implementado: true
+      x-permiso: PEDIDO_EDITAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetallesPedido'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      - name: detalle_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumoEdicion'
   /pedidos/{id}/dividir-cuenta:
     post:
       operationId: operacion_116
@@ -10061,6 +10124,9 @@ components:
         notas:
           type: string
           maxLength: 2000
+        reparto:
+          $ref: '#/components/schemas/DeliveryDatos'
+          description: Obligatorio si tipo es DELIVERY y no se admite en los demás tipos.
     ConsumoAlta:
       type: object
       additionalProperties: false
@@ -10075,6 +10141,9 @@ components:
           $ref: '#/components/schemas/Id'
         cantidad:
           $ref: '#/components/schemas/Cantidad'
+        detalle_padre_id:
+          $ref: '#/components/schemas/Id'
+          description: Solo para productos ADICIONAL; indica la línea activa de la misma cuenta de la que cuelga.
         instrucciones:
           type: string
           maxLength: 2000
@@ -10082,6 +10151,96 @@ components:
           $ref: '#/components/schemas/Dinero'
       description: El servidor fija descripción, precio, moneda y tasa desde el contexto vigente. Un descuento exige permiso
         y reglas aprobadas; no se acepta un precio arbitrario del cliente.
+    ConsumoEdicion:
+      type: object
+      additionalProperties: false
+      properties:
+        cantidad:
+          $ref: '#/components/schemas/Cantidad'
+        instrucciones:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          description: null vacía las instrucciones.
+        descuento_monto:
+          $ref: '#/components/schemas/Dinero'
+      description: Debe enviarse al menos un campo. Un descuento distinto de 0 exige permiso.
+    RepartoPedido:
+      type: object
+      required:
+      - destinatario
+      - telefono
+      - direccion
+      - canal
+      - estado
+      properties:
+        destinatario:
+          type: string
+        telefono:
+          type: string
+        direccion:
+          type: string
+        referencia:
+          anyOf:
+          - type: string
+          - type: 'null'
+        canal:
+          type: string
+        estado:
+          type: string
+    CuentaPedido:
+      type: object
+      required:
+      - id
+      - numero
+      - estado
+      - subtotal
+      - impuesto
+      - total
+      - lineas
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        numero:
+          type: integer
+        cliente_id:
+          anyOf:
+          - $ref: '#/components/schemas/Id'
+          - type: 'null'
+        etiqueta:
+          anyOf:
+          - type: string
+          - type: 'null'
+        estado:
+          type: string
+        subtotal:
+          $ref: '#/components/schemas/Dinero'
+        impuesto:
+          $ref: '#/components/schemas/Dinero'
+        total:
+          $ref: '#/components/schemas/Dinero'
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetallesPedido'
+      description: Los totales suman solo las líneas activas y los calcula la API.
+    PedidoDetalle:
+      description: Pedido con sus datos de reparto (solo DELIVERY) y sus cuentas con las líneas de cada una.
+      allOf:
+      - $ref: '#/components/schemas/Pedidos'
+      - type: object
+        required:
+        - cuentas
+        properties:
+          reparto:
+            anyOf:
+            - $ref: '#/components/schemas/RepartoPedido'
+            - type: 'null'
+          cuentas:
+            type: array
+            items:
+              $ref: '#/components/schemas/CuentaPedido'
     DividirCuenta:
       type: object
       additionalProperties: false

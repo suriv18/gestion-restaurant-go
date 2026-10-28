@@ -63,3 +63,7 @@ Listados antes de corregir nada; los huecos se decidieron en la Task 5; H-1 y H-
   Propuesta: diferir (permisos no tiene pantalla de baja en I2) · pendiente de confirmar por el usuario
 
 Frontend: sin huecos. Notas, no huecos: (a) usuarios llama `reason` a la clave del campo del motivo (etiqueta «Motivo»), por eso el grep de A no lo lista; (b) sucursales, zonas, mesas y usuarios no tienen interruptor «Incluir bajas»: muestran siempre las bajas; sucursales, zonas y usuarios con la marca «De baja» (`sedes-section.ts:40`, `salon-section.ts:51`, `team-access.ts:76`) y las mesas atenuadas (`salon-section.ts:88`) con su motivo (`:94-95`) y el botón «Restaurar» (`:133-137`); (c) usuarios gobierna E con `canAdminister()`, fuera del patrón del grep de E; (d) el grep de F no detecta «Incluir bajas» en `contactos-real.ts` porque el texto se parte en dos líneas.
+
+## Nota (I3 rebanada 1)
+
+Los pedidos, las cuentas y sus líneas **no tienen baja lógica**: se cancelan o se anulan con motivo (RES-RF-014, rebanada 3 de I3), y esa operación se audita aparte. Por eso no entran en esta matriz. Sus formularios (abrir pedido, agregar y editar consumos) llegan con el frontend de la rebanada 4 de I3.

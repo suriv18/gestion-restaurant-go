@@ -50,7 +50,7 @@
     "incremento": "I1",
     "aceptacion": "Un usuario de sucursal A no puede leer ni modificar un pedido de B; respuesta 403 o 404.",
     "cobertura_prototipo": "Pendiente",
-    "estado_backend": "PARCIAL",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -60,7 +60,7 @@
     "add": [
       "ADD-09"
     ],
-    "situacion_backend": "Mecanismo implementado (Actor.Can por permiso y sede; regla de sedes en las asignaciones, probada en administración). El criterio de aceptación habla de pedidos de otra sede y solo es verificable cuando exista el módulo de pedidos (I3); el caso permanece NO_EJECUTADA."
+    "situacion_backend": "Implementado: el mecanismo (Actor.Can por permiso y sede) rige la administración de accesos y, desde I3 rebanada 1, los pedidos: un usuario de la sede A no lee ni modifica un pedido de la sede B aunque conozca su id (404; prueba TestPedidosAislamientoPorSede). Las operaciones de cocina, división y cancelación (R2 y R3) usarán el mismo mecanismo. RES-CP-002 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-003",
@@ -257,7 +257,7 @@
     "incremento": "I3",
     "aceptacion": "Si falla la creación de la cuenta no queda una cabecera de pedido huérfana.",
     "cobertura_prototipo": "Simulado",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -266,7 +266,8 @@
     ],
     "add": [
       "ADD-07"
-    ]
+    ],
+    "situacion_backend": "Implementado en I3 (rebanada 1): POST /pedidos abre el pedido y su cuenta nº 1 en una sola transacción (SALON con mesa, capacidad y habilitación validadas; LLEVAR; DELIVERY con sus datos de reparto), con Idempotency-Key y una sola apertura por mesa. Una falla al crear la cuenta no deja cabecera huérfana (prueba TestPedidosAperturaSinCabeceraHuerfana). Pendiente el frontend (R4). RES-CP-009 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-010",
@@ -286,7 +287,7 @@
     "incremento": "I3",
     "aceptacion": "Cambiar el precio de carta no modifica un detalle existente; cantidades no positivas se rechazan.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -294,7 +295,8 @@
     ],
     "add": [
       "ADD-06"
-    ]
+    ],
+    "situacion_backend": "Implementado en I3 (rebanada 1): POST /pedidos/{id}/detalles fija descripción, precio y tasa vigente como instantánea; la API calcula importes; cantidades no positivas se rechazan y cambiar el precio de la carta no modifica una línea existente (prueba TestConsumoConservaElPrecioHistorico). PATCH edita cantidad, instrucciones y descuento (un descuento distinto de 0 exige DESCUENTO_AUTORIZAR). Pendiente el frontend (R4). RES-CP-010 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-011",

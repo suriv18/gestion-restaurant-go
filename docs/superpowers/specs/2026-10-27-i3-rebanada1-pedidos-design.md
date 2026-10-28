@@ -98,3 +98,18 @@ Sigue las capas y la dirección de imports del mapa de módulos:
 ## 6. Trazabilidad
 
 Al cerrar la rebanada se actualiza el expediente: `estado_backend` de RF-009 y RF-010 a `IMPLEMENTADO` (casos de aceptación `NO_EJECUTADA` hasta la ejecución formal); RF-002 pasa de `PARCIAL` a `IMPLEMENTADO` en lo verificable con pedidos; `avance` de I3 en `backlog_incrementos.json` y su estado a `EN_CURSO`; y la matriz de bajas y formularios se extiende con las entidades nuevas (los pedidos no tienen baja lógica: se cancelan, en R3).
+
+## 7. Ajustes durante el plan
+
+Al escribir el plan (`docs/superpowers/plans/2026-10-27-i3-rebanada1-pedidos.md`) se reconcilió este diseño con el código y el contrato existentes. Las diferencias con las secciones anteriores son:
+
+| Sección | Diseño | Implementado | Motivo |
+|---|---|---|---|
+| D5, D4 | Permiso nuevo `PEDIDO_DESCONTAR` | `DESCUENTO_AUTORIZAR` (ya existe desde `00001`), asignado a CAJERO; solo se exige para un descuento distinto de 0 (al agregar y al editar una línea) | Evitar un permiso duplicado |
+| D5 | `PEDIDO_CREAR` nuevo | Ya existe; `00011` lo asigna a MESERO y CAJERO y crea solo `PEDIDO_VER` y `PEDIDO_EDITAR` | Evitar insertarlo dos veces |
+| D2 | `notas_preparacion`, `descuento_total`, `cuenta_id` opcional | `instrucciones`, `descuento_monto`, `cuenta_id` obligatorio | Nombres del contrato `ConsumoAlta` |
+| D1 | `reparto` con `ubigeo`, coordenadas y `programado_en` | `reparto` = `DeliveryDatos` (destinatario, teléfono, dirección, referencia, canal) | Los campos extra son de `PUT /pedidos/{id}/delivery` (I6) |
+| D4 | Código `permiso_insuficiente` | `sin_permiso` | Código ya usado por todo el módulo |
+| D1 | Repetición idempotente: 200 | 201 (el estado original) | Así lo hace `idempotency.Run` |
+| D7 | `version_bloqueo` no se expone | Se expone de solo lectura | Lo exige el esquema `Pedidos` |
+| §2 | `POST detalles` con `PEDIDO_CREAR` (contrato) | `PEDIDO_EDITAR` | Lo fija D3/D5; el contrato se corrigió |

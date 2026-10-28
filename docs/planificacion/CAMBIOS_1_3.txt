@@ -41,3 +41,9 @@ Fecha: 2026-10-25
   Los clientes y proveedores (12 operaciones) pasan a x-implementado true y los empleados entran al contrato
   (6 operaciones; 119 rutas y 163 operaciones). La baja de roles rechaza cuerpos desconocidos. El avance de I2
   recoge las cuatro rebanadas.
+- I3 rebanada 1: pedidos, cuentas y consumos (backend). RES-RF-009 y RES-RF-010 pasan a IMPLEMENTADO en backend y
+  RES-RF-002 pasa de PARCIAL a IMPLEMENTADO (aislamiento por sede de los pedidos); los casos de prueba siguen NO_EJECUTADA.
+  El contrato marca 4 operaciones de /pedidos como implementadas, añade PATCH /pedidos/{id}/detalles/{detalle_id}
+  (120 rutas y 164 operaciones), los filtros estado, tipo y mesa_id del listado, el campo reparto de PedidoAlta,
+  detalle_padre_id de ConsumoAlta y los esquemas PedidoDetalle, CuentaPedido, RepartoPedido y ConsumoEdicion.
+  El descuento usa el permiso existente DESCUENTO_AUTORIZAR. I3 pasa a EN_CURSO.
