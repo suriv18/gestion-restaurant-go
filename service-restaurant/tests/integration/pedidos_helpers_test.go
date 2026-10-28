@@ -3,6 +3,7 @@ package integration
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -110,7 +111,12 @@ func tokenPedidos(t *testing.T, usuario, rol string, permisos []string, sedes ..
 
 // cajeroPedidos: ver, crear y editar pedidos y autorizar descuentos en PRINCIPAL y las sedes dadas.
 func cajeroPedidos(t *testing.T, sedes ...string) string {
-	return tokenPedidos(t, "ped.cajero", "T_PED_CAJERO",
+	usuario := "ped.cajero"
+	if len(sedes) > 0 {
+		// Un usuario propio por conjunto de sedes: no se muta el cajero compartido.
+		usuario += "." + strings.Join(sedes, "+")
+	}
+	return tokenPedidos(t, usuario, "T_PED_CAJERO",
 		[]string{"PEDIDO_VER", "PEDIDO_CREAR", "PEDIDO_EDITAR", "DESCUENTO_AUTORIZAR"}, sedes...)
 }
 

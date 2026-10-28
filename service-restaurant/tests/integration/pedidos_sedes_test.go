@@ -18,9 +18,17 @@ func TestPedidosAislamientoPorSede(t *testing.T) {
 	prod := productoVentaSQL(t, "PED-AJENA", "PREPARADO", "10.00", true)
 	tk := cajeroPedidos(t) // solo PRINCIPAL
 
+	// Línea real en el pedido ajeno: el PATCH debe fallar por la sede, no por un id inexistente.
+	asSystem(t, fmt.Sprintf(`INSERT INTO sch_restaurante.detalles_pedido(pedido_id,cuenta_id,producto_id,descripcion,cantidad,precio_unitario,afectacion_igv,tasa_impuesto)
+		VALUES (%s,%s,%s,'Línea ajena',1,10,'10',18)`, ajenoID, ajenaCuenta, prod))
+	lineaAjena := scalarStr(t, `SELECT id FROM sch_restaurante.detalles_pedido WHERE pedido_id=$1::text::bigint`, ajenoID)
+
 	esperar(t, call(t, "GET", "/api/v1/pedidos/"+ajenoID, "", tk), http.StatusNotFound, "no_encontrado")
 	esperar(t, agregarConsumo(t, tk, ajenoID, ajenaCuenta, prod, "1", ""), http.StatusNotFound, "no_encontrado")
-	esperar(t, call(t, "PATCH", "/api/v1/pedidos/"+ajenoID+"/detalles/1", `{"cantidad":"1"}`, tk), http.StatusNotFound, "no_encontrado")
+	esperar(t, call(t, "PATCH", "/api/v1/pedidos/"+ajenoID+"/detalles/"+lineaAjena, `{"cantidad":"5"}`, tk), http.StatusNotFound, "no_encontrado")
+	if c := scalarStr(t, `SELECT cantidad::numeric(12,3) FROM sch_restaurante.detalles_pedido WHERE id=$1::text::bigint`, lineaAjena); c != "1.000" {
+		t.Fatalf("la línea ajena no debe cambiar, cantidad = %s", c)
+	}
 	esperar(t, post(t, "/api/v1/pedidos",
 		fmt.Sprintf(`{"sucursal_id":%q,"tipo":"LLEVAR","comensales":1}`, sedeID(t, "PED-AJENA")), tk), http.StatusNotFound, "no_encontrado")
 	esperar(t, call(t, "GET", "/api/v1/pedidos?sucursal_id="+sedeID(t, "PED-AJENA"), "", tk), http.StatusNotFound, "no_encontrado")
@@ -29,8 +37,8 @@ func TestPedidosAislamientoPorSede(t *testing.T) {
 	if !slices.Contains(ids, propio.ID) || slices.Contains(ids, ajenoID) {
 		t.Fatalf("el listado debe incluir el propio y no el ajeno: %v", ids)
 	}
-	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.detalles_pedido WHERE pedido_id=$1::text::bigint`, ajenoID); n != 0 {
-		t.Fatalf("el pedido ajeno no debe recibir líneas (%d)", n)
+	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.detalles_pedido WHERE pedido_id=$1::text::bigint`, ajenoID); n != 1 {
+		t.Fatalf("el pedido ajeno debe conservar solo su línea sembrada (%d)", n)
 	}
 
 	// Con la sede asignada el mismo usuario sí lo ve.
@@ -39,6 +47,8 @@ func TestPedidosAislamientoPorSede(t *testing.T) {
 	if g := obtenerPedido(t, tkAmbas, ajenoID); g.ID != ajenoID {
 		t.Fatalf("con la sede asignada debe verlo: %+v", g)
 	}
+	// Control positivo del PATCH: con la sede asignada la misma línea sí se edita.
+	esperar(t, call(t, "PATCH", "/api/v1/pedidos/"+ajenoID+"/detalles/"+lineaAjena, `{"cantidad":"2"}`, tkAmbas), http.StatusOK, "")
 }
 
 func TestPedidosVerSinPermisoDeEscritura(t *testing.T) {
@@ -136,9 +146,15 @@ func TestPedidosFiltrosYPaginacion(t *testing.T) {
 		t.Fatalf("primera página: %+v", p1)
 	}
 	p2 := listarPedidos(t, "?limit=1&cursor="+*p1.NextCursor, tk)
-	id1, _ := strconv.Atoi(p1.Items[0].ID)
-	id2, _ := strconv.Atoi(p2.Items[0].ID)
-	if len(p2.Items) != 1 || id1 >= id2 {
-		t.Fatalf("la segunda página debe continuar en orden ascendente: %+v / %+v", p1, p2)
+	if len(p2.Items) != 1 {
+		t.Fatalf("la segunda página debe tener un elemento: %+v", p2)
+	}
+	id1, err1 := strconv.Atoi(p1.Items[0].ID)
+	id2, err2 := strconv.Atoi(p2.Items[0].ID)
+	if err1 != nil || err2 != nil {
+		t.Fatalf("ids no numéricos: %q (%v) / %q (%v)", p1.Items[0].ID, err1, p2.Items[0].ID, err2)
+	}
+	if id1 == id2 || id1 >= id2 {
+		t.Fatalf("las páginas no deben compartir id y deben continuar en orden ascendente: %+v / %+v", p1, p2)
 	}
 }

@@ -106,19 +106,34 @@ func TestPedidosDosAperturasSimultaneasDeUnaMesa(t *testing.T) {
 	tk := cajeroPedidos(t)
 	cuerpo := fmt.Sprintf(`{"sucursal_id":%q,"tipo":"SALON","mesa_id":%q,"comensales":2}`, sedeID(t, "PRINCIPAL"), mesa)
 
-	codigos := make([]int, 2)
+	// Ambas peticiones se liberan a la vez; las goroutines solo devuelven la respuesta.
+	respuestas := make([]resp, 2)
+	listo := make(chan struct{}, len(respuestas))
+	salida := make(chan struct{})
 	var wg sync.WaitGroup
-	for i := range codigos {
+	for i := range respuestas {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			codigos[i] = post(t, "/api/v1/pedidos", cuerpo, tk).Code
+			listo <- struct{}{}
+			<-salida
+			respuestas[i] = post(t, "/api/v1/pedidos", cuerpo, tk)
 		}(i)
 	}
+	for range respuestas {
+		<-listo
+	}
+	close(salida)
 	wg.Wait()
+	codigos := []int{respuestas[0].Code, respuestas[1].Code}
 	sort.Ints(codigos)
 	if codigos[0] != http.StatusCreated || codigos[1] != http.StatusConflict {
 		t.Fatalf("estados %v, quería [201 409]", codigos)
+	}
+	for _, r := range respuestas {
+		if r.Code == http.StatusConflict {
+			esperar(t, r, http.StatusConflict, "mesa_ocupada")
+		}
 	}
 	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.pedidos WHERE mesa_id=$1::text::bigint AND cerrado_en IS NULL`, mesa); n != 1 {
 		t.Fatalf("pedidos abiertos en la mesa = %d, quería 1", n)
@@ -128,6 +143,10 @@ func TestPedidosDosAperturasSimultaneasDeUnaMesa(t *testing.T) {
 // RES-CP-009: si falla la creación de la cuenta no queda una cabecera de pedido huérfana.
 func TestPedidosAperturaSinCabeceraHuerfana(t *testing.T) {
 	app(t)
+	t.Cleanup(func() {
+		asSystem(t, `DROP TRIGGER IF EXISTS zz_test_falla_cuenta ON sch_restaurante.cuentas`,
+			`DROP FUNCTION IF EXISTS sch_restaurante.fn_test_falla_cuenta()`)
+	})
 	asSystem(t,
 		`CREATE OR REPLACE FUNCTION sch_restaurante.fn_test_falla_cuenta() RETURNS trigger LANGUAGE plpgsql AS $$
 		 BEGIN
@@ -136,12 +155,9 @@ func TestPedidosAperturaSinCabeceraHuerfana(t *testing.T) {
 		   END IF;
 		   RETURN NEW;
 		 END $$`,
+		`DROP TRIGGER IF EXISTS zz_test_falla_cuenta ON sch_restaurante.cuentas`,
 		`CREATE TRIGGER zz_test_falla_cuenta BEFORE INSERT ON sch_restaurante.cuentas
 		 FOR EACH ROW EXECUTE FUNCTION sch_restaurante.fn_test_falla_cuenta()`)
-	t.Cleanup(func() {
-		asSystem(t, `DROP TRIGGER IF EXISTS zz_test_falla_cuenta ON sch_restaurante.cuentas`,
-			`DROP FUNCTION IF EXISTS sch_restaurante.fn_test_falla_cuenta()`)
-	})
 
 	tk := cajeroPedidos(t)
 	r := post(t, "/api/v1/pedidos", fmt.Sprintf(`{"sucursal_id":%q,"tipo":"LLEVAR","comensales":1,"notas":"FALLA-CUENTA"}`, sedeID(t, "PRINCIPAL")), tk)

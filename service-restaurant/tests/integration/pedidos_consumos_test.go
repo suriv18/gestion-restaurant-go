@@ -166,6 +166,12 @@ func TestConsumoAgregarEsIdempotente(t *testing.T) {
 	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.detalles_pedido WHERE pedido_id=$1::text::bigint`, p.ID); n != 1 {
 		t.Fatalf("líneas = %d, quería 1", n)
 	}
+	// Misma clave con otro cuerpo: conflicto, sin línea nueva.
+	otro := fmt.Sprintf(`{"producto_id":%q,"cuenta_id":%q,"cantidad":"2"}`, prod, p.Cuentas[0].ID)
+	esperar(t, callH(t, http.MethodPost, ruta, otro, tk, h), http.StatusConflict, "idempotency_key_reutilizada")
+	if n := scalar(t, `SELECT count(*) FROM sch_restaurante.detalles_pedido WHERE pedido_id=$1::text::bigint`, p.ID); n != 1 {
+		t.Fatalf("líneas tras la clave reutilizada = %d, quería 1", n)
+	}
 }
 
 func TestConsumoEditar(t *testing.T) {
@@ -181,9 +187,10 @@ func TestConsumoEditar(t *testing.T) {
 	// Cantidad.
 	r = call(t, "PATCH", ruta, `{"cantidad":"3"}`, mesero)
 	esperar(t, r, http.StatusOK, "")
-	r.json(t, &l)
-	if l.Cantidad != "3.000" || l.ImporteTotal != "30.00" || l.Notas == nil {
-		t.Fatalf("tras editar la cantidad: %+v", l)
+	var tras lineaResp
+	r.json(t, &tras)
+	if tras.Cantidad != "3.000" || tras.ImporteTotal != "30.00" || tras.Notas == nil || *tras.Notas != "sin sal" {
+		t.Fatalf("tras editar la cantidad: %+v", tras)
 	}
 	// Vaciar las instrucciones (null).
 	r = call(t, "PATCH", ruta, `{"instrucciones":null}`, mesero)
@@ -203,9 +210,10 @@ func TestConsumoEditar(t *testing.T) {
 	esperar(t, call(t, "PATCH", ruta, `{"descuento_monto":"1.00"}`, mesero), http.StatusForbidden, "sin_permiso")
 	r = call(t, "PATCH", ruta, `{"descuento_monto":"10.00"}`, cajero)
 	esperar(t, r, http.StatusOK, "")
-	r.json(t, &l)
-	if l.DescuentoTotal != "10.00" || l.ImporteTotal != "20.00" {
-		t.Fatalf("tras el descuento: %+v", l)
+	var desc lineaResp
+	r.json(t, &desc)
+	if desc.DescuentoTotal != "10.00" || desc.ImporteTotal != "20.00" {
+		t.Fatalf("tras el descuento: %+v", desc)
 	}
 	esperar(t, call(t, "PATCH", ruta, `{"descuento_monto":"30.01"}`, cajero), 422, "descuento_excede_importe")
 	// Una línea anulada ya no se edita.
