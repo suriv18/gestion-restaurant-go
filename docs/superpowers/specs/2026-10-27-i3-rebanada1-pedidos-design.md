@@ -113,3 +113,11 @@ Al escribir el plan (`docs/superpowers/plans/2026-10-27-i3-rebanada1-pedidos.md`
 | D1 | Repetición idempotente: 200 | 201 (el estado original) | Así lo hace `idempotency.Run` |
 | D7 | `version_bloqueo` no se expone | Se expone de solo lectura | Lo exige el esquema `Pedidos` |
 | §2 | `POST detalles` con `PEDIDO_CREAR` (contrato) | `PEDIDO_EDITAR` | Lo fija D3/D5; el contrato se corrigió |
+| D1 | `comensales` por defecto 1 | Obligatorio: el contrato `PedidoAlta` lo declara así y el código responde 422 `comensales_invalidos` si falta o es menor que 1 | Alinearse con el contrato |
+| D1 | Conflicto de idempotencia: 409 `idempotencia_conflicto` | 409 `idempotency_key_reutilizada` | Código de la plataforma; las pruebas lo afirman |
+| §4, §5 | Prueba de contrato | No existe una prueba automática de OpenAPI en el repositorio; el alineamiento con el contrato se comprueba a mano y las pruebas de integración decodifican las respuestas en estructuras con la forma del contrato | La prueba automática no se llegó a escribir |
+
+### Reglas para las rebanadas siguientes
+
+- Toda escritura que toque las líneas o las cuentas de un pedido debe bloquear el pedido `FOR UPDATE` primero y después la cuenta o el detalle. R2 y R3 mantienen este orden. `EditarDetalle` bloquea pedido, detalle y cuenta; `AgregarDetalle` bloquea pedido, cuenta y detalle padre; ambos son seguros solo porque el bloqueo del pedido va primero.
+- Pendiente de decisión (D4): quien no tiene `DESCUENTO_AUTORIZAR` puede bajar la `cantidad` de una línea que ya tiene descuento, con lo que el descuento pesa más sobre la línea. Decidir antes de R3 si se exige el permiso cuando la línea resultante conserva un descuento distinto de 0.

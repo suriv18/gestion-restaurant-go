@@ -158,6 +158,9 @@ func TestConsumoAgregarEsIdempotente(t *testing.T) {
 	esperar(t, r1, http.StatusCreated, "")
 	esperar(t, r2, http.StatusCreated, "")
 	var l1, l2 lineaResp
+	if r1.Body.String() != r2.Body.String() {
+		t.Fatalf("el reintento debe devolver el mismo cuerpo:\n%s\n%s", r1.Body.String(), r2.Body.String())
+	}
 	r1.json(t, &l1)
 	r2.json(t, &l2)
 	if l1.ID != l2.ID {

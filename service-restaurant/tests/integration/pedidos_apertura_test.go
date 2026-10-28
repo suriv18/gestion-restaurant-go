@@ -178,6 +178,9 @@ func TestPedidosAperturaIdempotente(t *testing.T) {
 	r2 := callH(t, http.MethodPost, "/api/v1/pedidos", cuerpo, tk, h)
 	esperar(t, r2, http.StatusCreated, "")
 	var p1, p2 pedidoResp
+	if r1.Body.String() != r2.Body.String() {
+		t.Fatalf("el reintento debe devolver el mismo cuerpo:\n%s\n%s", r1.Body.String(), r2.Body.String())
+	}
 	r1.json(t, &p1)
 	r2.json(t, &p2)
 	if p1.ID != p2.ID || p1.ClaveIdempotencia != clave {

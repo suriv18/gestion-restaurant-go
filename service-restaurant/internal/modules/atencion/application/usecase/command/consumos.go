@@ -41,6 +41,7 @@ func cuentaCerrada() *apperror.AppError {
 
 // pedidoEditable bloquea el pedido y comprueba que el actor pueda editarlo en su sede y que siga
 // abierto. El rechazo esperado va en el segundo retorno; el fallo técnico, en el tercero.
+// Regla: bloquea el pedido FOR UPDATE antes que cualquier cuenta o línea (spec §7).
 func pedidoEditable(ctx context.Context, store outbound.PedidoStore, actor appctx.Actor, pedidoID int64) (outbound.PedidoRef, *apperror.AppError, error) {
 	ped, found, err := store.BloquearPedido(ctx, pedidoID)
 	if err != nil {
