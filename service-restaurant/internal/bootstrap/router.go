@@ -27,6 +27,7 @@ func (a *App) router() http.Handler {
 	a.identidad.RegisterRoutes(api, protect)
 	a.atencion.RegisterRoutes(api, protect)
 	a.catalogo.RegisterRoutes(api, protect)
+	a.produccion.RegisterRoutes(api, protect)
 	mux.Handle("/api/v1/", http.StripPrefix("/api/v1", api))
 
 	var h http.Handler = mux
