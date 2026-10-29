@@ -12,3 +12,7 @@ import (
 type EnviarComanda interface {
 	Execute(context.Context, cmd.EnviarComanda) (appresult.Result[dtoresult.Comanda], error)
 }
+
+type TransicionarLinea interface {
+	Execute(context.Context, cmd.TransicionarLinea) (appresult.Result[dtoresult.ComandaLinea], error)
+}

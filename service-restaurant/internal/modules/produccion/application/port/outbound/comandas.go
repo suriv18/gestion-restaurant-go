@@ -66,3 +66,18 @@ type EnvioStore interface {
 	// CrearComanda inserta la comanda y sus líneas y la devuelve ya armada.
 	CrearComanda(ctx context.Context, n NuevaComanda) (dtoresult.Comanda, error)
 }
+
+// LineaComandaRef es una línea de comanda bloqueada con la sede de su comanda.
+type LineaComandaRef struct {
+	ID         int64
+	SucursalID int64
+	Estado     string
+}
+
+// TransicionStore escribe el avance de una línea de comanda dentro de la transacción del comando.
+type TransicionStore interface {
+	// BloquearLineaComanda lee la línea FOR UPDATE; found=false si no existe.
+	BloquearLineaComanda(ctx context.Context, id int64) (LineaComandaRef, bool, error)
+	// TransicionarLinea fija el estado y la marca de tiempo del paso, y devuelve la línea.
+	TransicionarLinea(ctx context.Context, id int64, destino string) (dtoresult.ComandaLinea, error)
+}
