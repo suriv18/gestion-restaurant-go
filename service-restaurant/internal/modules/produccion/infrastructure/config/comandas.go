@@ -21,5 +21,11 @@ func armarComandas(db *sql.DB, logger *slog.Logger) *controller.ComandasHandler 
 		},
 		meta: func(c cmd.EnviarComanda) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
 
-	return controller.NewComandasHandler(inbound.EnviarComanda(enviar))
+	transicionar := escritura[cmd.TransicionarLinea, dtoresult.ComandaLinea]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.TransicionarLinea, dtoresult.ComandaLinea] {
+			return command.NewTransicionarLinea(writeadapter.NewComandaWriteAdapter(q))
+		},
+		meta: func(c cmd.TransicionarLinea) (int64, cmd.Intencion) { return c.Actor.UserID, cmd.Intencion{} }}
+
+	return controller.NewComandasHandler(inbound.EnviarComanda(enviar), inbound.TransicionarLinea(transicionar))
 }

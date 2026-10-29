@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 
 	cmd "service-restaurant/internal/modules/produccion/application/dto/command"
@@ -95,10 +96,8 @@ func enumDe(q url.Values, campo string, validos ...string) (string, error) {
 	if v == "" {
 		return "", nil
 	}
-	for _, ok := range validos {
-		if v == ok {
-			return v, nil
-		}
+	if slices.Contains(validos, v) {
+		return v, nil
 	}
 	return "", apperror.New(apperror.KindBadRequest, campo+"_invalido", campo+" no es un valor válido")
 }

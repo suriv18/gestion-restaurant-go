@@ -13,10 +13,13 @@ import (
 
 // ComandasHandler: envío a cocina, cola de preparación y estados de las líneas (RES-RF-012).
 type ComandasHandler struct {
-	enviar inbound.EnviarComanda
+	enviar       inbound.EnviarComanda
+	transicionar inbound.TransicionarLinea
 }
 
-func NewComandasHandler(e inbound.EnviarComanda) *ComandasHandler { return &ComandasHandler{e} }
+func NewComandasHandler(e inbound.EnviarComanda, t inbound.TransicionarLinea) *ComandasHandler {
+	return &ComandasHandler{e, t}
+}
 
 // Enviar: POST /pedidos/{id}/comandas (Idempotency-Key obligatoria)
 func (h *ComandasHandler) Enviar(w http.ResponseWriter, r *http.Request) error {
@@ -52,4 +55,24 @@ func (h *ComandasHandler) Enviar(w http.ResponseWriter, r *http.Request) error {
 		Intencion: in, Actor: actor, PedidoID: pedido, EstacionID: estacion, Lineas: lineas,
 	})
 	return responder(w, res, err, http.StatusCreated, webmapper.ToComanda)
+}
+
+// Transicionar: POST /comanda-detalles/{id}/transiciones
+func (h *ComandasHandler) Transicionar(w http.ResponseWriter, r *http.Request) error {
+	actor, err := actorDe(r)
+	if err != nil {
+		return err
+	}
+	id, err := pathID(r)
+	if err != nil {
+		return err
+	}
+	var body request.PreparacionTransicion
+	if err := webrequest.DecodeJSON(r, &body); err != nil {
+		return err
+	}
+	res, err := h.transicionar.Execute(r.Context(), command.TransicionarLinea{
+		Actor: actor, LineaID: id, Estado: body.Estado, Motivo: body.Motivo,
+	})
+	return responder(w, res, err, http.StatusOK, webmapper.ToLinea)
 }

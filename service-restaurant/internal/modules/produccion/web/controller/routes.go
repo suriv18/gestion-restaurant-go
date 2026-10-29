@@ -13,4 +13,5 @@ func RegisterRoutes(mux *http.ServeMux, comandas *ComandasHandler, protect func(
 	ruta := func(patron string, e handler.Endpoint) { mux.Handle(patron, protect(handler.Adapt(logger, e))) }
 
 	ruta("POST /pedidos/{id}/comandas", comandas.Enviar)
+	ruta("POST /comanda-detalles/{id}/transiciones", comandas.Transicionar)
 }

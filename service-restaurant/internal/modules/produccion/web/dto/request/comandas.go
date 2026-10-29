@@ -12,3 +12,9 @@ type ComandaAlta struct {
 	EstacionID string         `json:"estacion_id"`
 	Lineas     []ComandaLinea `json:"lineas"`
 }
+
+// PreparacionTransicion: estado destino y, por contrato, un motivo que hoy se ignora.
+type PreparacionTransicion struct {
+	Estado string  `json:"estado"`
+	Motivo *string `json:"motivo,omitempty"`
+}

@@ -117,3 +117,33 @@ func (r *ComandaSQLWriter) InsertComanda(ctx context.Context, n outbound.NuevaCo
 	}
 	return c, nil
 }
+
+// GetLineaComandaForUpdate bloquea la línea de comanda; trae la sede de su comanda.
+func (r *ComandaSQLWriter) GetLineaComandaForUpdate(ctx context.Context, id int64) (outbound.LineaComandaRef, bool, error) {
+	var l outbound.LineaComandaRef
+	err := r.db.QueryRowContext(ctx, `
+		SELECT cd.id, c.sucursal_id, cd.estado
+		FROM sch_restaurante.comanda_detalles cd
+		JOIN sch_restaurante.comandas c ON c.id = cd.comanda_id
+		WHERE cd.id = $1
+		FOR UPDATE OF cd`, id).Scan(&l.ID, &l.SucursalID, &l.Estado)
+	if missing, err := notFound(err); missing || err != nil {
+		return outbound.LineaComandaRef{}, false, err
+	}
+	return l, true, nil
+}
+
+// UpdateLineaComanda fija el estado y la marca de tiempo del paso. Las marcas usan la hora de la
+// transacción; los CHECK de la tabla (listo_en >= iniciado_en, entregado_en >= listo_en) se cumplen
+// porque cada paso es una transacción posterior a la anterior.
+func (r *ComandaSQLWriter) UpdateLineaComanda(ctx context.Context, id int64, destino string) (dtoresult.ComandaLinea, error) {
+	l, err := cargar.ScanLinea(r.db.QueryRowContext(ctx, `
+		UPDATE sch_restaurante.comanda_detalles SET
+			estado = $2::text,
+			iniciado_en  = CASE WHEN $2::text = 'PREPARACION' THEN CURRENT_TIMESTAMP ELSE iniciado_en END,
+			listo_en     = CASE WHEN $2::text = 'LISTO'       THEN CURRENT_TIMESTAMP ELSE listo_en END,
+			entregado_en = CASE WHEN $2::text = 'ENTREGADO'   THEN CURRENT_TIMESTAMP ELSE entregado_en END
+		WHERE id = $1
+		RETURNING `+cargar.ColLinea, id, destino))
+	return l, Translate(err)
+}
