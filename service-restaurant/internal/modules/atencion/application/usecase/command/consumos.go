@@ -154,7 +154,8 @@ func (uc *AgregarDetalle) Execute(ctx context.Context, c cmd.AgregarDetalle) (ap
 }
 
 // validarPadre aplica la regla de los adicionales: un ADICIONAL cuelga de una línea activa de la
-// misma cuenta, y solo un ADICIONAL puede colgar de otra línea.
+// misma cuenta que no sea a su vez un adicional (un solo nivel), y solo un ADICIONAL puede colgar de
+// otra línea.
 func (uc *AgregarDetalle) validarPadre(ctx context.Context, c cmd.AgregarDetalle, tipoProducto string) (*apperror.AppError, error) {
 	esAdicional := tipoProducto == tipoAdicional
 	switch {
@@ -169,8 +170,8 @@ func (uc *AgregarDetalle) validarPadre(ctx context.Context, c cmd.AgregarDetalle
 	if err != nil {
 		return nil, err
 	}
-	if !found || padre.CuentaID != c.CuentaID || padre.Estado != estadoActivo {
-		return mapper.Validacion("padre_invalido", "la línea padre no existe, está anulada o es de otra cuenta"), nil
+	if !found || padre.CuentaID != c.CuentaID || padre.Estado != estadoActivo || padre.PadreID != nil {
+		return mapper.Validacion("padre_invalido", "la línea padre no existe, está anulada, es de otra cuenta o es a su vez un adicional"), nil
 	}
 	return nil, nil
 }

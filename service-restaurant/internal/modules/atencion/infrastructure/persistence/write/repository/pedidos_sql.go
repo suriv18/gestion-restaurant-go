@@ -143,13 +143,17 @@ func (r *PedidoSQLWriter) GetProductoVenta(ctx context.Context, productoID, sede
 // ya tiene un envío a cocina.
 func (r *PedidoSQLWriter) GetDetalleForUpdate(ctx context.Context, pedidoID, detalleID int64) (outbound.DetalleRef, bool, error) {
 	var d outbound.DetalleRef
+	var padre sql.NullInt64
 	err := r.db.QueryRowContext(ctx, `
-		SELECT id, pedido_id, cuenta_id, producto_id, cantidad::text, precio_unitario::text, descuento_total::text, estado,
+		SELECT id, pedido_id, cuenta_id, producto_id, cantidad::text, precio_unitario::text, descuento_total::text, estado, detalle_padre_id,
 		       EXISTS (SELECT 1 FROM sch_restaurante.comanda_detalles cd WHERE cd.detalle_pedido_id = detalles_pedido.id)
 		FROM sch_restaurante.detalles_pedido WHERE id = $1 AND pedido_id = $2 FOR UPDATE`, detalleID, pedidoID).
-		Scan(&d.ID, &d.PedidoID, &d.CuentaID, &d.ProductoID, &d.Cantidad, &d.PrecioUnitario, &d.DescuentoTotal, &d.Estado, &d.EnComanda)
+		Scan(&d.ID, &d.PedidoID, &d.CuentaID, &d.ProductoID, &d.Cantidad, &d.PrecioUnitario, &d.DescuentoTotal, &d.Estado, &padre, &d.EnComanda)
 	if missing, err := notFound(err); missing || err != nil {
 		return outbound.DetalleRef{}, false, err
+	}
+	if padre.Valid {
+		d.PadreID = &padre.Int64
 	}
 	return d, true, nil
 }

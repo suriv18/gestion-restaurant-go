@@ -100,6 +100,7 @@ type DetalleRef struct {
 	DescuentoTotal string
 	Estado         string
 	EnComanda      bool
+	PadreID        *int64 // detalle_padre_id: no nulo si la línea es un adicional
 }
 
 // NuevoDetalle es la instantánea de una línea: todo salvo importe_total y base_imponible.

@@ -23,7 +23,7 @@ Las tres exigen `Idempotency-Key`. Se marcan `x-implementado: true`. La ruta nue
 ### 3.1 Dividir cuenta (RF-011)
 
 1. Se bloquea el pedido `FOR UPDATE` primero; después las líneas y las cuentas por `id` ascendente (orden de R1 y R2).
-2. El pedido debe estar abierto, las cuentas de origen `ABIERTA` y las líneas `ACTIVO`; si no, 409.
+2. El pedido debe estar abierto, las cuentas de origen `ABIERTA` y las líneas `ACTIVO`; si no, 409. Los adicionales son de un solo nivel: R1 (`validarPadre`) rechaza con 422 `padre_invalido` un padre que ya es adicional.
 3. `detalle_ids` no puede estar vacío ni traer repetidos (422 `detalle_duplicado`); todos deben ser del pedido (404 si no).
 4. Adicionales: al mover una línea padre viajan sus hijas. Un adicional solo, sin su padre en la selección, da 422 `adicional_sin_padre`.
 5. Pago confirmado: si alguna cuenta de origen tiene un pago `CONFIRMADO`, 409 `cuenta_con_pago`. Los pagos son de I4, así que hoy no se dispara en uso real; se implementa y se prueba insertando el pago por SQL.

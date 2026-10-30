@@ -139,6 +139,11 @@ func TestAgregarDetalleRechazos(t *testing.T) {
 			f.detalles[55] = outbound.DetalleRef{ID: 55, PedidoID: 10, CuentaID: 21, Estado: "ACTIVO"}
 			c.DetallePadreID = idPtr(55)
 		}, apperror.KindValidation, "padre_invalido"},
+		{"padre que ya es adicional", func(f *pedidoStoreFake, c *cmd.AgregarDetalle) {
+			f.producto.Tipo = "ADICIONAL"
+			f.detalles[55] = outbound.DetalleRef{ID: 55, PedidoID: 10, CuentaID: 20, Estado: "ACTIVO", PadreID: idPtr(40)}
+			c.DetallePadreID = idPtr(55)
+		}, apperror.KindValidation, "padre_invalido"},
 		{"padre anulado", func(f *pedidoStoreFake, c *cmd.AgregarDetalle) {
 			f.producto.Tipo = "ADICIONAL"
 			f.detalles[55] = outbound.DetalleRef{ID: 55, PedidoID: 10, CuentaID: 20, Estado: "ANULADO"}
