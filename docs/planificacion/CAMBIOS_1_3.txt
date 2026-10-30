@@ -47,3 +47,7 @@ Fecha: 2026-10-25
   (120 rutas y 164 operaciones), los filtros estado, tipo y mesa_id del listado, el campo reparto de PedidoAlta,
   detalle_padre_id de ConsumoAlta y los esquemas PedidoDetalle, CuentaPedido, RepartoPedido y ConsumoEdicion.
   El descuento usa el permiso existente DESCUENTO_AUTORIZAR. I3 pasa a EN_CURSO.
+- I3 rebanada 2: comandas y estados de cocina (backend, módulo produccion). RES-RF-012 pasa a IMPLEMENTADO en backend;
+  RES-CP-012 sigue NO_EJECUTADA. El contrato marca como implementadas POST /pedidos/{id}/comandas, GET /comandas y
+  POST /comanda-detalles/{id}/transiciones (sin nuevas rutas: 120 rutas y 164 operaciones) y el esquema Comandas añade
+  mesa_id y lineas. COCINA_OPERAR se asigna al rol COCINA (migración 00012).

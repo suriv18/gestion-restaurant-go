@@ -80,3 +80,19 @@ Concurrencia: en la transición se bloquea la línea de comanda; si hace falta e
 
 - D4 de R1 (descuento al bajar la cantidad sin `DESCUENTO_AUTORIZAR`): decidir antes de R3, no afecta a R2.
 - Cancelar una línea que ya tiene comanda (R3) deberá pasar sus `comanda_detalles` a `CANCELADO` con motivo.
+
+## 8. Ajustes durante el plan
+
+Al escribir el plan (`docs/superpowers/plans/2026-10-28-i3-rebanada2-comandas.md`) se reconcilió este diseño con el código y el contrato existentes. Las diferencias con las secciones anteriores son:
+
+| Sección | Diseño | Implementado | Motivo |
+|---|---|---|---|
+| §1 | `00012` asigna `COCINA_OPERAR` a COCINA «y a ADMIN si no lo tiene» | Solo a COCINA | `00001` asigna todos los permisos existentes a ADMIN |
+| §2 | `POST …/transiciones` con `Idempotency-Key` | Sin clave | Mismo criterio que el `PATCH` de consumos de R1; repetirla da 409 `transicion_invalida` |
+| §3.2 | Sin permiso: 403 `sin_permiso` | `sin_permiso` si no tiene el permiso en ninguna sede; `sede_no_autorizada` si lo tiene en otra sede pero no en la del recurso | Mismo contrato que `AutorizarPedidos` de R1 |
+| §3.2 | `CANCELADO` no se alcanza | `CANCELADO` → 409 `transicion_invalida`; un estado desconocido o `PENDIENTE` → 422 `estado_invalido`; `motivo` se acepta y se ignora | Contrato `PreparacionTransicion` |
+| §3.3 | Cola por sede con filtros | Sin `estado`, comandas con alguna línea PENDIENTE, PREPARACION o LISTO; con `estado`, las que tienen alguna línea en él; siempre con todas sus líneas | Una cola de cocina no debe mostrar el historial entregado |
+| §3.3 | «mesa si existe» | `mesa_id` (cadena o `null`) | El nombre de la mesa lo resuelve el frontend (R4) |
+| §3.1 | Respuesta del envío | Comanda con `lineas[]` y `mesa_id` (esquema `Comandas` ampliado) | La pantalla necesita las líneas creadas |
+
+`pedidos.estado` (`REGISTRADO/PREPARACION/LISTO/ENTREGADO`) no se actualiza desde las comandas en R2: el estado de cocina vive en las líneas de comanda. Derivarlo se decidirá con R3/R4 o I4.

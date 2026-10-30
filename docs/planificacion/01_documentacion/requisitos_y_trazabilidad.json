@@ -345,7 +345,7 @@
     "incremento": "I3",
     "aceptacion": "Dos reintentos de un mismo envío producen una sola comanda por clave; no exceden la cantidad solicitada.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -354,7 +354,8 @@
     ],
     "add": [
       "ADD-07"
-    ]
+    ],
+    "situacion_backend": "Implementado en I3 (rebanada 2): POST /pedidos/{id}/comandas envía a una estación solo las cantidades pendientes de cada línea (sin reenviar lo despachado, con la estación del producto exigida y Idempotency-Key; repetir la clave devuelve la misma comanda), GET /comandas es la cola de preparación por sede y POST /comanda-detalles/{id}/transiciones avanza cada línea PENDIENTE→PREPARACION→LISTO→ENTREGADO (la entrega también con PEDIDO_EDITAR). Pruebas: TestComandaSeEnviaEnTandasSinReenviar, TestDosEnviosSimultaneosNoSuperanLaCantidad y TestLineaDeComandaRecorreSusEstados. Pendiente: cancelar (R3) y la pantalla de Cocina (R4). RES-CP-012 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-013",

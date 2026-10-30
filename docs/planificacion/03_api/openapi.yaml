@@ -4658,10 +4658,10 @@ paths:
       summary: Enviar cantidades pendientes
       tags:
       - Producción
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      description: Envía a una estación las cantidades pendientes de las líneas indicadas; cada línea debe corresponder a la
+        estación (422 estacion_no_corresponde) y no puede superar lo pendiente (409 cantidad_excede_pendiente). Idempotency-Key
+        obligatorio.
+      x-implementado: true
       x-permiso: PEDIDO_CREAR
       responses:
         '201':
@@ -4696,8 +4696,10 @@ paths:
       summary: Consultar colas de preparación
       tags:
       - Producción
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-      x-implementado: false
+      description: Cola de preparación de las sedes donde el usuario opera la cocina. Sin estado, devuelve las comandas con alguna
+        línea PENDIENTE, PREPARACION o LISTO; con estado, las que tienen alguna línea en él. Filtros sucursal_id, estacion_id y
+        paginación por cursor.
+      x-implementado: true
       x-permiso: COCINA_OPERAR
       responses:
         '200':
@@ -4736,10 +4738,10 @@ paths:
       summary: Actualizar preparación y consumo
       tags:
       - Producción
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      description: 'Avanza la línea al estado siguiente: PENDIENTE→PREPARACION→LISTO→ENTREGADO. COCINA_OPERAR; la entrega también
+        con PEDIDO_EDITAR. CANCELADO se resuelve en la rebanada 3. No lleva Idempotency-Key: repetir una transición da 409
+        transicion_invalida.'
+      x-implementado: true
       x-permiso: COCINA_OPERAR
       responses:
         '200':
@@ -8271,6 +8273,18 @@ components:
         clave_idempotencia:
           type: string
           format: uuid
+        mesa_id:
+          anyOf:
+          - type: string
+            pattern: ^[1-9][0-9]*$
+            description: Identificador BIGINT serializado como cadena.
+          - type: 'null'
+          description: Mesa del pedido de salón; null en LLEVAR y DELIVERY.
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComandaDetalles'
+          description: Todas las líneas de la comanda con su estado de preparación.
         enviado_en:
           type: string
           format: date-time
