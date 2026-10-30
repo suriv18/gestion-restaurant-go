@@ -14,25 +14,43 @@ import (
 // plato todavía no llegó a la mesa. ENTREGADO y CANCELADO quedan como están.
 const estadosCocinaCancelables = `'PENDIENTE','PREPARACION','LISTO'`
 
-// ExistsCocinaEntregadaEnLinea indica si la línea o alguno de sus adicionales tiene una línea de
-// comanda ya ENTREGADO.
+// ExistsCocinaEntregadaEnLinea indica si la línea o alguno de sus adicionales tiene una línea de comanda
+// ya ENTREGADO. Bloquea esas líneas de comanda (FOR UPDATE) antes de decidir: la cocina cambia su
+// estado sin bloquear el pedido, y sin el bloqueo un plato podría entregarse entre la verificación y
+// la anulación.
 func (r *PedidoSQLWriter) ExistsCocinaEntregadaEnLinea(ctx context.Context, pedidoID, detalleID int64) (bool, error) {
-	var ok bool
-	err := r.db.QueryRowContext(ctx, `SELECT EXISTS (
-		SELECT 1 FROM sch_restaurante.comanda_detalles cd
+	return r.hayEntregada(ctx, `SELECT cd.estado FROM sch_restaurante.comanda_detalles cd
 		JOIN sch_restaurante.detalles_pedido d ON d.id = cd.detalle_pedido_id
-		WHERE d.pedido_id = $1 AND (d.id = $2 OR d.detalle_padre_id = $2) AND cd.estado = 'ENTREGADO')`,
-		pedidoID, detalleID).Scan(&ok)
-	return ok, err
+		WHERE d.pedido_id = $1 AND (d.id = $2 OR d.detalle_padre_id = $2)
+		ORDER BY cd.id FOR UPDATE OF cd`, pedidoID, detalleID)
 }
 
-// ExistsCocinaEntregadaEnPedido indica si alguna línea de comanda del pedido está ENTREGADO.
+// ExistsCocinaEntregadaEnPedido indica si alguna línea de comanda del pedido está ENTREGADO. Bloquea todas
+// las líneas de comanda del pedido (FOR UPDATE) antes de decidir, por la misma razón.
 func (r *PedidoSQLWriter) ExistsCocinaEntregadaEnPedido(ctx context.Context, pedidoID int64) (bool, error) {
-	var ok bool
-	err := r.db.QueryRowContext(ctx, `SELECT EXISTS (
-		SELECT 1 FROM sch_restaurante.comanda_detalles WHERE pedido_id = $1 AND estado = 'ENTREGADO')`,
-		pedidoID).Scan(&ok)
-	return ok, err
+	return r.hayEntregada(ctx, `SELECT estado FROM sch_restaurante.comanda_detalles
+		WHERE pedido_id = $1 ORDER BY id FOR UPDATE`, pedidoID)
+}
+
+// hayEntregada bloquea las filas de la consulta y dice si alguna está ENTREGADO. La consulta debe
+// devolver una sola columna: el estado de la línea de comanda.
+func (r *PedidoSQLWriter) hayEntregada(ctx context.Context, query string, args ...any) (bool, error) {
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	entregada := false
+	for rows.Next() {
+		var estado string
+		if err := rows.Scan(&estado); err != nil {
+			return false, err
+		}
+		if estado == "ENTREGADO" {
+			entregada = true
+		}
+	}
+	return entregada, rows.Err()
 }
 
 // UpdateAnularLinea cancela las líneas de comanda de la línea y sus adicionales que aún no se

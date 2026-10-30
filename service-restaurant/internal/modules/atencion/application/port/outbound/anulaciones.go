@@ -25,9 +25,10 @@ type AnulacionStore interface {
 	// CuentasConPago devuelve, de las cuentas dadas, las que tienen algún pago CONFIRMADO.
 	CuentasConPago(ctx context.Context, cuentaIDs []int64) ([]int64, error)
 	// CocinaEntregadaEnLinea indica si la línea o alguno de sus adicionales tiene una línea de
-	// comanda ya ENTREGADO.
+	// comanda ya ENTREGADO. Bloquea esas líneas de comanda (FOR UPDATE) antes de decidir.
 	CocinaEntregadaEnLinea(ctx context.Context, pedidoID, detalleID int64) (bool, error)
-	// CocinaEntregadaEnPedido indica si alguna línea de comanda del pedido está ENTREGADO.
+	// CocinaEntregadaEnPedido indica si alguna línea de comanda del pedido está ENTREGADO. Bloquea
+	// todas las líneas de comanda del pedido (FOR UPDATE) antes de decidir.
 	CocinaEntregadaEnPedido(ctx context.Context, pedidoID int64) (bool, error)
 	// AnularLinea anula la línea y sus adicionales activos, cancela sus líneas de comanda que aún no
 	// se entregaron y devuelve la línea anulada.
