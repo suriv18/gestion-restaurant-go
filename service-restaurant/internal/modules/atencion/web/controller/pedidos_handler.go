@@ -24,11 +24,12 @@ type PedidosHandler struct {
 	abrir   inbound.AbrirPedido
 	agregar inbound.AgregarDetalle
 	editar  inbound.EditarDetalle
+	dividir inbound.DividirCuenta
 }
 
 func NewPedidosHandler(l inbound.ListarPedidos, o inbound.ObtenerPedido, a inbound.AbrirPedido,
-	ag inbound.AgregarDetalle, e inbound.EditarDetalle) *PedidosHandler {
-	return &PedidosHandler{l, o, a, ag, e}
+	ag inbound.AgregarDetalle, e inbound.EditarDetalle, d inbound.DividirCuenta) *PedidosHandler {
+	return &PedidosHandler{l, o, a, ag, e, d}
 }
 
 // opcionalID convierte un id en cadena anulable (contrato) a *int64.
@@ -192,4 +193,34 @@ func (h *PedidosHandler) EditarDetalle(w http.ResponseWriter, r *http.Request) e
 		Instrucciones: command.Campo[string]{Presente: body.Instrucciones.Presente, Valor: body.Instrucciones.Valor},
 	})
 	return responder(w, res, err, http.StatusOK, webmapper.ToLinea)
+}
+
+// DividirCuenta: POST /pedidos/{id}/dividir-cuenta (Idempotency-Key obligatoria)
+func (h *PedidosHandler) DividirCuenta(w http.ResponseWriter, r *http.Request) error {
+	actor, err := actorDe(r)
+	if err != nil {
+		return err
+	}
+	pedido, err := pathID(r)
+	if err != nil {
+		return err
+	}
+	var body request.CuentaDivision
+	if err := webrequest.DecodeJSON(r, &body); err != nil {
+		return err
+	}
+	ids := make([]int64, len(body.DetalleIDs))
+	for i, s := range body.DetalleIDs {
+		if ids[i], err = idCadena(s, "detalle_ids"); err != nil {
+			return err
+		}
+	}
+	in, err := intencion(r, fmt.Sprintf("POST /pedidos/%d/dividir-cuenta", pedido), body)
+	if err != nil {
+		return err
+	}
+	res, err := h.dividir.Execute(r.Context(), command.DividirCuenta{
+		Intencion: in, Actor: actor, PedidoID: pedido, DetalleIDs: ids, NombreCuenta: body.NombreCuenta,
+	})
+	return responder(w, res, err, http.StatusOK, webmapper.ToCuenta)
 }

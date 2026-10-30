@@ -43,16 +43,21 @@ func ToPedidoDetalle(d dtoresult.PedidoDetalle) response.PedidoDetalle {
 		}
 	}
 	for i, c := range d.Cuentas {
-		lineas := make([]response.Linea, len(c.Lineas))
-		for j, l := range c.Lineas {
-			lineas[j] = ToLinea(l)
-		}
-		out.Cuentas[i] = response.Cuenta{
-			ID: id(c.ID), Numero: c.Numero, ClienteID: idOpcional(c.ClienteID), Etiqueta: c.Etiqueta, Estado: c.Estado,
-			Subtotal: c.Subtotal, Impuesto: c.Impuesto, Total: c.Total, Lineas: lineas,
-		}
+		out.Cuentas[i] = ToCuenta(c)
 	}
 	return out
+}
+
+// ToCuenta arma la cuenta con sus líneas y totales (esquema CuentaPedido del contrato).
+func ToCuenta(c dtoresult.Cuenta) response.Cuenta {
+	lineas := make([]response.Linea, len(c.Lineas))
+	for j, l := range c.Lineas {
+		lineas[j] = ToLinea(l)
+	}
+	return response.Cuenta{
+		ID: id(c.ID), Numero: c.Numero, ClienteID: idOpcional(c.ClienteID), Etiqueta: c.Etiqueta, Estado: c.Estado,
+		Subtotal: c.Subtotal, Impuesto: c.Impuesto, Total: c.Total, Lineas: lineas,
+	}
 }
 
 func ToPedidosPagina(p dtoresult.PaginaPedidos) response.PedidosPagina {

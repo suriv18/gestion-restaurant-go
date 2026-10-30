@@ -35,7 +35,14 @@ func armarPedidos(db *sql.DB, logger *slog.Logger) *controller.PedidosHandler {
 		},
 		meta: func(c cmd.EditarDetalle) (int64, cmd.Intencion) { return c.Actor.UserID, cmd.Intencion{} }}
 
+	dividir := escritura[cmd.DividirCuenta, dtoresult.Cuenta]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.DividirCuenta, dtoresult.Cuenta] {
+			return command.NewDividirCuenta(writeadapter.NewPedidoWriteAdapter(q))
+		},
+		meta: func(c cmd.DividirCuenta) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
+
 	lector := readadapter.NewPedidoReadAdapter(db)
 	return controller.NewPedidosHandler(uquery.NewListarPedidos(lector), uquery.NewObtenerPedido(lector),
-		inbound.AbrirPedido(abrir), inbound.AgregarDetalle(agregar), inbound.EditarDetalle(editar))
+		inbound.AbrirPedido(abrir), inbound.AgregarDetalle(agregar), inbound.EditarDetalle(editar),
+		inbound.DividirCuenta(dividir))
 }

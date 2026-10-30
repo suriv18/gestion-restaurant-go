@@ -28,6 +28,7 @@ type lineaResp struct {
 type cuentaResp struct {
 	ID       string      `json:"id"`
 	Numero   int         `json:"numero"`
+	Etiqueta *string     `json:"etiqueta"`
 	Estado   string      `json:"estado"`
 	Subtotal string      `json:"subtotal"`
 	Impuesto string      `json:"impuesto"`

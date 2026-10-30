@@ -32,4 +32,5 @@ func RegisterRoutes(mux *http.ServeMux, zonas *ZonasHandler, mesas *MesasHandler
 	ruta("GET /pedidos/{id}", pedidos.Obtener)
 	ruta("POST /pedidos/{id}/detalles", pedidos.AgregarDetalle)
 	ruta("PATCH /pedidos/{id}/detalles/{detalle_id}", pedidos.EditarDetalle)
+	ruta("POST /pedidos/{id}/dividir-cuenta", pedidos.DividirCuenta)
 }

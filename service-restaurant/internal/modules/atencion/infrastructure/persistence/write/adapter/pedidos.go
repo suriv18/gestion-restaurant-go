@@ -45,3 +45,24 @@ func (a *PedidoWriteAdapter) InsertarDetalle(ctx context.Context, n outbound.Nue
 func (a *PedidoWriteAdapter) ActualizarDetalle(ctx context.Context, id int64, c outbound.CambiosDetalle) (dtoresult.Linea, error) {
 	return a.repo.UpdateDetalle(ctx, id, c)
 }
+
+var _ outbound.DivisionStore = (*PedidoWriteAdapter)(nil)
+
+func (a *PedidoWriteAdapter) LineasDelPedido(ctx context.Context, pedidoID int64) ([]outbound.LineaCuenta, error) {
+	return a.repo.GetLineasDelPedido(ctx, pedidoID)
+}
+func (a *PedidoWriteAdapter) CuentasDelPedido(ctx context.Context, pedidoID int64) ([]outbound.CuentaRef, error) {
+	return a.repo.GetCuentasForUpdate(ctx, pedidoID)
+}
+func (a *PedidoWriteAdapter) CuentasConPago(ctx context.Context, cuentaIDs []int64) ([]int64, error) {
+	return a.repo.GetCuentasConPago(ctx, cuentaIDs)
+}
+func (a *PedidoWriteAdapter) CrearCuenta(ctx context.Context, n outbound.NuevaCuenta) (int64, error) {
+	return a.repo.InsertCuenta(ctx, n)
+}
+func (a *PedidoWriteAdapter) MoverLineas(ctx context.Context, pedidoID, cuentaID int64, lineaIDs []int64) error {
+	return a.repo.MoveLineas(ctx, pedidoID, cuentaID, lineaIDs)
+}
+func (a *PedidoWriteAdapter) CuentaConLineas(ctx context.Context, pedidoID, cuentaID int64) (dtoresult.Cuenta, error) {
+	return a.repo.GetCuentaConLineas(ctx, pedidoID, cuentaID)
+}
