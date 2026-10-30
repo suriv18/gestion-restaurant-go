@@ -51,3 +51,9 @@ Fecha: 2026-10-25
   RES-CP-012 sigue NO_EJECUTADA. El contrato marca como implementadas POST /pedidos/{id}/comandas, GET /comandas y
   POST /comanda-detalles/{id}/transiciones (sin nuevas rutas: 120 rutas y 164 operaciones) y el esquema Comandas añade
   mesa_id y lineas. COCINA_OPERAR se asigna al rol COCINA (migración 00012).
+- I3 rebanada 3: dividir cuentas y cancelar con motivo (backend, módulo atencion). RES-RF-011 y RES-RF-014 pasan a
+  IMPLEMENTADO en backend; RES-CP-011 y RES-CP-014 siguen NO_EJECUTADA. El contrato marca como implementadas
+  POST /pedidos/{id}/dividir-cuenta y POST /pedidos/{id}/cancelacion, añade POST /pedidos/{id}/detalles/{detalle_id}/anulacion
+  (121 rutas y 165 operaciones), cambia la respuesta de dividir-cuenta a CuentaPedido y limita nombre_cuenta a 80
+  caracteres, como la columna. PEDIDO_ANULAR se asigna al rol CAJERO (migración 00013). Bajar la cantidad de una línea
+  con descuento exige DESCUENTO_AUTORIZAR.

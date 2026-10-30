@@ -90,3 +90,18 @@ Concurrencia: orden de bloqueo pedido, cuentas y líneas por `id` ascendente, y 
 - R4: frontend de Salón y Cocina y cierre con auditoría.
 - I4: pagos, devoluciones y cierre del pedido con saldo; hasta entonces `cuenta_con_pago` y `pedido_con_pago` se prueban con pagos insertados por SQL.
 - `pedidos.estado` (`REGISTRADO/PREPARACION/LISTO/ENTREGADO`) sigue sin derivarse de las comandas; se decide en R4 o I4.
+
+## 8. Ajustes durante el plan
+
+Al escribir el plan (`docs/superpowers/plans/2026-10-29-i3-rebanada3-cancelar-dividir.md`) se reconcilió este diseño con el código y el contrato existentes. Las diferencias con las secciones anteriores son:
+
+| Sección | Diseño | Implementado | Motivo |
+|---|---|---|---|
+| §3.4 | El total ignora las líneas anuladas; afecta a la lectura de pedidos de R1 | Sin cambio en los totales; `Linea` añade `anulado_en`, `anulado_por` y `motivo_anulacion` | `leerTotales` ya filtra `estado = 'ACTIVO'`; faltaba devolver el motivo |
+| §3.5 | D4 responde 403 `sin_permiso_descuento` | 403 `sin_permiso`, el rechazo que ya emiten `AgregarDetalle` y `EditarDetalle` | Coherencia del contrato de errores |
+| §3.1 | `nombre_cuenta` según el contrato admite 100 caracteres | Máximo 80 y se corrige el contrato | `cuentas.etiqueta` es `VARCHAR(80)` |
+| §3.1 | La respuesta de dividir es `Cuentas` | Es `CuentaPedido` (cuenta con líneas y totales) | `Cuentas` exige `pedido_id` y metadatos que la API de pedidos no devuelve |
+| §4 | Regla de estados de cocina cancelables en `domain` | Constante `estadosCocinaCancelables` en la persistencia | Es el filtro de la sentencia `UPDATE`; duplicarla en dominio no la haría más segura |
+| §3.1 | Rechazo por pago confirmado | Comprobación en la aplicación (409 `cuenta_con_pago`); el trigger `a_guardar_detalle` queda como segunda defensa | Código propio en lugar del mensaje genérico del trigger |
+
+Orden de las sentencias de cancelación: líneas de comanda, líneas de pedido, cuentas y, al final, el pedido. Los triggers del esquema lo exigen (una cuenta con líneas activas no se cancela y un pedido con cuentas abiertas no se cierra).

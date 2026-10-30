@@ -4538,16 +4538,60 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ConsumoEdicion'
+  /pedidos/{id}/detalles/{detalle_id}/anulacion:
+    post:
+      operationId: operacion_165
+      summary: Anular consumo con motivo
+      tags:
+      - Atención
+      description: Anula una línea activa de una cuenta abierta junto con sus adicionales. Las líneas de cocina PENDIENTE,
+        PREPARACION o LISTO pasan a CANCELADO con el mismo motivo; la línea se conserva como ANULADO con su auditoría. Se
+        rechaza con 409 linea_entregada si ya se sirvió y con 409 cuenta_con_pago si la cuenta tiene pagos confirmados.
+        Idempotency-Key obligatorio.
+      x-implementado: true
+      x-permiso: PEDIDO_ANULAR
+      responses:
+        '200':
+          description: Resultado confirmado por el servicio; no implica efecto fiscal o bancario externo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetallesPedido'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404': *id004
+        '409': *id005
+        '422': *id006
+        '503': *id007
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      - name: detalle_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Motivo'
   /pedidos/{id}/dividir-cuenta:
     post:
       operationId: operacion_116
       summary: Mover líneas a nueva cuenta
       tags:
       - Atención
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      description: Mueve líneas activas de las cuentas abiertas de un pedido a una cuenta nueva. Los adicionales viajan con su
+        línea padre (422 adicional_sin_padre si se pide uno solo). No cambia lo enviado a cocina. Se rechaza con 409
+        cuenta_con_pago si una cuenta de origen tiene pagos confirmados. Idempotency-Key obligatorio.
+      x-implementado: true
       x-permiso: PEDIDO_CREAR
       responses:
         '200':
@@ -4555,7 +4599,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Cuentas'
+                $ref: '#/components/schemas/CuentaPedido'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -4582,10 +4626,11 @@ paths:
       summary: Cancelar pedido con motivo
       tags:
       - Atención
-      description: Diseño propuesto. El backend valida permiso, sucursal, campos y estado en una transacción cuando corresponda.
-        Idempotency-Key identifica la intención estable. La API debe persistir el resultado; para comandos sin columna propia
-        en V4 se requiere diseño y migración adicional.
-      x-implementado: false
+      description: Cancela el pedido completo con un motivo. Las cuentas abiertas pasan a CANCELADA, las líneas activas a ANULADO
+        y las líneas de cocina aún no entregadas a CANCELADO; las líneas se conservan con su auditoría y la mesa queda libre.
+        Se rechaza con 409 pedido_con_pago si hay pagos confirmados (la devolución se registra aparte) y con 409 linea_entregada
+        si ya se sirvió algo. Idempotency-Key obligatorio.
+      x-implementado: true
       x-permiso: PEDIDO_ANULAR
       responses:
         '200':
@@ -8047,71 +8092,6 @@ components:
           pattern: ^[1-9][0-9]*$
           description: Identificador BIGINT serializado como cadena.
           readOnly: true
-    Cuentas:
-      type: object
-      description: Subcuentas por pedido para separar consumos y comprobantes; cada una admite multiples pagos.
-      required:
-      - id
-      - pedido_id
-      - numero
-      - estado
-      - creado_por
-      - creado_en
-      - actualizado_en
-      - actualizado_por
-      properties:
-        id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          description: Identificador BIGINT serializado como cadena.
-          readOnly: true
-        pedido_id:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          description: Identificador BIGINT serializado como cadena.
-        numero:
-          type: integer
-        cliente_id:
-          anyOf:
-          - type: string
-            pattern: ^[1-9][0-9]*$
-            description: Identificador BIGINT serializado como cadena.
-          - type: 'null'
-        etiqueta:
-          anyOf:
-          - type: string
-            maxLength: 80
-          - type: 'null'
-        estado:
-          type: string
-          maxLength: 15
-        cerrado_en:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-        motivo_cancelacion:
-          anyOf:
-          - type: string
-          - type: 'null'
-        creado_por:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          description: Identificador BIGINT serializado como cadena.
-          readOnly: true
-        creado_en:
-          type: string
-          format: date-time
-          readOnly: true
-        actualizado_en:
-          type: string
-          format: date-time
-          readOnly: true
-        actualizado_por:
-          type: string
-          pattern: ^[1-9][0-9]*$
-          description: Identificador BIGINT serializado como cadena.
-          readOnly: true
     DetallesPedido:
       type: object
       description: Snapshot comercial. Adicionales como lineas hijas; envio como producto SERVICIO. Precios incluyen tributos.
@@ -10268,7 +10248,7 @@ components:
           minItems: 1
         nombre_cuenta:
           type: string
-          maxLength: 100
+          maxLength: 80
     ComandaLinea:
       type: object
       additionalProperties: false

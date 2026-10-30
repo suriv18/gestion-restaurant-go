@@ -81,7 +81,7 @@
       "ADR-02",
       "ADR-04"
     ],
-    "avance": "Rebanadas 1 y 2 de 4 hechas (backend): apertura de pedido y cuenta (RES-RF-009), consumos como instantánea (RES-RF-010), autorización por sede (RES-RF-002) y, en R2, envío de comandas por estación, cola de preparación y estados de cocina (RES-RF-012). Faltan dividir cuentas y cancelar con motivo (R3, RES-RF-011 y RES-RF-014) y el frontend de Salón y Cocina con el cierre con auditoría (R4). Los casos de aceptación siguen NO_EJECUTADA."
+    "avance": "Rebanadas 1, 2 y 3 de 4 hechas (backend): apertura de pedido y cuenta (RES-RF-009), consumos como instantánea (RES-RF-010), autorización por sede (RES-RF-002), envío de comandas por estación, cola de preparación y estados de cocina (RES-RF-012) y, en R3, dividir cuentas (RES-RF-011) y anular líneas o cancelar el pedido con motivo (RES-RF-014). Falta el frontend de Salón y Cocina con el cierre con auditoría (R4). Los casos de aceptación siguen NO_EJECUTADA."
   },
   {
     "id": "I4",

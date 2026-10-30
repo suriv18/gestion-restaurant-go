@@ -316,7 +316,7 @@
     "incremento": "I3",
     "aceptacion": "La suma de las cuentas antes y después coincide. Con pago confirmado se bloquea el cambio.",
     "cobertura_prototipo": "Simulado",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -325,7 +325,8 @@
     ],
     "add": [
       "ADD-07"
-    ]
+    ],
+    "situacion_backend": "Implementado en I3 (rebanada 3): POST /pedidos/{id}/dividir-cuenta mueve líneas activas a una cuenta nueva del mismo pedido (los adicionales viajan con su línea padre, la suma de importes se conserva, lo enviado a cocina no cambia y con un pago confirmado en la cuenta de origen se rechaza con 409 cuenta_con_pago). Pruebas: TestDividirCuentaConservaLaSuma, TestDividirCuentaConservaLaTrazabilidadDeCocina y TestDividirCuentaRechazos. RES-CP-011 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-012",
@@ -407,7 +408,7 @@
     "incremento": "I3",
     "aceptacion": "Una cancelación conserva las líneas y su auditoría; el consumo ya confirmado no se devuelve automáticamente.",
     "cobertura_prototipo": "Parcial",
-    "estado_backend": "PENDIENTE",
+    "estado_backend": "IMPLEMENTADO",
     "fuente": "SQL V4 y diseño funcional propuesto",
     "resultado_prueba_backend": "NO_EJECUTADA",
     "adr": [
@@ -416,7 +417,8 @@
     ],
     "add": [
       "ADD-06"
-    ]
+    ],
+    "situacion_backend": "Implementado en I3 (rebanada 3): POST /pedidos/{id}/cancelacion cancela el pedido entero y POST /pedidos/{id}/detalles/{detalle_id}/anulacion anula una línea, ambos con motivo y PEDIDO_ANULAR (asignado al CAJERO en la migración 00013). Las líneas se conservan como ANULADO con su auditoría, las cuentas abiertas quedan CANCELADA y las líneas de cocina no entregadas pasan a CANCELADO; lo ya servido (409 linea_entregada) y lo cobrado (409 pedido_con_pago o cuenta_con_pago) no se anulan: la devolución es de I4. Pruebas: TestAnularLineaEnviadaCancelaSuComanda, TestCancelarPedidoCancelaTodo, TestCancelarPedidoRechazos y TestCancelarYEnviarSimultaneosDejanUnEstadoCoherente. RES-CP-014 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-015",
