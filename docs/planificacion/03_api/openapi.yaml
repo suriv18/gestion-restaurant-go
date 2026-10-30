@@ -8092,6 +8092,71 @@ components:
           pattern: ^[1-9][0-9]*$
           description: Identificador BIGINT serializado como cadena.
           readOnly: true
+    Cuentas:
+      type: object
+      description: Subcuentas por pedido para separar consumos y comprobantes; cada una admite multiples pagos.
+      required:
+      - id
+      - pedido_id
+      - numero
+      - estado
+      - creado_por
+      - creado_en
+      - actualizado_en
+      - actualizado_por
+      properties:
+        id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          description: Identificador BIGINT serializado como cadena.
+          readOnly: true
+        pedido_id:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          description: Identificador BIGINT serializado como cadena.
+        numero:
+          type: integer
+        cliente_id:
+          anyOf:
+          - type: string
+            pattern: ^[1-9][0-9]*$
+            description: Identificador BIGINT serializado como cadena.
+          - type: 'null'
+        etiqueta:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        estado:
+          type: string
+          maxLength: 15
+        cerrado_en:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+        motivo_cancelacion:
+          anyOf:
+          - type: string
+          - type: 'null'
+        creado_por:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          description: Identificador BIGINT serializado como cadena.
+          readOnly: true
+        creado_en:
+          type: string
+          format: date-time
+          readOnly: true
+        actualizado_en:
+          type: string
+          format: date-time
+          readOnly: true
+        actualizado_por:
+          type: string
+          pattern: ^[1-9][0-9]*$
+          description: Identificador BIGINT serializado como cadena.
+          readOnly: true
     DetallesPedido:
       type: object
       description: Snapshot comercial. Adicionales como lineas hijas; envio como producto SERVICIO. Precios incluyen tributos.
