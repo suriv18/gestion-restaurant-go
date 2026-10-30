@@ -41,8 +41,19 @@ func armarPedidos(db *sql.DB, logger *slog.Logger) *controller.PedidosHandler {
 		},
 		meta: func(c cmd.DividirCuenta) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
 
+	anular := escritura[cmd.AnularDetalle, dtoresult.Linea]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.AnularDetalle, dtoresult.Linea] {
+			return command.NewAnularDetalle(writeadapter.NewPedidoWriteAdapter(q))
+		},
+		meta: func(c cmd.AnularDetalle) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
+	cancelar := escritura[cmd.CancelarPedido, dtoresult.PedidoDetalle]{db: db, logger: logger, status: http.StatusOK,
+		build: func(q txQuerier) ejecutor[cmd.CancelarPedido, dtoresult.PedidoDetalle] {
+			return command.NewCancelarPedido(writeadapter.NewPedidoWriteAdapter(q))
+		},
+		meta: func(c cmd.CancelarPedido) (int64, cmd.Intencion) { return c.Actor.UserID, c.Intencion }}
+
 	lector := readadapter.NewPedidoReadAdapter(db)
 	return controller.NewPedidosHandler(uquery.NewListarPedidos(lector), uquery.NewObtenerPedido(lector),
 		inbound.AbrirPedido(abrir), inbound.AgregarDetalle(agregar), inbound.EditarDetalle(editar),
-		inbound.DividirCuenta(dividir))
+		inbound.DividirCuenta(dividir), inbound.AnularDetalle(anular), inbound.CancelarPedido(cancelar))
 }

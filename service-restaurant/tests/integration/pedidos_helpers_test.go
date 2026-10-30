@@ -8,21 +8,22 @@ import (
 )
 
 type lineaResp struct {
-	ID             string  `json:"id"`
-	PedidoID       string  `json:"pedido_id"`
-	CuentaID       string  `json:"cuenta_id"`
-	ProductoID     string  `json:"producto_id"`
-	DetallePadreID *string `json:"detalle_padre_id"`
-	Descripcion    string  `json:"descripcion"`
-	Cantidad       string  `json:"cantidad"`
-	PrecioUnitario string  `json:"precio_unitario"`
-	DescuentoTotal string  `json:"descuento_total"`
-	AfectacionIGV  string  `json:"afectacion_igv"`
-	TasaImpuesto   string  `json:"tasa_impuesto"`
-	ImporteTotal   string  `json:"importe_total"`
-	BaseImponible  string  `json:"base_imponible"`
-	Estado         string  `json:"estado"`
-	Notas          *string `json:"notas_preparacion"`
+	ID              string  `json:"id"`
+	PedidoID        string  `json:"pedido_id"`
+	CuentaID        string  `json:"cuenta_id"`
+	ProductoID      string  `json:"producto_id"`
+	DetallePadreID  *string `json:"detalle_padre_id"`
+	Descripcion     string  `json:"descripcion"`
+	Cantidad        string  `json:"cantidad"`
+	PrecioUnitario  string  `json:"precio_unitario"`
+	DescuentoTotal  string  `json:"descuento_total"`
+	AfectacionIGV   string  `json:"afectacion_igv"`
+	TasaImpuesto    string  `json:"tasa_impuesto"`
+	ImporteTotal    string  `json:"importe_total"`
+	BaseImponible   string  `json:"base_imponible"`
+	Estado          string  `json:"estado"`
+	Notas           *string `json:"notas_preparacion"`
+	MotivoAnulacion *string `json:"motivo_anulacion"`
 }
 
 type cuentaResp struct {
@@ -56,6 +57,8 @@ type pedidoResp struct {
 	Moneda            string       `json:"moneda"`
 	Comensales        int          `json:"comensales"`
 	Notas             *string      `json:"notas"`
+	MotivoCancelacion *string      `json:"motivo_cancelacion"`
+	CerradoEn         *string      `json:"cerrado_en"`
 	Reparto           *repartoResp `json:"reparto"`
 	Cuentas           []cuentaResp `json:"cuentas"`
 }

@@ -29,25 +29,28 @@ type Pedido struct {
 
 // Linea es un consumo (esquema DetallesPedido del contrato).
 type Linea struct {
-	ID               string    `json:"id"`
-	PedidoID         string    `json:"pedido_id"`
-	CuentaID         string    `json:"cuenta_id"`
-	ProductoID       string    `json:"producto_id"`
-	DetallePadreID   *string   `json:"detalle_padre_id"`
-	Descripcion      string    `json:"descripcion"`
-	Cantidad         string    `json:"cantidad"`
-	PrecioUnitario   string    `json:"precio_unitario"`
-	DescuentoTotal   string    `json:"descuento_total"`
-	AfectacionIGV    string    `json:"afectacion_igv"`
-	TasaImpuesto     string    `json:"tasa_impuesto"`
-	ImporteTotal     string    `json:"importe_total"`
-	BaseImponible    string    `json:"base_imponible"`
-	Estado           string    `json:"estado"`
-	NotasPreparacion *string   `json:"notas_preparacion"`
-	CreadoEn         time.Time `json:"creado_en"`
-	CreadoPor        string    `json:"creado_por"`
-	ActualizadoEn    time.Time `json:"actualizado_en"`
-	ActualizadoPor   string    `json:"actualizado_por"`
+	ID               string     `json:"id"`
+	PedidoID         string     `json:"pedido_id"`
+	CuentaID         string     `json:"cuenta_id"`
+	ProductoID       string     `json:"producto_id"`
+	DetallePadreID   *string    `json:"detalle_padre_id"`
+	Descripcion      string     `json:"descripcion"`
+	Cantidad         string     `json:"cantidad"`
+	PrecioUnitario   string     `json:"precio_unitario"`
+	DescuentoTotal   string     `json:"descuento_total"`
+	AfectacionIGV    string     `json:"afectacion_igv"`
+	TasaImpuesto     string     `json:"tasa_impuesto"`
+	ImporteTotal     string     `json:"importe_total"`
+	BaseImponible    string     `json:"base_imponible"`
+	Estado           string     `json:"estado"`
+	NotasPreparacion *string    `json:"notas_preparacion"`
+	CreadoEn         time.Time  `json:"creado_en"`
+	CreadoPor        string     `json:"creado_por"`
+	ActualizadoEn    time.Time  `json:"actualizado_en"`
+	ActualizadoPor   string     `json:"actualizado_por"`
+	AnuladoEn        *time.Time `json:"anulado_en"`
+	AnuladoPor       *string    `json:"anulado_por"`
+	MotivoAnulacion  *string    `json:"motivo_anulacion"`
 }
 
 type Cuenta struct {

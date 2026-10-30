@@ -66,3 +66,18 @@ func (a *PedidoWriteAdapter) MoverLineas(ctx context.Context, pedidoID, cuentaID
 func (a *PedidoWriteAdapter) CuentaConLineas(ctx context.Context, pedidoID, cuentaID int64) (dtoresult.Cuenta, error) {
 	return a.repo.GetCuentaConLineas(ctx, pedidoID, cuentaID)
 }
+
+var _ outbound.AnulacionStore = (*PedidoWriteAdapter)(nil)
+
+func (a *PedidoWriteAdapter) CocinaEntregadaEnLinea(ctx context.Context, pedidoID, detalleID int64) (bool, error) {
+	return a.repo.ExistsCocinaEntregadaEnLinea(ctx, pedidoID, detalleID)
+}
+func (a *PedidoWriteAdapter) CocinaEntregadaEnPedido(ctx context.Context, pedidoID int64) (bool, error) {
+	return a.repo.ExistsCocinaEntregadaEnPedido(ctx, pedidoID)
+}
+func (a *PedidoWriteAdapter) AnularLinea(ctx context.Context, pedidoID, detalleID int64, an outbound.Anulacion) (dtoresult.Linea, error) {
+	return a.repo.UpdateAnularLinea(ctx, pedidoID, detalleID, an)
+}
+func (a *PedidoWriteAdapter) CancelarPedido(ctx context.Context, pedidoID int64, an outbound.Anulacion) (dtoresult.PedidoDetalle, error) {
+	return a.repo.UpdateCancelarPedido(ctx, pedidoID, an)
+}

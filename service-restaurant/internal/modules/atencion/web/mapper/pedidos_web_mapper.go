@@ -31,6 +31,7 @@ func ToLinea(l dtoresult.Linea) response.Linea {
 		TasaImpuesto: l.TasaImpuesto, ImporteTotal: l.ImporteTotal, BaseImponible: l.BaseImponible, Estado: l.Estado,
 		NotasPreparacion: l.NotasPreparacion, CreadoEn: l.CreadoEn, CreadoPor: id(l.CreadoPor),
 		ActualizadoEn: l.ActualizadoEn, ActualizadoPor: id(l.ActualizadoPor),
+		AnuladoEn: l.AnuladoEn, AnuladoPor: idOpcional(l.AnuladoPor), MotivoAnulacion: l.MotivoAnulacion,
 	}
 }
 

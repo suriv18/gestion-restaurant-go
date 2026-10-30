@@ -16,7 +16,8 @@ const (
 
 	Linea = `id, pedido_id, cuenta_id, producto_id, detalle_padre_id, descripcion, cantidad::text, precio_unitario::text,
 		descuento_total::text, afectacion_igv, tasa_impuesto::text, importe_total::text, base_imponible::text, estado,
-		notas_preparacion, creado_en, creado_por, actualizado_en, actualizado_por`
+		notas_preparacion, creado_en, creado_por, actualizado_en, actualizado_por, anulado_en, anulado_por,
+		motivo_anulacion`
 )
 
 func enteroNulo(v sql.NullInt64) *int64 {
@@ -58,11 +59,17 @@ func ScanCuenta(s Fila) (dtoresult.Cuenta, error) {
 // ScanLinea lee una fila con las columnas de Linea.
 func ScanLinea(s Fila) (dtoresult.Linea, error) {
 	var l dtoresult.Linea
-	var padre sql.NullInt64
-	var notas sql.NullString
+	var padre, anuladoPor sql.NullInt64
+	var notas, motivo sql.NullString
+	var anuladoEn sql.NullTime
 	err := s.Scan(&l.ID, &l.PedidoID, &l.CuentaID, &l.ProductoID, &padre, &l.Descripcion, &l.Cantidad, &l.PrecioUnitario,
 		&l.DescuentoTotal, &l.AfectacionIGV, &l.TasaImpuesto, &l.ImporteTotal, &l.BaseImponible, &l.Estado,
-		&notas, &l.CreadoEn, &l.CreadoPor, &l.ActualizadoEn, &l.ActualizadoPor)
+		&notas, &l.CreadoEn, &l.CreadoPor, &l.ActualizadoEn, &l.ActualizadoPor, &anuladoEn, &anuladoPor, &motivo)
 	l.DetallePadreID, l.NotasPreparacion = enteroNulo(padre), textoNulo(notas)
+	l.AnuladoPor, l.MotivoAnulacion = enteroNulo(anuladoPor), textoNulo(motivo)
+	if anuladoEn.Valid {
+		t := anuladoEn.Time
+		l.AnuladoEn = &t
+	}
 	return l, err
 }

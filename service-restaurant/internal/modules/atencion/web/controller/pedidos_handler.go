@@ -19,17 +19,20 @@ var (
 
 // PedidosHandler: pedidos, cuentas y consumos del salón (RES-RF-009, RES-RF-010).
 type PedidosHandler struct {
-	listar  inbound.ListarPedidos
-	obtener inbound.ObtenerPedido
-	abrir   inbound.AbrirPedido
-	agregar inbound.AgregarDetalle
-	editar  inbound.EditarDetalle
-	dividir inbound.DividirCuenta
+	listar   inbound.ListarPedidos
+	obtener  inbound.ObtenerPedido
+	abrir    inbound.AbrirPedido
+	agregar  inbound.AgregarDetalle
+	editar   inbound.EditarDetalle
+	dividir  inbound.DividirCuenta
+	anular   inbound.AnularDetalle
+	cancelar inbound.CancelarPedido
 }
 
 func NewPedidosHandler(l inbound.ListarPedidos, o inbound.ObtenerPedido, a inbound.AbrirPedido,
-	ag inbound.AgregarDetalle, e inbound.EditarDetalle, d inbound.DividirCuenta) *PedidosHandler {
-	return &PedidosHandler{l, o, a, ag, e, d}
+	ag inbound.AgregarDetalle, e inbound.EditarDetalle, d inbound.DividirCuenta,
+	an inbound.AnularDetalle, ca inbound.CancelarPedido) *PedidosHandler {
+	return &PedidosHandler{l, o, a, ag, e, d, an, ca}
 }
 
 // opcionalID convierte un id en cadena anulable (contrato) a *int64.
@@ -223,4 +226,56 @@ func (h *PedidosHandler) DividirCuenta(w http.ResponseWriter, r *http.Request) e
 		Intencion: in, Actor: actor, PedidoID: pedido, DetalleIDs: ids, NombreCuenta: body.NombreCuenta,
 	})
 	return responder(w, res, err, http.StatusOK, webmapper.ToCuenta)
+}
+
+// AnularDetalle: POST /pedidos/{id}/detalles/{detalle_id}/anulacion (Idempotency-Key obligatoria)
+func (h *PedidosHandler) AnularDetalle(w http.ResponseWriter, r *http.Request) error {
+	actor, err := actorDe(r)
+	if err != nil {
+		return err
+	}
+	pedido, err := pathID(r)
+	if err != nil {
+		return err
+	}
+	detalle, err := pathIDDe(r, "detalle_id")
+	if err != nil {
+		return err
+	}
+	var body request.Motivo
+	if err := webrequest.DecodeJSON(r, &body); err != nil {
+		return err
+	}
+	in, err := intencion(r, fmt.Sprintf("POST /pedidos/%d/detalles/%d/anulacion", pedido, detalle), body)
+	if err != nil {
+		return err
+	}
+	res, err := h.anular.Execute(r.Context(), command.AnularDetalle{
+		Intencion: in, Actor: actor, PedidoID: pedido, DetalleID: detalle, Motivo: body.Motivo,
+	})
+	return responder(w, res, err, http.StatusOK, webmapper.ToLinea)
+}
+
+// Cancelar: POST /pedidos/{id}/cancelacion (Idempotency-Key obligatoria)
+func (h *PedidosHandler) Cancelar(w http.ResponseWriter, r *http.Request) error {
+	actor, err := actorDe(r)
+	if err != nil {
+		return err
+	}
+	pedido, err := pathID(r)
+	if err != nil {
+		return err
+	}
+	var body request.Motivo
+	if err := webrequest.DecodeJSON(r, &body); err != nil {
+		return err
+	}
+	in, err := intencion(r, fmt.Sprintf("POST /pedidos/%d/cancelacion", pedido), body)
+	if err != nil {
+		return err
+	}
+	res, err := h.cancelar.Execute(r.Context(), command.CancelarPedido{
+		Intencion: in, Actor: actor, PedidoID: pedido, Motivo: body.Motivo,
+	})
+	return responder(w, res, err, http.StatusOK, webmapper.ToPedidoDetalle)
 }

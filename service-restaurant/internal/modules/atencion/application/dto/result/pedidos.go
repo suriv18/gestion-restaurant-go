@@ -60,6 +60,9 @@ type Linea struct {
 	CreadoPor        int64
 	ActualizadoEn    time.Time
 	ActualizadoPor   int64
+	AnuladoEn        *time.Time
+	AnuladoPor       *int64
+	MotivoAnulacion  *string
 }
 
 // Cuenta agrupa líneas. Subtotal, Impuesto y Total suman solo las líneas activas.
