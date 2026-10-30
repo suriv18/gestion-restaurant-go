@@ -4638,7 +4638,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pedidos'
+                $ref: '#/components/schemas/PedidoDetalle'
         '400': *id001
         '401': *id002
         '403': *id003

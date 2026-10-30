@@ -60,7 +60,7 @@
     "add": [
       "ADD-09"
     ],
-    "situacion_backend": "Implementado: el mecanismo (Actor.Can por permiso y sede) rige la administración de accesos y, desde I3 rebanada 1, los pedidos: un usuario de la sede A no lee ni modifica un pedido de la sede B aunque conozca su id (404; prueba TestPedidosAislamientoPorSede). Las operaciones de cocina, división y cancelación (R2 y R3) usarán el mismo mecanismo. RES-CP-002 sigue NO_EJECUTADA."
+    "situacion_backend": "Implementado: el mecanismo (Actor.Can por permiso y sede) rige la administración de accesos y, desde I3 rebanada 1, los pedidos: un usuario de la sede A no lee ni modifica un pedido de la sede B aunque conozca su id (404; prueba TestPedidosAislamientoPorSede). Las operaciones de cocina, división y cancelación (R2 y R3) usan el mismo mecanismo. RES-CP-002 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-003",
@@ -356,7 +356,7 @@
     "add": [
       "ADD-07"
     ],
-    "situacion_backend": "Implementado en I3 (rebanada 2): POST /pedidos/{id}/comandas envía a una estación solo las cantidades pendientes de cada línea (sin reenviar lo despachado, con la estación del producto exigida y Idempotency-Key; repetir la clave devuelve la misma comanda), GET /comandas es la cola de preparación por sede y POST /comanda-detalles/{id}/transiciones avanza cada línea PENDIENTE→PREPARACION→LISTO→ENTREGADO (la entrega también con PEDIDO_EDITAR). Pruebas: TestComandaSeEnviaEnTandasSinReenviar, TestDosEnviosSimultaneosNoSuperanLaCantidad y TestLineaDeComandaRecorreSusEstados. Pendiente: cancelar (R3) y la pantalla de Cocina (R4). RES-CP-012 sigue NO_EJECUTADA."
+    "situacion_backend": "Implementado en I3 (rebanada 2): POST /pedidos/{id}/comandas envía a una estación solo las cantidades pendientes de cada línea (sin reenviar lo despachado, con la estación del producto exigida y Idempotency-Key; repetir la clave devuelve la misma comanda), GET /comandas es la cola de preparación por sede y POST /comanda-detalles/{id}/transiciones avanza cada línea PENDIENTE→PREPARACION→LISTO→ENTREGADO (la entrega también con PEDIDO_EDITAR). Pruebas: TestComandaSeEnviaEnTandasSinReenviar, TestDosEnviosSimultaneosNoSuperanLaCantidad y TestLineaDeComandaRecorreSusEstados. Cancelar líneas y pedidos se implementó en la rebanada 3 (RES-RF-014); pendiente: la pantalla de Cocina (R4). RES-CP-012 sigue NO_EJECUTADA."
   },
   {
     "id": "RES-RF-013",

@@ -16,7 +16,7 @@ Spec: `docs/superpowers/specs/2026-10-29-i3-rebanada3-cancelar-dividir-design.md
 - `atencion` **no importa** `produccion`, `catalogo` ni `identidad` (lo verifica `tests/architecture`). Dominio y aplicación no importan `database/sql`, `net/http` ni drivers. `web` no importa dominio ni infraestructura.
 - Tablas siempre con el esquema: `sch_restaurante.<tabla>`.
 - Cantidades y ids viajan como cadenas en JSON (contrato).
-- Orden de bloqueo (regla de R1 y R2): el pedido `FOR UPDATE` primero; después cuentas, líneas y líneas de comanda. Todo escritor de un pedido toma primero ese bloqueo, así que no hay interbloqueos entre sí.
+- Orden de bloqueo (regla de R1 y R2): todo escritor de `atencion` bloquea primero el pedido `FOR UPDATE`. Los escritores de líneas de cocina del módulo `produccion` (transiciones) bloquean solo la fila de `comanda_detalles` y no el pedido; por eso `atencion` debe bloquear las filas de `comanda_detalles` (`FOR UPDATE`) antes de decidir cualquier cosa que dependa de su estado. Dentro de una transacción de `atencion` el orden es: pedido → líneas/cuentas → líneas de comanda.
 - Errores (`apperror`): `422` validación, `409` conflicto de estado, `403`/`404` por sede. Sin ningún permiso del conjunto exigido: `403 sin_permiso`. Con visibilidad de la sede pero sin el permiso: `403 sede_no_autorizada`. Pedido de una sede que el actor no ve: `404 no_encontrado`.
 - Mensajes de usuario y comentarios en español, con tildes, como el resto del repositorio.
 - Mensaje de cada commit termina con la línea `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` (se pasa con un segundo `-m`).

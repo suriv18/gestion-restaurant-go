@@ -90,6 +90,9 @@ Concurrencia: orden de bloqueo pedido, cuentas y líneas por `id` ascendente, y 
 - R4: frontend de Salón y Cocina y cierre con auditoría.
 - I4: pagos, devoluciones y cierre del pedido con saldo; hasta entonces `cuenta_con_pago` y `pedido_con_pago` se prueban con pagos insertados por SQL.
 - `pedidos.estado` (`REGISTRADO/PREPARACION/LISTO/ENTREGADO`) sigue sin derivarse de las comandas; se decide en R4 o I4.
+- Una línea con un lote ya entregado no se puede anular ni reducir (R1 prohíbe editar una línea que ya está en cocina); las reducciones parciales de líneas servidas siguen pendientes.
+- Un pedido de SALON cuya mesa se deshabilitó (`habilitada = false`) no se puede cancelar, porque `fn_validar_pedido` revisa la mesa en cada UPDATE de `pedidos`; bloquear la deshabilitación de una mesa con pedido abierto queda pendiente.
+- Al cancelar un pedido de DELIVERY, `pedidos_delivery.estado` queda en PENDIENTE hasta I6.
 
 ## 8. Ajustes durante el plan
 
