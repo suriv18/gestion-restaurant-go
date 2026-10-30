@@ -64,6 +64,9 @@ func NewCantidad(raw string) (Cantidad, error) {
 
 func (c Cantidad) String() string { return c.text }
 
+// Menor indica si c es estrictamente menor que otra.
+func (c Cantidad) Menor(otra Cantidad) bool { return c.r.Cmp(otra.r) < 0 }
+
 // Dinero es un importe decimal exacto de numeric(14,2), mayor o igual que cero.
 type Dinero struct {
 	text string

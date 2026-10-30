@@ -13,5 +13,6 @@ const (
 	PedidoVer          = "PEDIDO_VER"
 	PedidoCrear        = "PEDIDO_CREAR"
 	PedidoEditar       = "PEDIDO_EDITAR"
+	PedidoAnular       = "PEDIDO_ANULAR" // existe desde 00001; la migración 00013 lo asigna a CAJERO
 	DescuentoAutorizar = "DESCUENTO_AUTORIZAR"
 )
