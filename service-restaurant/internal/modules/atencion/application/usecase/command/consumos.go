@@ -260,6 +260,17 @@ func (uc *EditarDetalle) Execute(ctx context.Context, c cmd.EditarDetalle) (appr
 	if !vo.DescuentoCabe(*nuevaCantidad, det.PrecioUnitario, *nuevoDescuento) {
 		return rechazar[dtoresult.Linea](descuentoExcede())
 	}
+	// D4: bajar la cantidad de una línea que conserva descuento hace que el descuento pese más sobre
+	// ella; sin DESCUENTO_AUTORIZAR no se permite.
+	if cambios.Cantidad != nil && !nuevoDescuento.EsCero() && !c.Actor.Can(policy.DescuentoAutorizar, ped.SucursalID) {
+		anterior, err := vo.NewCantidad(det.Cantidad)
+		if err != nil {
+			return tecnico[dtoresult.Linea]("leer la cantidad de la línea", err)
+		}
+		if nuevaCantidad.Menor(anterior) {
+			return rechazar[dtoresult.Linea](sinPermisoDescuento())
+		}
+	}
 
 	l, err := uc.pedidos.ActualizarDetalle(ctx, c.DetalleID, cambios)
 	if err != nil {

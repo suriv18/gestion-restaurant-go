@@ -276,3 +276,52 @@ func TestEditarDetalleRechazos(t *testing.T) {
 		})
 	}
 }
+
+// D4: bajar la cantidad de una línea que conserva descuento hace que el descuento pese más sobre
+// ella, así que exige el mismo permiso que fijarlo.
+func TestEditarDetalleBajarLaCantidadConDescuentoExigePermiso(t *testing.T) {
+	conDescuentoPrevio := func() *pedidoStoreFake {
+		f := fakeEdicion()
+		d := f.detalles[55]
+		d.DescuentoTotal = "1.00"
+		f.detalles[55] = d
+		return f
+	}
+
+	f := conDescuentoPrevio()
+	c := editarBase()
+	c.Cantidad = texto("1") // baja de 2 a 1
+	res, err := NewEditarDetalle(f).Execute(context.Background(), c)
+	sinFallo(t, err)
+	esperarRechazo(t, res.Err(), apperror.KindForbidden, "sin_permiso")
+	if f.actualizaciones != 0 {
+		t.Fatal("un rechazo no debe escribir")
+	}
+
+	for nombre, mod := range map[string]func(*cmd.EditarDetalle){
+		"subir la cantidad no exige el permiso":     func(c *cmd.EditarDetalle) { c.Cantidad = texto("3") },
+		"dejarla igual no exige el permiso":         func(c *cmd.EditarDetalle) { c.Cantidad = texto("2") },
+		"quien autoriza descuentos puede bajarla":   func(c *cmd.EditarDetalle) { c.Actor, c.Cantidad = conDescuento(), texto("1") },
+		"bajarla y quitar el descuento no lo exige": func(c *cmd.EditarDetalle) { c.Cantidad, c.DescuentoMonto = texto("1"), texto("0") },
+	} {
+		t.Run(nombre, func(t *testing.T) {
+			f := conDescuentoPrevio()
+			c := editarBase()
+			mod(&c)
+			res, err := NewEditarDetalle(f).Execute(context.Background(), c)
+			if err != nil || !res.IsOk() || f.actualizaciones != 1 {
+				t.Fatalf("debía editarse: %v %+v", err, res.Err())
+			}
+		})
+	}
+
+	// Sin descuento previo, bajar la cantidad tampoco exige el permiso.
+	f = fakeEdicion()
+	if res, err := NewEditarDetalle(f).Execute(context.Background(), func() cmd.EditarDetalle {
+		c := editarBase()
+		c.Cantidad = texto("1")
+		return c
+	}()); err != nil || !res.IsOk() {
+		t.Fatalf("sin descuento no se exige el permiso: %v %+v", err, res.Err())
+	}
+}
