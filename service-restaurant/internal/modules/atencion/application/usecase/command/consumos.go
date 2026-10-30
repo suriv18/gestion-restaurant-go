@@ -39,10 +39,10 @@ func cuentaCerrada() *apperror.AppError {
 	return apperror.New(apperror.KindConflict, "cuenta_cerrada", "la cuenta ya no está abierta")
 }
 
-// pedidoEditable bloquea el pedido y comprueba que el actor pueda editarlo en su sede y que siga
-// abierto. El rechazo esperado va en el segundo retorno; el fallo técnico, en el tercero.
+// pedidoAutorizado bloquea el pedido y comprueba que el actor tenga el permiso en su sede y que
+// siga abierto. El rechazo esperado va en el segundo retorno; el fallo técnico, en el tercero.
 // Regla: bloquea el pedido FOR UPDATE antes que cualquier cuenta o línea (spec §7).
-func pedidoEditable(ctx context.Context, store outbound.PedidoStore, actor appctx.Actor, pedidoID int64) (outbound.PedidoRef, *apperror.AppError, error) {
+func pedidoAutorizado(ctx context.Context, store outbound.PedidoBloqueable, actor appctx.Actor, pedidoID int64, permiso string) (outbound.PedidoRef, *apperror.AppError, error) {
 	ped, found, err := store.BloquearPedido(ctx, pedidoID)
 	if err != nil {
 		return outbound.PedidoRef{}, nil, err
@@ -50,13 +50,18 @@ func pedidoEditable(ctx context.Context, store outbound.PedidoStore, actor appct
 	if !found {
 		return outbound.PedidoRef{}, mapper.NoEncontradoM("pedido"), nil
 	}
-	if ae := mapper.AutorizarPedidos(actor, ped.SucursalID, policy.PedidoEditar, mapper.NoEncontradoM("pedido")); ae != nil {
+	if ae := mapper.AutorizarPedidos(actor, ped.SucursalID, permiso, mapper.NoEncontradoM("pedido")); ae != nil {
 		return outbound.PedidoRef{}, ae, nil
 	}
 	if ped.Cerrado {
 		return outbound.PedidoRef{}, pedidoCerrado(), nil
 	}
 	return ped, nil, nil
+}
+
+// pedidoEditable es pedidoAutorizado con PEDIDO_EDITAR: agregar y editar consumos.
+func pedidoEditable(ctx context.Context, store outbound.PedidoStore, actor appctx.Actor, pedidoID int64) (outbound.PedidoRef, *apperror.AppError, error) {
+	return pedidoAutorizado(ctx, store, actor, pedidoID, policy.PedidoEditar)
 }
 
 // AgregarDetalle agrega una línea a una cuenta abierta fijando descripción, precio y tasa desde
