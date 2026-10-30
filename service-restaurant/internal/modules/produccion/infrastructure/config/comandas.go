@@ -9,6 +9,8 @@ import (
 	dtoresult "service-restaurant/internal/modules/produccion/application/dto/result"
 	"service-restaurant/internal/modules/produccion/application/port/inbound"
 	"service-restaurant/internal/modules/produccion/application/usecase/command"
+	uquery "service-restaurant/internal/modules/produccion/application/usecase/query"
+	readadapter "service-restaurant/internal/modules/produccion/infrastructure/persistence/read/adapter"
 	writeadapter "service-restaurant/internal/modules/produccion/infrastructure/persistence/write/adapter"
 	"service-restaurant/internal/modules/produccion/web/controller"
 )
@@ -27,5 +29,7 @@ func armarComandas(db *sql.DB, logger *slog.Logger) *controller.ComandasHandler 
 		},
 		meta: func(c cmd.TransicionarLinea) (int64, cmd.Intencion) { return c.Actor.UserID, cmd.Intencion{} }}
 
-	return controller.NewComandasHandler(inbound.EnviarComanda(enviar), inbound.TransicionarLinea(transicionar))
+	lector := readadapter.NewComandaReadAdapter(db)
+	return controller.NewComandasHandler(uquery.NewListarComandas(lector),
+		inbound.EnviarComanda(enviar), inbound.TransicionarLinea(transicionar))
 }

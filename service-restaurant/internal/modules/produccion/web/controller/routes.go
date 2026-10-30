@@ -12,6 +12,7 @@ import (
 func RegisterRoutes(mux *http.ServeMux, comandas *ComandasHandler, protect func(http.Handler) http.Handler, logger *slog.Logger) {
 	ruta := func(patron string, e handler.Endpoint) { mux.Handle(patron, protect(handler.Adapt(logger, e))) }
 
+	ruta("GET /comandas", comandas.Listar)
 	ruta("POST /pedidos/{id}/comandas", comandas.Enviar)
 	ruta("POST /comanda-detalles/{id}/transiciones", comandas.Transicionar)
 }

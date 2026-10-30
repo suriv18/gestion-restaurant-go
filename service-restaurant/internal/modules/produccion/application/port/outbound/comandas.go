@@ -81,3 +81,18 @@ type TransicionStore interface {
 	// TransicionarLinea fija el estado y la marca de tiempo del paso, y devuelve la línea.
 	TransicionarLinea(ctx context.Context, id int64, destino string) (dtoresult.ComandaLinea, error)
 }
+
+// FiltroComandas acota la cola a las sedes visibles (SedeIDs) y, opcionalmente, por estación y por
+// el estado de alguna de sus líneas. Estado vacío = líneas pendientes de entregar.
+type FiltroComandas struct {
+	SedeIDs     []int64
+	EstacionID  *int64
+	Estado      string
+	DespuesDeID int64
+	Limite      int
+}
+
+// ComandaReader lee comandas sin bloquear filas.
+type ComandaReader interface {
+	ListarComandas(ctx context.Context, f FiltroComandas) ([]dtoresult.Comanda, error)
+}

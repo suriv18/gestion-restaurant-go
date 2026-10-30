@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"service-restaurant/internal/modules/produccion/application/dto/command"
+	"service-restaurant/internal/modules/produccion/application/dto/query"
 	"service-restaurant/internal/modules/produccion/application/port/inbound"
 	"service-restaurant/internal/modules/produccion/web/dto/request"
 	webmapper "service-restaurant/internal/modules/produccion/web/mapper"
@@ -12,13 +13,47 @@ import (
 )
 
 // ComandasHandler: envío a cocina, cola de preparación y estados de las líneas (RES-RF-012).
+var estadosLinea = []string{"PENDIENTE", "PREPARACION", "LISTO", "ENTREGADO", "CANCELADO"}
+
 type ComandasHandler struct {
+	listar       inbound.ListarComandas
 	enviar       inbound.EnviarComanda
 	transicionar inbound.TransicionarLinea
 }
 
-func NewComandasHandler(e inbound.EnviarComanda, t inbound.TransicionarLinea) *ComandasHandler {
-	return &ComandasHandler{e, t}
+func NewComandasHandler(l inbound.ListarComandas, e inbound.EnviarComanda, t inbound.TransicionarLinea) *ComandasHandler {
+	return &ComandasHandler{l, e, t}
+}
+
+// Listar: GET /comandas?sucursal_id=&estacion_id=&estado=&limit=&cursor=
+func (h *ComandasHandler) Listar(w http.ResponseWriter, r *http.Request) error {
+	actor, err := actorDe(r)
+	if err != nil {
+		return err
+	}
+	q, err := consulta(r)
+	if err != nil {
+		return err
+	}
+	limite, err := limiteDe(q)
+	if err != nil {
+		return err
+	}
+	sede, err := idOpcionalDe(q, "sucursal_id")
+	if err != nil {
+		return err
+	}
+	estacion, err := idOpcionalDe(q, "estacion_id")
+	if err != nil {
+		return err
+	}
+	estado, err := enumDe(q, "estado", estadosLinea...)
+	if err != nil {
+		return err
+	}
+	res, err := h.listar.Execute(r.Context(), query.ListarComandas{
+		Actor: actor, SucursalID: sede, EstacionID: estacion, Estado: estado, Limite: limite, Cursor: q.Get("cursor")})
+	return responder(w, res, err, http.StatusOK, webmapper.ToComandasPagina)
 }
 
 // Enviar: POST /pedidos/{id}/comandas (Idempotency-Key obligatoria)
